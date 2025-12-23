@@ -2,6 +2,28 @@
 
 This guide covers deploying the ticketing system in a production environment on your local server.
 
+## Quick Start (Docker)
+
+```bash
+# 1. Setup environment
+cp .env.example .env
+# Edit .env with your production settings
+
+# 2. Start containers
+docker-compose build
+docker-compose up -d
+
+# 3. Create admin user
+docker-compose exec web npm run seed-admin
+# Follow prompts or use the non-interactive method in section 4 below
+
+# 4. Access the application
+# Public: http://localhost:3000
+# Admin: http://localhost:3000/auth/login
+```
+
+---
+
 ## Prerequisites
 
 - Docker and Docker Compose installed
@@ -70,17 +92,45 @@ docker-compose logs -f web
 
 **The database will be automatically initialized on first startup!**
 
-The Docker entrypoint script will:
-- Wait for PostgreSQL to be ready
-- Run database migrations if not already initialized
-- Create a default admin user if none exists:
-  - **Username**: `admin`
-  - **Password**: `admin123`
-  - **Email**: `admin@example.com`
+PostgreSQL automatically runs the SQL migration files from the `./migrations` folder on first startup, creating all necessary tables (users, tickets, comments, session).
 
-⚠️ **IMPORTANT**: Change the default admin password immediately after first login!
+#### 4. Create Admin User
 
-#### 4. Verify Deployment
+After containers start, create an admin user:
+
+```bash
+# Create admin user interactively
+docker-compose exec web npm run seed-admin
+
+# Or create default admin user (non-interactive)
+docker-compose exec web node -e "
+const User = require('./models/User');
+(async () => {
+  try {
+    await User.create({
+      username: 'admin',
+      email: 'admin@example.com',
+      password: 'admin123',
+      role: 'admin'
+    });
+    console.log('✓ Admin user created: admin / admin123');
+  } catch (error) {
+    console.error('Error:', error.message);
+  } finally {
+    process.exit(0);
+  }
+})();
+"
+```
+
+Default admin credentials (if using non-interactive method):
+- **Username**: `admin`
+- **Password**: `admin123`
+- **Email**: `admin@example.com`
+
+⚠️ **IMPORTANT**: Change the default password immediately after first login!
+
+#### 5. Verify Deployment
 
 ```bash
 # Check service status
@@ -96,7 +146,13 @@ docker-compose logs db
 curl http://localhost:3000
 ```
 
-#### 6. Database Backups
+#### 6. Access the Application
+
+- **Public Ticket Submission**: `http://localhost:3000`
+- **Admin Login**: `http://localhost:3000/auth/login`
+- **Admin Dashboard**: `http://localhost:3000/admin/dashboard` (after login)
+
+#### 7. Database Backups
 
 ```bash
 # Create a backup directory (already mounted in docker-compose.yml)
@@ -184,14 +240,9 @@ pm2 save
 - [ ] Configured firewall to restrict database port access
 - [ ] Reviewed Helmet security headers in index.js
 - [ ] Disabled development tools (nodemon, source maps)
+- [ ] Changed default admin password (admin/admin123)
 
-### 2. Access the Application
-
-- **Public Ticket Submission**: `http://your-server:3000`
-- **Admin Login**: `http://your-server:3000/auth/login`
-- **Admin Dashboard**: `http://your-server:3000/admin/dashboard`
-
-### 3. Monitoring
+### 2. Monitoring
 
 #### Docker Monitoring
 ```bash
@@ -217,7 +268,7 @@ pm2 logs ticketing-system
 pm2 show ticketing-system
 ```
 
-### 4. Log Management
+### 3. Log Management
 
 Logs are stored in:
 - **Docker**: `docker-compose logs`
