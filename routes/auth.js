@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs');
 const { body } = require('express-validator');
 const User = require('../models/User');
 const { validateRequest } = require('../middleware/validation');
+const { FLASH_KEYS, AUTH_MESSAGES } = require('../constants/messages');
+const { VALIDATION_MESSAGES } = require('../constants/validation');
 
 router.get('/login', (req, res) => {
   if (req.session.user) {
@@ -13,15 +15,15 @@ router.get('/login', (req, res) => {
 });
 
 router.post('/login', [
-  body('username').trim().notEmpty().withMessage('Username is required'),
-  body('password').notEmpty().withMessage('Password is required')
+  body('username').trim().notEmpty().withMessage(VALIDATION_MESSAGES.USERNAME_REQUIRED),
+  body('password').notEmpty().withMessage(VALIDATION_MESSAGES.PASSWORD_REQUIRED)
 ], validateRequest, async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const user = await User.findByUsername(username);
 
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-      req.flash('error_msg', 'Invalid username or password');
+      req.flash(FLASH_KEYS.ERROR, AUTH_MESSAGES.LOGIN_FAILED);
       return res.redirect('/auth/login');
     }
 
@@ -32,7 +34,7 @@ router.post('/login', [
       role: user.role
     };
 
-    req.flash('success_msg', 'Welcome back!');
+    req.flash(FLASH_KEYS.SUCCESS, AUTH_MESSAGES.LOGIN_SUCCESS);
     res.redirect('/admin/dashboard');
   } catch (error) {
     next(error);

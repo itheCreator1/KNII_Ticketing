@@ -5,6 +5,9 @@ const { requireAuth } = require('../middleware/auth');
 const Ticket = require('../models/Ticket');
 const Comment = require('../models/Comment');
 const { validateRequest } = require('../middleware/validation');
+const { TICKET_STATUS, TICKET_PRIORITY } = require('../constants/enums');
+const { FLASH_KEYS, TICKET_MESSAGES, COMMENT_MESSAGES } = require('../constants/messages');
+const { VALIDATION_MESSAGES } = require('../constants/validation');
 
 router.use(requireAuth);
 
@@ -33,7 +36,7 @@ router.get('/tickets/:id', async (req, res, next) => {
     const comments = await Comment.findByTicketId(req.params.id);
 
     if (!ticket) {
-      req.flash('error_msg', 'Ticket not found');
+      req.flash(FLASH_KEYS.ERROR, TICKET_MESSAGES.NOT_FOUND);
       return res.redirect('/admin/dashboard');
     }
 
@@ -48,12 +51,12 @@ router.get('/tickets/:id', async (req, res, next) => {
 });
 
 router.post('/tickets/:id/update', [
-  body('status').optional().isIn(['open', 'in_progress', 'closed']).withMessage('Invalid status'),
-  body('priority').optional().isIn(['low', 'medium', 'high', 'critical']).withMessage('Invalid priority')
+  body('status').optional().isIn(Object.values(TICKET_STATUS)).withMessage(VALIDATION_MESSAGES.STATUS_INVALID),
+  body('priority').optional().isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
 ], validateRequest, async (req, res, next) => {
   try {
     await Ticket.update(req.params.id, req.body);
-    req.flash('success_msg', 'Ticket updated successfully');
+    req.flash(FLASH_KEYS.SUCCESS, TICKET_MESSAGES.UPDATED);
     res.redirect(`/admin/tickets/${req.params.id}`);
   } catch (error) {
     next(error);
@@ -61,7 +64,7 @@ router.post('/tickets/:id/update', [
 });
 
 router.post('/tickets/:id/comments', [
-  body('content').trim().notEmpty().withMessage('Comment cannot be empty')
+  body('content').trim().notEmpty().withMessage(VALIDATION_MESSAGES.COMMENT_REQUIRED)
 ], validateRequest, async (req, res, next) => {
   try {
     await Comment.create({
@@ -71,7 +74,7 @@ router.post('/tickets/:id/comments', [
       is_internal: req.body.is_internal === 'true'
     });
 
-    req.flash('success_msg', 'Comment added successfully');
+    req.flash(FLASH_KEYS.SUCCESS, COMMENT_MESSAGES.ADDED);
     res.redirect(`/admin/tickets/${req.params.id}`);
   } catch (error) {
     next(error);
