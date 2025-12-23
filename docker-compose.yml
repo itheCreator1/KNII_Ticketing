@@ -8,3 +8,30 @@ services:
       - /usr/src/app/node_modules
     environment:
       - PORT=3000
+      - NODE_ENV=development
+      - DATABASE_URL=postgres://ticketing_user:ticketing_pass@db:5432/ticketing_db
+      - SESSION_SECRET=your-super-secret-session-key-change-in-production
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ticketing_user
+      POSTGRES_PASSWORD: ticketing_pass
+      POSTGRES_DB: ticketing_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticketing_user -d ticketing_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
