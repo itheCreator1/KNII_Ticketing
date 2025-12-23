@@ -10,6 +10,8 @@ const path = require('path');
 const sessionConfig = require('./config/session');
 const errorHandler = require('./middleware/errorHandler');
 
+const publicRoutes = require('./routes/public');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -45,9 +47,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/', (req, res) => {
-  res.send('KNII Ticketing System - Coming Soon!');
-});
+app.use('/', publicRoutes);
 
 app.use((req, res) => {
   res.status(404).send('404 - Page Not Found');
