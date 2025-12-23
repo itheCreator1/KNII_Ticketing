@@ -11,6 +11,7 @@ const sessionConfig = require('./config/session');
 const errorHandler = require('./middleware/errorHandler');
 
 const publicRoutes = require('./routes/public');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -48,6 +49,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/', publicRoutes);
+app.use('/auth', authRoutes);
 
 app.use((req, res) => {
   res.status(404).send('404 - Page Not Found');
