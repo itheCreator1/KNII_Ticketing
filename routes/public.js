@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const Ticket = require('../models/Ticket');
 const { validateRequest } = require('../middleware/validation');
 const { TICKET_PRIORITY } = require('../constants/enums');
 const { FLASH_KEYS, TICKET_MESSAGES } = require('../constants/messages');
 const { VALIDATION_MESSAGES } = require('../constants/validation');
+const ticketService = require('../services/ticketService');
 
 router.get('/', (req, res) => {
   res.render('public/submit-ticket', {
@@ -22,7 +22,7 @@ router.post('/submit-ticket', [
   body('priority').isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
 ], validateRequest, async (req, res, next) => {
   try {
-    const ticket = await Ticket.create(req.body);
+    const ticket = await ticketService.createTicket(req.body);
     req.flash(FLASH_KEYS.SUCCESS, TICKET_MESSAGES.CREATED);
     res.render('public/success', {
       title: 'Ticket Submitted',

@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
 const { body } = require('express-validator');
-const User = require('../models/User');
 const { validateRequest } = require('../middleware/validation');
 const { FLASH_KEYS, AUTH_MESSAGES } = require('../constants/messages');
 const { VALIDATION_MESSAGES } = require('../constants/validation');
+const authService = require('../services/authService');
 
 router.get('/login', (req, res) => {
   if (req.session.user) {
@@ -20,19 +19,14 @@ router.post('/login', [
 ], validateRequest, async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    const user = await User.findByUsername(username);
+    const user = await authService.authenticate(username, password);
 
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    if (!user) {
       req.flash(FLASH_KEYS.ERROR, AUTH_MESSAGES.LOGIN_FAILED);
       return res.redirect('/auth/login');
     }
 
-    req.session.user = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role
-    };
+    req.session.user = authService.createSessionData(user);
 
     req.flash(FLASH_KEYS.SUCCESS, AUTH_MESSAGES.LOGIN_SUCCESS);
     res.redirect('/admin/dashboard');

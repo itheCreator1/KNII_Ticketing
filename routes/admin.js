@@ -2,28 +2,22 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { requireAuth } = require('../middleware/auth');
-const Ticket = require('../models/Ticket');
 const Comment = require('../models/Comment');
 const { validateRequest } = require('../middleware/validation');
 const { TICKET_STATUS, TICKET_PRIORITY } = require('../constants/enums');
 const { FLASH_KEYS, TICKET_MESSAGES, COMMENT_MESSAGES } = require('../constants/messages');
 const { VALIDATION_MESSAGES } = require('../constants/validation');
+const ticketService = require('../services/ticketService');
 
 router.use(requireAuth);
 
 router.get('/dashboard', async (req, res, next) => {
   try {
-    const filters = {
-      status: req.query.status,
-      priority: req.query.priority,
-      search: req.query.search
-    };
-
-    const tickets = await Ticket.findAll(filters);
+    const tickets = await ticketService.getAllTickets(req.query);
     res.render('admin/dashboard', {
       title: 'Admin Dashboard',
       tickets,
-      filters
+      filters: req.query
     });
   } catch (error) {
     next(error);
@@ -32,7 +26,7 @@ router.get('/dashboard', async (req, res, next) => {
 
 router.get('/tickets/:id', async (req, res, next) => {
   try {
-    const ticket = await Ticket.findById(req.params.id);
+    const ticket = await ticketService.getTicketById(req.params.id);
     const comments = await Comment.findByTicketId(req.params.id);
 
     if (!ticket) {
@@ -55,7 +49,7 @@ router.post('/tickets/:id/update', [
   body('priority').optional().isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
 ], validateRequest, async (req, res, next) => {
   try {
-    await Ticket.update(req.params.id, req.body);
+    await ticketService.updateTicket(req.params.id, req.body);
     req.flash(FLASH_KEYS.SUCCESS, TICKET_MESSAGES.UPDATED);
     res.redirect(`/admin/tickets/${req.params.id}`);
   } catch (error) {
