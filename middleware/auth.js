@@ -11,13 +11,16 @@ function requireAuth(req, res, next) {
   // Check if user is still active (in case status changed after login)
   User.findById(req.session.user.id).then(user => {
     if (!user || user.status !== 'active') {
-      req.session.destroy();
-      return errorRedirect(req, res, 'Account is no longer active', '/auth/login');
+      req.session.destroy((err) => {
+        if (err) console.error('Session destruction error:', err);
+        return res.redirect('/auth/login');
+      });
+      return;
     }
     next();
   }).catch(err => {
     console.error('Auth check error:', err);
-    return errorRedirect(req, res, 'Authentication error', '/auth/login');
+    return res.redirect('/auth/login');
   });
 }
 

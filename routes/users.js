@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth, requireSuperAdmin } = require('../middleware/auth');
 const { validateUserCreate, validateUserUpdate, validatePasswordReset } = require('../validators/userValidators');
-const { handleValidationErrors } = require('../middleware/validation');
+const { validateRequest } = require('../middleware/validation');
 const UserService = require('../services/userService');
-const { successRedirect, errorRedirect } = require('../helpers/responseHelpers');
+const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
 
 // GET /admin/users - List all users
 router.get('/', requireAuth, requireSuperAdmin, async (req, res) => {
@@ -34,7 +34,7 @@ router.post('/',
   requireAuth,
   requireSuperAdmin,
   validateUserCreate,
-  handleValidationErrors,
+  validateRequest,
   async (req, res) => {
     try {
       const { username, email, password, role } = req.body;
@@ -74,7 +74,7 @@ router.post('/:id',
   requireAuth,
   requireSuperAdmin,
   validateUserUpdate,
-  handleValidationErrors,
+  validateRequest,
   async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
@@ -123,7 +123,7 @@ router.post('/:id/password',
   requireAuth,
   requireSuperAdmin,
   validatePasswordReset,
-  handleValidationErrors,
+  validateRequest,
   async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
