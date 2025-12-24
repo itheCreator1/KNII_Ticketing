@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { body } = require('express-validator');
 const { requireAuth } = require('../middleware/auth');
 const Comment = require('../models/Comment');
 const { validateRequest } = require('../middleware/validation');
-const { TICKET_STATUS, TICKET_PRIORITY } = require('../constants/enums');
 const { FLASH_KEYS, TICKET_MESSAGES, COMMENT_MESSAGES } = require('../constants/messages');
-const { VALIDATION_MESSAGES } = require('../constants/validation');
 const ticketService = require('../services/ticketService');
+const { validateTicketUpdate } = require('../validators/ticketValidators');
+const { validateCommentCreation } = require('../validators/commentValidators');
 
 router.use(requireAuth);
 
@@ -44,10 +43,7 @@ router.get('/tickets/:id', async (req, res, next) => {
   }
 });
 
-router.post('/tickets/:id/update', [
-  body('status').optional().isIn(Object.values(TICKET_STATUS)).withMessage(VALIDATION_MESSAGES.STATUS_INVALID),
-  body('priority').optional().isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
-], validateRequest, async (req, res, next) => {
+router.post('/tickets/:id/update', validateTicketUpdate, validateRequest, async (req, res, next) => {
   try {
     await ticketService.updateTicket(req.params.id, req.body);
     req.flash(FLASH_KEYS.SUCCESS, TICKET_MESSAGES.UPDATED);
@@ -57,9 +53,7 @@ router.post('/tickets/:id/update', [
   }
 });
 
-router.post('/tickets/:id/comments', [
-  body('content').trim().notEmpty().withMessage(VALIDATION_MESSAGES.COMMENT_REQUIRED)
-], validateRequest, async (req, res, next) => {
+router.post('/tickets/:id/comments', validateCommentCreation, validateRequest, async (req, res, next) => {
   try {
     await Comment.create({
       ticket_id: req.params.id,

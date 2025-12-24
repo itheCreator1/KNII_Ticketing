@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { body } = require('express-validator');
 const { validateRequest } = require('../middleware/validation');
 const { FLASH_KEYS, AUTH_MESSAGES } = require('../constants/messages');
-const { VALIDATION_MESSAGES } = require('../constants/validation');
 const authService = require('../services/authService');
+const { validateLogin } = require('../validators/authValidators');
 
 router.get('/login', (req, res) => {
   if (req.session.user) {
@@ -13,10 +12,7 @@ router.get('/login', (req, res) => {
   res.render('auth/login', { title: 'Admin Login' });
 });
 
-router.post('/login', [
-  body('username').trim().notEmpty().withMessage(VALIDATION_MESSAGES.USERNAME_REQUIRED),
-  body('password').notEmpty().withMessage(VALIDATION_MESSAGES.PASSWORD_REQUIRED)
-], validateRequest, async (req, res, next) => {
+router.post('/login', validateLogin, validateRequest, async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const user = await authService.authenticate(username, password);
