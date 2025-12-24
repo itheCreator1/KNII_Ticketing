@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 const Comment = require('../models/Comment');
 const { validateRequest } = require('../middleware/validation');
 const { FLASH_KEYS, TICKET_MESSAGES, COMMENT_MESSAGES } = require('../constants/messages');
@@ -43,7 +43,7 @@ router.get('/tickets/:id', async (req, res, next) => {
   }
 });
 
-router.post('/tickets/:id/update', validateTicketUpdate, validateRequest, async (req, res, next) => {
+router.post('/tickets/:id/update', requireAdmin, validateTicketUpdate, validateRequest, async (req, res, next) => {
   try {
     await ticketService.updateTicket(req.params.id, req.body);
     req.flash(FLASH_KEYS.SUCCESS, TICKET_MESSAGES.UPDATED);

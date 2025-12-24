@@ -10,10 +10,17 @@ function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (!req.session.user || req.session.user.role !== USER_ROLE.ADMIN) {
+  if (!req.session.user) {
+    req.flash(FLASH_KEYS.ERROR, AUTH_MESSAGES.UNAUTHORIZED);
+    return res.redirect('/auth/login');
+  }
+
+  const adminRoles = [USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN];
+  if (!adminRoles.includes(req.session.user.role)) {
     req.flash(FLASH_KEYS.ERROR, AUTH_MESSAGES.FORBIDDEN);
     return res.redirect('/admin/dashboard');
   }
+
   next();
 }
 
