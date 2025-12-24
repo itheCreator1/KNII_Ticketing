@@ -5,6 +5,7 @@ const { AUTH_MESSAGES } = require('../constants/messages');
 const authService = require('../services/authService');
 const { validateLogin } = require('../validators/authValidators');
 const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
+const AuditLog = require('../models/AuditLog');
 
 router.get('/login', (req, res) => {
   if (req.session.user) {
@@ -23,6 +24,17 @@ router.post('/login', validateLogin, validateRequest, async (req, res, next) => 
     }
 
     req.session.user = authService.createSessionData(user);
+
+    // Log successful login to audit trail
+    await AuditLog.create({
+      actorId: user.id,
+      action: 'USER_LOGIN',
+      targetType: 'user',
+      targetId: user.id,
+      details: { success: true },
+      ipAddress: req.ip
+    });
+
     successRedirect(req, res, AUTH_MESSAGES.LOGIN_SUCCESS, '/admin/dashboard');
   } catch (error) {
     next(error);
