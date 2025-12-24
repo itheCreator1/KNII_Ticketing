@@ -2,6 +2,9 @@
   <nav class="admin-nav">
     <div class="nav-left">
       <h1><a href="/admin/dashboard">KNII Ticketing</a></h1>
+      <% if (user && user.role === 'super_admin') { %>
+        <a href="/admin/users" class="nav-link">User Management</a>
+      <% } %>
     </div>
     <div class="nav-right">
       <% if (user) { %>

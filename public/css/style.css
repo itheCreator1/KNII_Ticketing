@@ -636,3 +636,105 @@ h1 {
     width: 100%;
   }
 }
+
+/* User Management Styles */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.user-table-wrapper {
+  overflow-x: auto;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.user-table th,
+.user-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.user-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.user-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.25rem;
+}
+
+.badge-success { background-color: #28a745; color: white; }
+.badge-danger { background-color: #dc3545; color: white; }
+.badge-info { background-color: #17a2b8; color: white; }
+.badge-secondary { background-color: #6c757d; color: white; }
+
+.user-form {
+  max-width: 600px;
+  margin: 2rem 0;
+}
+
+.user-edit-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .user-edit-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.password-form {
+  background-color: #fff3cd;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ffc107;
+}
+
+.password-strength {
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
+.password-strength.weak { color: #dc3545; }
+.password-strength.medium { color: #ffc107; }
+.password-strength.strong { color: #28a745; }
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actions form {
+  margin: 0;
+}
+
+.nav-link {
+  color: #fff;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  margin-left: 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
