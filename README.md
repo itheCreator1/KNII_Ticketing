@@ -202,9 +202,9 @@ docker-compose exec db psql -U ticketing_user -d ticketing_db -f /docker-entrypo
 1. `001_create_users.sql` - User accounts table
 2. `002_create_tickets.sql` - Support tickets table
 3. `003_create_comments.sql` - Ticket comments table
-4. `004_seed_admin_user.sql` - Default admin user
-5. `005_enhance_users_table.sql` - Add user management fields
-6. `006_create_audit_logs.sql` - Audit logging table
+4. `004_create_sessions.sql` - Session storage table
+5. `005_enhance_users_table.sql` - User management fields (failed login attempts, account locking, status)
+6. `006_create_audit_logs.sql` - Audit logging table for user management actions
 
 ## Development Workflow
 
