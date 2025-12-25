@@ -3,6 +3,7 @@ const { VALIDATION_MESSAGES } = require('../constants/validation');
 const { USER_ROLE, USER_STATUS } = require('../constants/enums');
 const User = require('../models/User');
 const pool = require('../config/database');
+const { passwordValidation } = require('./shared/passwordRules');
 
 const validateUserCreate = [
   body('username')
@@ -32,11 +33,7 @@ const validateUserCreate = [
       return true;
     }),
 
-  body('password')
-    .notEmpty()
-    .withMessage(VALIDATION_MESSAGES.PASSWORD_REQUIRED)
-    .isLength({ min: 8 })
-    .withMessage(VALIDATION_MESSAGES.PASSWORD_TOO_SHORT),
+  passwordValidation('password'),
 
   body('role')
     .isIn([USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN])
@@ -74,11 +71,7 @@ const validateUserUpdate = [
 
 const validatePasswordReset = [
   param('id').isInt().withMessage('Invalid user ID'),
-  body('password')
-    .notEmpty()
-    .withMessage(VALIDATION_MESSAGES.PASSWORD_REQUIRED)
-    .isLength({ min: 8 })
-    .withMessage(VALIDATION_MESSAGES.PASSWORD_TOO_SHORT)
+  passwordValidation('password')
 ];
 
 module.exports = {
