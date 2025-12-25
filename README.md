@@ -206,6 +206,39 @@ docker-compose exec db psql -U ticketing_user -d ticketing_db -f /docker-entrypo
 5. `005_enhance_users_table.sql` - Add user management fields
 6. `006_create_audit_logs.sql` - Audit logging table
 
+## Development Workflow
+
+### Branch Protection Requirements
+
+**Branch Strategy:**
+- `main` - Production-ready code, always deployable
+- `develop` - Integration branch for features
+- `feature/*` - New features
+- `fix/*` - Bug fixes
+- `chore/*` - Maintenance tasks
+- `docs/*` - Documentation updates
+
+**Workflow Rules:**
+1. Never commit directly to main - all changes via Pull Requests
+2. One PR per logical change - keep PRs focused and atomic
+3. Code review required - at least one approval before merge
+4. Tests must pass - verify docker-compose build and startup
+5. Clean commit history - meaningful messages in imperative mood
+6. Delete merged branches - keep repository clean
+
+**Commit Message Format:**
+```
+<type>: <subject line in imperative mood>
+
+<optional body explaining WHY, not WHAT>
+
+<optional footer with issue references>
+```
+
+Examples:
+- `fix: prevent session secret fallback in production`
+- `feat: add rate limiting to login endpoint`
+
 ## Development
 
 ### Running Locally
