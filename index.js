@@ -5,6 +5,7 @@ const flash = require('connect-flash');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 
 const { doubleCsrf } = require('csrf-csrf');
@@ -56,6 +57,7 @@ app.use(compression());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(express.static(path.join(__dirname, 'public')));
 
