@@ -37,7 +37,8 @@ const {
   },
   size: 64,
   ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
-  getTokenFromRequest: (req) => req.body._csrf
+  getTokenFromRequest: (req) => req.body._csrf,
+  getSessionIdentifier: (req) => req.session?.id || ''
 });
 
 app.set('view engine', 'ejs');
