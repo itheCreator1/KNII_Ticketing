@@ -1,8 +1,6 @@
 const FLASH_KEYS = {
   SUCCESS: 'success_msg',
-  ERROR: 'error_msg',
-  WARNING: 'warning_msg',
-  INFO: 'error'
+  ERROR: 'error_msg'
 };
 
 const AUTH_MESSAGES = {
