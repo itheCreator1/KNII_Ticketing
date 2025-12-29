@@ -22,10 +22,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // CSRF Protection Configuration
-const {
-  generateToken, // Used by doubleCsrfProtection internally
-  doubleCsrfProtection,
-} = doubleCsrf({
+const csrfProtection = doubleCsrf({
   getSecret: () => process.env.SESSION_SECRET,
   cookieName: '__Host-psifi.x-csrf-token',
   cookieOptions: {
@@ -38,6 +35,8 @@ const {
   ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
   getTokenFromRequest: (req) => req.body._csrf
 });
+
+const csrfMiddleware = csrfProtection.doubleCsrfProtection;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -64,15 +63,15 @@ app.use(session(sessionConfig));
 app.use(flash());
 
 // Apply CSRF protection to all routes
-app.use(doubleCsrfProtection);
+app.use(csrfMiddleware);
 
 // Make CSRF token and flash messages available to all views
 app.use((req, res, next) => {
   res.locals.success_msg = req.flash('success_msg');
   res.locals.error_msg = req.flash('error_msg');
   res.locals.user = req.session.user || null;
-  // generateToken is called by doubleCsrfProtection and attaches token to request
-  res.locals.csrfToken = generateToken(req, res, true); // Third param true for stateless
+  // Generate CSRF token for forms
+  res.locals.csrfToken = csrfProtection.generateToken(req, res);
   next();
 });
 
