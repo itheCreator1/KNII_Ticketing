@@ -23,7 +23,7 @@ const port = process.env.PORT || 3000;
 
 // CSRF Protection Configuration
 const {
-  generateToken,
+  generateToken, // Used by doubleCsrfProtection internally
   doubleCsrfProtection,
 } = doubleCsrf({
   getSecret: () => process.env.SESSION_SECRET,
@@ -71,7 +71,8 @@ app.use((req, res, next) => {
   res.locals.success_msg = req.flash('success_msg');
   res.locals.error_msg = req.flash('error_msg');
   res.locals.user = req.session.user || null;
-  res.locals.csrfToken = generateToken(req, res);
+  // generateToken is called by doubleCsrfProtection and attaches token to request
+  res.locals.csrfToken = generateToken(req, res, true); // Third param true for stateless
   next();
 });
 
