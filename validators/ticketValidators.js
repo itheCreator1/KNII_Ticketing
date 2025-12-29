@@ -22,8 +22,24 @@ const validateTicketId = [
     .toInt()
 ];
 
+const validateTicketAssignment = [
+  body('assigned_to')
+    .optional({ nullable: true })
+    .custom((value) => {
+      // Allow null or empty string (unassign)
+      if (value === null || value === '') return true;
+      // Otherwise must be a positive integer
+      const parsed = parseInt(value);
+      if (isNaN(parsed) || parsed < 1) {
+        throw new Error('Assigned user ID must be a positive integer or null');
+      }
+      return true;
+    })
+];
+
 module.exports = {
   validateTicketCreation,
   validateTicketUpdate,
-  validateTicketId
+  validateTicketId,
+  validateTicketAssignment
 };
