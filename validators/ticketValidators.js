@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 const { TICKET_PRIORITY, TICKET_STATUS } = require('../constants/enums');
 const { VALIDATION_MESSAGES } = require('../constants/validation');
 
@@ -15,7 +15,15 @@ const validateTicketUpdate = [
   body('priority').optional().isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
 ];
 
+const validateTicketId = [
+  param('id')
+    .isInt({ min: 1 })
+    .withMessage('Ticket ID must be a positive integer')
+    .toInt()
+];
+
 module.exports = {
   validateTicketCreation,
-  validateTicketUpdate
+  validateTicketUpdate,
+  validateTicketId
 };

@@ -5,7 +5,7 @@ const Comment = require('../models/Comment');
 const { validateRequest } = require('../middleware/validation');
 const { TICKET_MESSAGES, COMMENT_MESSAGES } = require('../constants/messages');
 const ticketService = require('../services/ticketService');
-const { validateTicketUpdate } = require('../validators/ticketValidators');
+const { validateTicketUpdate, validateTicketId } = require('../validators/ticketValidators');
 const { validateCommentCreation } = require('../validators/commentValidators');
 const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
 
@@ -24,7 +24,7 @@ router.get('/dashboard', async (req, res, next) => {
   }
 });
 
-router.get('/tickets/:id', async (req, res, next) => {
+router.get('/tickets/:id', validateTicketId, validateRequest, async (req, res, next) => {
   try {
     const ticket = await ticketService.getTicketById(req.params.id);
     const comments = await Comment.findByTicketId(req.params.id);
@@ -43,7 +43,7 @@ router.get('/tickets/:id', async (req, res, next) => {
   }
 });
 
-router.post('/tickets/:id/update', requireAdmin, validateTicketUpdate, validateRequest, async (req, res, next) => {
+router.post('/tickets/:id/update', requireAdmin, validateTicketId, validateTicketUpdate, validateRequest, async (req, res, next) => {
   try {
     await ticketService.updateTicket(req.params.id, req.body);
     successRedirect(req, res, TICKET_MESSAGES.UPDATED, `/admin/tickets/${req.params.id}`);
@@ -52,7 +52,7 @@ router.post('/tickets/:id/update', requireAdmin, validateTicketUpdate, validateR
   }
 });
 
-router.post('/tickets/:id/comments', validateCommentCreation, validateRequest, async (req, res, next) => {
+router.post('/tickets/:id/comments', validateTicketId, validateCommentCreation, validateRequest, async (req, res, next) => {
   try {
     await Comment.create({
       ticket_id: req.params.id,
