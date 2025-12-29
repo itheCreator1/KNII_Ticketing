@@ -3,7 +3,7 @@ const router = express.Router();
 const { requireAuth, requireSuperAdmin } = require('../middleware/auth');
 const { validateUserCreate, validateUserUpdate, validatePasswordReset } = require('../validators/userValidators');
 const { validateRequest } = require('../middleware/validation');
-const UserService = require('../services/userService');
+const userService = require('../services/userService');
 const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
 const { loginLimiter } = require('../middleware/rateLimiter');
 const logger = require('../utils/logger');
@@ -11,7 +11,7 @@ const logger = require('../utils/logger');
 // GET /admin/users - List all users
 router.get('/', requireAuth, requireSuperAdmin, async (req, res, next) => {
   try {
-    const users = await UserService.getAllUsers();
+    const users = await userService.getAllUsers();
     res.render('admin/users/index', {
       title: 'User Management',
       users,
@@ -40,7 +40,7 @@ router.post('/',
   async (req, res, next) => {
     try {
       const { username, email, password, role } = req.body;
-      await UserService.createUser({ username, email, password, role });
+      await userService.createUser({ username, email, password, role });
 
       return successRedirect(req, res, 'User created successfully', '/admin/users');
     } catch (error) {
@@ -54,7 +54,7 @@ router.post('/',
 router.get('/:id/edit', requireAuth, requireSuperAdmin, async (req, res, next) => {
   try {
     const userId = parseInt(req.params.id);
-    const targetUser = await UserService.getUserById(userId);
+    const targetUser = await userService.getUserById(userId);
 
     if (!targetUser) {
       const error = new Error('User not found');
@@ -90,7 +90,7 @@ router.post('/:id',
       if (role) updates.role = role;
       if (status) updates.status = status;
 
-      await UserService.updateUser(
+      await userService.updateUser(
         req.session.user.id,
         userId,
         updates,
@@ -112,7 +112,7 @@ router.post('/:id/delete',
   async (req, res, next) => {
     try {
       const userId = parseInt(req.params.id);
-      await UserService.deleteUser(req.session.user.id, userId, req.ip);
+      await userService.deleteUser(req.session.user.id, userId, req.ip);
 
       return successRedirect(req, res, 'User deleted successfully', '/admin/users');
     } catch (error) {
@@ -126,7 +126,6 @@ router.post('/:id/delete',
 router.post('/:id/password',
   requireAuth,
   requireSuperAdmin,
-  loginLimiter,
   validatePasswordReset,
   validateRequest,
   async (req, res, next) => {
@@ -134,7 +133,7 @@ router.post('/:id/password',
       const userId = parseInt(req.params.id);
       const { password } = req.body;
 
-      await UserService.resetUserPassword(req.session.user.id, userId, password, req.ip);
+      await userService.resetUserPassword(req.session.user.id, userId, password, req.ip);
 
       return successRedirect(req, res, 'Password reset successfully', '/admin/users');
     } catch (error) {
@@ -153,7 +152,7 @@ router.post('/:id/toggle-status',
       const userId = parseInt(req.params.id);
       const { status } = req.body;
 
-      await UserService.toggleUserStatus(req.session.user.id, userId, status, req.ip);
+      await userService.toggleUserStatus(req.session.user.id, userId, status, req.ip);
 
       return successRedirect(req, res, 'User status updated', '/admin/users');
     } catch (error) {
