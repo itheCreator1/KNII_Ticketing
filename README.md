@@ -29,7 +29,15 @@ A professional ticket management system built with Node.js, Express, PostgreSQL,
 - **Audit Logging**: Complete audit trail for all user management actions
 - **SQL Injection Protection**: Parameterized queries throughout
 - **XSS Protection**: Helmet.js security headers
-- **CSRF Protection**: Built-in CSRF token validation
+- **CSRF Protection**: csrf-csrf (double-submit cookie pattern)
+- **Rate Limiting**:
+  - Login endpoint: 10 attempts per 15 minutes per IP
+  - Public ticket submission: 5 submissions per hour per IP
+- **Input Length Limits**: All text inputs have maximum lengths to prevent DoS attacks
+- **Timing Attack Prevention**: Constant-time comparison in authentication
+- **User Enumeration Prevention**: Generic error messages for all login failures
+- **Session Invalidation**: Automatic logout when user is deactivated or deleted
+- **Parameter Validation**: Ticket ID and user ID validation to prevent SQL errors
 
 ## Tech Stack
 
@@ -38,7 +46,9 @@ A professional ticket management system built with Node.js, Express, PostgreSQL,
 - **Template Engine**: EJS
 - **Authentication**: express-session with connect-pg-simple
 - **Validation**: express-validator
-- **Security**: Helmet.js, bcryptjs
+- **Security**: Helmet.js, bcryptjs, csrf-csrf, cookie-parser
+- **Logging**: winston, winston-daily-rotate-file
+- **Rate Limiting**: express-rate-limit
 - **Containerization**: Docker & Docker Compose
 
 ## Project Structure
@@ -81,9 +91,12 @@ KNII_Ticketing/
 │   ├── ticketService.js
 │   └── userService.js
 ├── utils/               # Utility functions
+│   ├── logger.js            # Winston logging configuration
 │   ├── passwordValidator.js
 │   └── responseHelpers.js
 ├── validators/          # Request validators
+│   ├── shared/
+│   │   └── passwordRules.js # Reusable password validation
 │   ├── authValidators.js
 │   ├── commentValidators.js
 │   ├── ticketValidators.js

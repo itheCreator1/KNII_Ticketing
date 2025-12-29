@@ -79,6 +79,12 @@ requireSuperAdmin // Checks role is 'super_admin' only
 - Session cookie: httpOnly, secure in production, sameSite strict
 - CSRF protection on all state-changing requests (POST/PUT/DELETE)
 - Rate limiting on login endpoint (10 attempts per 15 minutes per IP)
+- Rate limiting on public ticket submission (5 attempts per hour per IP)
+- Input length limits on all text fields to prevent DoS attacks
+- Timing attack prevention: dummy hash comparison for non-existent users
+- User enumeration prevention: generic error messages for all login failures
+- Session invalidation: automatic logout when user is deactivated or deleted
+- Ticket ID parameter validation to prevent SQL errors and injection attempts
 
 **CSRF Protection**: Using csrf-csrf (double-submit cookie pattern)
 - All POST/PUT/DELETE requests require CSRF token
@@ -124,6 +130,20 @@ router.post('/', validateUserCreate, validateRequest, async (req, res) => {
 });
 ```
 
+**Validator patterns**:
+- `validateTicketId` - Validates ticket ID parameters (positive integer)
+- `validateTicketAssignment` - Validates assigned_to field (null or valid user ID)
+- Length validation using `MAX_LENGTHS` constants
+- Custom async validators use Model methods (e.g., `User.findByEmail()`) NOT direct pool access
+
+**Example with length validation**:
+```javascript
+body('title')
+  .trim()
+  .isLength({ min: 1, max: MAX_LENGTHS.TICKET_TITLE })
+  .withMessage(VALIDATION_MESSAGES.TITLE_TOO_LONG)
+```
+
 ### 4. Models
 Static class methods, not instantiated. Return raw rows:
 ```javascript
@@ -132,6 +152,15 @@ const user = await User.findById(id);
 
 // Models return result.rows[0] for single, result.rows for multiple
 ```
+
+**User model security pattern**:
+- `findById(id)` - Returns user WITHOUT password_hash (safe)
+- `findByUsername(username)` - Returns user WITHOUT password_hash (safe)
+- `findByUsernameWithPassword(username)` - Returns ALL fields including password_hash (auth-only)
+- `findByEmail(email)` - Returns user WITHOUT password_hash (safe)
+- `clearUserSessions(userId)` - Removes all active sessions for a user (used when deactivated/deleted)
+
+**CRITICAL**: Never return password_hash from public model methods. Only `*WithPassword` methods should include it.
 
 ### 5. Services
 Business logic lives here. Services call models, handle validation logic:
@@ -145,10 +174,37 @@ async deleteUser(actorId, targetId, ipAddress) {
 }
 ```
 
+**Session invalidation pattern**:
+```javascript
+// In userService.updateUser() - clears sessions when status changes to non-active
+if (status && status !== 'active' && status !== targetUser.status) {
+  await User.clearUserSessions(targetId);
+}
+
+// In userService.deleteUser() - clears sessions after soft delete
+await User.clearUserSessions(targetId);
+```
+
+**Security benefit**: Deactivated or deleted users are immediately logged out from all devices, preventing unauthorized access after account status changes.
+
 ### 6. Error Handling
 - Routes wrap async code in try/catch, call next(error)
 - Global error handler in middleware/errorHandler.js
 - Production hides error details, development shows them
+- **Pattern**: All errors delegated to centralized error handler (no errorRedirect in routes)
+
+**Consistent pattern**:
+```javascript
+router.post('/:id', async (req, res, next) => {
+  try {
+    // Route logic
+    successRedirect(req, res, 'Success message', '/redirect/path');
+  } catch (error) {
+    logger.error('Error description', { error: error.message, stack: error.stack });
+    next(error); // Pass to global error handler
+  }
+});
+```
 
 ### 7. Rate Limiting
 Rate limiting is implemented using express-rate-limit middleware in `middleware/rateLimiter.js`.
@@ -188,6 +244,55 @@ logger.warn('Rate limit exceeded', { ip: req.ip });
 **Production**: Logs to files and console
 **Development**: Console only with colorized output
 
+### 9. Input Length Validation
+All text inputs have maximum length constraints to prevent DoS attacks and database bloat.
+
+**MAX_LENGTHS constants** (defined in `constants/validation.js`):
+```javascript
+const MAX_LENGTHS = {
+  TICKET_TITLE: 200,
+  TICKET_DESCRIPTION: 5000,
+  COMMENT_CONTENT: 2000,
+  PHONE_NUMBER: 20,
+  USERNAME: 50,
+  EMAIL: 100,
+  NAME: 100
+};
+```
+
+**Usage in validators**:
+```javascript
+body('title')
+  .trim()
+  .isLength({ min: 1, max: MAX_LENGTHS.TICKET_TITLE })
+  .withMessage(VALIDATION_MESSAGES.TITLE_TOO_LONG)
+```
+
+**Rationale**: Prevents malicious users from submitting extremely large payloads that could consume server resources or cause database issues.
+
+### 10. parseUserId Middleware
+Reusable middleware to parse and validate user IDs from route parameters.
+
+**Location**: `middleware/validation.js`
+
+**Usage**:
+```javascript
+const { parseUserId } = require('../middleware/validation');
+
+router.get('/:id/edit', parseUserId, async (req, res) => {
+  const userId = req.userId; // Already parsed and validated
+  // ...
+});
+```
+
+**Behavior**:
+- Parses `req.params.id` to integer
+- Validates it's a positive number (> 0)
+- Attaches parsed value to `req.userId`
+- Returns 400 error for invalid IDs
+
+**Benefit**: Eliminates parseInt() duplication across routes and ensures consistent validation.
+
 ---
 
 ## File Dependency Map
@@ -203,9 +308,12 @@ index.js
 ├── routes/admin.js → middleware/auth, validators, services, models
 └── routes/users.js → middleware/auth, validators, services, models
 
-services/userService.js → models/User, models/AuditLog, utils/passwordValidator
-services/authService.js → models/User
-services/ticketService.js → models/Ticket
+services/userService.js → models/User, models/AuditLog, utils/passwordValidator, models/User.clearUserSessions
+services/authService.js → models/User, models/User.findByUsernameWithPassword
+services/ticketService.js → models/Ticket, models/User
+
+validators/* → models/User.findByEmail, constants/validation (MAX_LENGTHS)
+validators/shared/passwordRules.js → utils/passwordValidator
 
 models/* → config/database.js (pool)
 ```
@@ -251,6 +359,18 @@ await AuditLog.create({
 });
 ```
 
+### Add input validation with length limits
+```javascript
+// 1. Import MAX_LENGTHS and VALIDATION_MESSAGES
+const { MAX_LENGTHS, VALIDATION_MESSAGES } = require('../constants/validation');
+
+// 2. Add validation chain in validator file
+body('fieldName')
+  .trim()
+  .isLength({ min: 1, max: MAX_LENGTHS.FIELD_NAME })
+  .withMessage(VALIDATION_MESSAGES.FIELD_TOO_LONG)
+```
+
 ---
 
 ## Testing Changes Locally
@@ -291,6 +411,7 @@ docker-compose exec db psql -U ticketing_user -d ticketing_db -c "\dt"
 | DB_PORT | Docker | Database port (default: 5432) |
 | DOCKER_COMMAND | No | Docker deployment command (default: docker-compose) |
 | RESTART_POLICY | No | PM2 restart policy (default: 'cluster') |
+| LOG_LEVEL | No | Winston log level: error, warn, info, debug (default: 'info') |
 
 ---
 
@@ -353,6 +474,19 @@ VALIDATION_MESSAGES.DESCRIPTION_REQUIRED
 ```
 
 All validation error messages use these constants for consistency.
+
+### Input Length Limits (constants/validation.js)
+```javascript
+MAX_LENGTHS.TICKET_TITLE = 200
+MAX_LENGTHS.TICKET_DESCRIPTION = 5000
+MAX_LENGTHS.COMMENT_CONTENT = 2000
+MAX_LENGTHS.PHONE_NUMBER = 20
+MAX_LENGTHS.USERNAME = 50
+MAX_LENGTHS.EMAIL = 100
+MAX_LENGTHS.NAME = 100
+```
+
+Used in validators to prevent DoS attacks via large payloads.
 
 ### Message Constants (constants/messages.js)
 ```javascript

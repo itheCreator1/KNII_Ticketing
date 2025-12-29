@@ -248,6 +248,10 @@ pm2 save
 - [ ] Verified audit logging is working
 - [ ] Reviewed user roles and permissions
 - [ ] Disabled or removed any test/demo user accounts
+- [ ] Verified rate limiting is active on login and ticket submission
+- [ ] Confirmed input length limits are enforced
+- [ ] Tested session invalidation when user is deactivated
+- [ ] Reviewed Winston logs for proper output
 
 ### 2. Monitoring
 
@@ -277,13 +281,28 @@ pm2 show ticketing-system
 
 ### 3. Log Management
 
-Logs are stored in:
+**Winston Application Logs:**
+- **Location**: `logs/error.log` (errors only), `logs/combined.log` (all logs)
+- **Rotation**: Automatic at 5MB, keeps 5 files
+- **Log Level**: Configure via `LOG_LEVEL` environment variable (error, warn, info, debug)
+- **Viewing logs**:
+  ```bash
+  # View all logs
+  tail -f logs/combined.log
+
+  # View errors only
+  tail -f logs/error.log
+
+  # Docker deployment
+  docker-compose exec web tail -f logs/combined.log
+  ```
+
+**Container Logs:**
 - **Docker**: `docker-compose logs`
 - **PM2**: `./logs/pm2-*.log`
-- **Application**: Morgan logs to stdout/stderr
+- **Application**: Morgan HTTP logs to stdout/stderr
 
-Implement log rotation:
-
+**PM2 Log Rotation:**
 ```bash
 # For PM2 logs
 pm2 install pm2-logrotate
@@ -418,6 +437,24 @@ rm -f logs/*.log
 pm2 flush
 ```
 
+### Issue: Rate limit preventing legitimate access
+
+Rate limits are stored in-memory and reset on application restart.
+
+```bash
+# Docker deployment
+docker-compose restart web
+
+# PM2 deployment
+pm2 restart ticketing-system
+```
+
+**Note**: Rate limits are per-IP address:
+- Login: 10 attempts per 15 minutes
+- Ticket submission: 5 attempts per hour
+
+If you need to adjust these limits, modify `middleware/rateLimiter.js`.
+
 ---
 
 ## Scaling Considerations
@@ -481,9 +518,11 @@ server {
 | `PORT` | No | 3000 | Application port |
 | `DATABASE_URL` | Yes | - | PostgreSQL connection string |
 | `SESSION_SECRET` | Yes | - | Secret for session encryption (min 32 chars) |
+| `LOG_LEVEL` | No | info | Winston log level: error, warn, info, debug |
 | `POSTGRES_USER` | Docker only | ticketing_user | Database username |
 | `POSTGRES_PASSWORD` | Docker only | - | Database password |
 | `POSTGRES_DB` | Docker only | ticketing_db | Database name |
+| `DB_PORT` | Docker only | 5432 | Database port |
 | `DOCKER_COMMAND` | Docker only | npm run dev | Command to run in container |
 | `RESTART_POLICY` | Docker only | no | Docker restart policy |
 
