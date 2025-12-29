@@ -77,6 +77,16 @@ requireSuperAdmin // Checks role is 'super_admin' only
 - Account locks after 5 failed login attempts (login_attempts field)
 - Passwords hashed with bcryptjs (cost 10)
 - Session cookie: httpOnly, secure in production, sameSite strict
+- CSRF protection on all state-changing requests (POST/PUT/DELETE)
+- Rate limiting on login endpoint (10 attempts per 15 minutes per IP)
+
+**CSRF Protection**: Using csrf-csrf (double-submit cookie pattern)
+- All POST/PUT/DELETE requests require CSRF token
+- Token generated per-request via `res.locals.csrfToken`
+- Must be included in forms as hidden field: `<input type="hidden" name="_csrf" value="<%= csrfToken %>">`
+- Automatically validated by doubleCsrfProtection middleware
+- Cookie name: `__Host-psifi.x-csrf-token`
+- Ignored methods: GET, HEAD, OPTIONS
 
 ---
 
@@ -140,6 +150,44 @@ async deleteUser(actorId, targetId, ipAddress) {
 - Global error handler in middleware/errorHandler.js
 - Production hides error details, development shows them
 
+### 7. Rate Limiting
+Rate limiting is implemented using express-rate-limit middleware in `middleware/rateLimiter.js`.
+
+**loginLimiter**:
+- Limits: 10 attempts per 15 minutes per IP
+- Applied to: `/auth/login` endpoint
+- Prevents: Brute force password attacks
+- On limit exceeded: Redirects to login with flash message
+
+**ticketSubmissionLimiter**:
+- Limits: 5 submissions per hour per IP
+- Applied to: `/submit-ticket` public endpoint
+- Prevents: Spam and abuse of public submission form
+
+Usage:
+```javascript
+const { loginLimiter } = require('../middleware/rateLimiter');
+router.post('/login', loginLimiter, validateLogin, validateRequest, async (req, res) => {
+  // ...
+});
+```
+
+### 8. Logging
+Structured logging using Winston in `utils/logger.js`.
+
+**Usage**:
+```javascript
+const logger = require('../utils/logger');
+
+logger.info('User logged in', { userId: user.id, username: user.username });
+logger.error('Database error', { error: err.message, stack: err.stack });
+logger.warn('Rate limit exceeded', { ip: req.ip });
+```
+
+**Log levels**: error, warn, info, debug
+**Production**: Logs to files and console
+**Development**: Console only with colorized output
+
 ---
 
 ## File Dependency Map
@@ -148,6 +196,8 @@ async deleteUser(actorId, targetId, ipAddress) {
 index.js
 ├── config/session.js → config/database.js
 ├── middleware/errorHandler.js
+├── middleware/rateLimiter.js → express-rate-limit
+├── utils/logger.js → winston (logging library)
 ├── routes/public.js → validators, services, models
 ├── routes/auth.js → validators, services, models, AuditLog
 ├── routes/admin.js → middleware/auth, validators, services, models
@@ -238,6 +288,9 @@ docker-compose exec db psql -U ticketing_user -d ticketing_db -c "\dt"
 | POSTGRES_USER | Docker | Database username |
 | POSTGRES_PASSWORD | Docker | Database password |
 | POSTGRES_DB | Docker | Database name |
+| DB_PORT | Docker | Database port (default: 5432) |
+| DOCKER_COMMAND | No | Docker deployment command (default: docker-compose) |
+| RESTART_POLICY | No | PM2 restart policy (default: 'cluster') |
 
 ---
 
@@ -286,6 +339,29 @@ TICKET_PRIORITY.HIGH = 'high'
 TICKET_PRIORITY.CRITICAL = 'critical'
 ```
 
+### Validation Messages (constants/validation.js)
+```javascript
+VALIDATION_MESSAGES.USERNAME_INVALID
+VALIDATION_MESSAGES.EMAIL_INVALID
+VALIDATION_MESSAGES.EMAIL_IN_USE
+VALIDATION_MESSAGES.PASSWORD_REQUIRED
+VALIDATION_MESSAGES.PASSWORD_TOO_SHORT
+VALIDATION_MESSAGES.PASSWORD_COMPLEXITY
+VALIDATION_MESSAGES.TITLE_REQUIRED
+VALIDATION_MESSAGES.DESCRIPTION_REQUIRED
+// ... and more
+```
+
+All validation error messages use these constants for consistency.
+
+### Message Constants (constants/messages.js)
+```javascript
+AUTH_MESSAGES = { LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT_SUCCESS, UNAUTHORIZED, FORBIDDEN, SUPER_ADMIN_REQUIRED }
+TICKET_MESSAGES = { CREATED, UPDATED, NOT_FOUND, LOAD_FAILED, etc. }
+COMMENT_MESSAGES = { CREATED, DELETED, etc. }
+USER_MESSAGES = { CREATED, UPDATED, DELETED, PASSWORD_RESET, STATUS_UPDATED, etc. }
+```
+
 ---
 
 ## Views Structure
@@ -316,8 +392,16 @@ views/
 **Template variables available globally** (set in index.js middleware):
 - `success_msg` - Array of success flash messages
 - `error_msg` - Array of error flash messages
-- `error` - Array of error flash messages (alternate key)
 - `user` - Session user object or null
+- `csrfToken` - CSRF token for form submissions (required for POST/PUT/DELETE)
+
+**CSRF token usage in forms**:
+```ejs
+<form method="POST" action="/some/endpoint">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+  <!-- form fields -->
+</form>
+```
 
 ---
 
