@@ -11,6 +11,7 @@ const { doubleCsrf } = require('csrf-csrf');
 
 const sessionConfig = require('./config/session');
 const errorHandler = require('./middleware/errorHandler');
+const logger = require('./utils/logger');
 
 const publicRoutes = require('./routes/public');
 const authRoutes = require('./routes/auth');
@@ -86,5 +87,5 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 app.listen(port, () => {
-  console.log(`Ticketing system running on port ${port}`);
+  logger.info('Ticketing system started', { port, nodeEnv: process.env.NODE_ENV || 'development' });
 });

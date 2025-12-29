@@ -6,6 +6,7 @@ const { validateRequest } = require('../middleware/validation');
 const UserService = require('../services/userService');
 const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
 const { loginLimiter } = require('../middleware/rateLimiter');
+const logger = require('../utils/logger');
 
 // GET /admin/users - List all users
 router.get('/', requireAuth, requireSuperAdmin, async (req, res) => {
@@ -17,7 +18,7 @@ router.get('/', requireAuth, requireSuperAdmin, async (req, res) => {
       user: req.session.user
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
+    logger.error('Error fetching users', { error: error.message, stack: error.stack });
     return errorRedirect(req, res, 'Failed to load users', '/admin/dashboard');
   }
 });
@@ -43,7 +44,7 @@ router.post('/',
 
       return successRedirect(req, res, 'User created successfully', '/admin/users');
     } catch (error) {
-      console.error('Error creating user:', error);
+      logger.error('Error creating user', { error: error.message, stack: error.stack });
       return errorRedirect(req, res, error.message || 'Failed to create user', '/admin/users/new');
     }
   }
@@ -65,7 +66,7 @@ router.get('/:id/edit', requireAuth, requireSuperAdmin, async (req, res) => {
       user: req.session.user
     });
   } catch (error) {
-    console.error('Error loading user:', error);
+    logger.error('Error loading user', { error: error.message, stack: error.stack });
     return errorRedirect(req, res, 'Failed to load user', '/admin/users');
   }
 });
@@ -96,7 +97,7 @@ router.post('/:id',
 
       return successRedirect(req, res, 'User updated successfully', '/admin/users');
     } catch (error) {
-      console.error('Error updating user:', error);
+      logger.error('Error updating user', { error: error.message, stack: error.stack });
       return errorRedirect(req, res, error.message || 'Failed to update user', `/admin/users/${req.params.id}/edit`);
     }
   }
@@ -113,7 +114,7 @@ router.post('/:id/delete',
 
       return successRedirect(req, res, 'User deleted successfully', '/admin/users');
     } catch (error) {
-      console.error('Error deleting user:', error);
+      logger.error('Error deleting user', { error: error.message, stack: error.stack });
       return errorRedirect(req, res, error.message || 'Failed to delete user', '/admin/users');
     }
   }
@@ -135,7 +136,7 @@ router.post('/:id/password',
 
       return successRedirect(req, res, 'Password reset successfully', '/admin/users');
     } catch (error) {
-      console.error('Error resetting password:', error);
+      logger.error('Error resetting password', { error: error.message, stack: error.stack });
       return errorRedirect(req, res, error.message || 'Failed to reset password', `/admin/users/${req.params.id}/edit`);
     }
   }
@@ -154,7 +155,7 @@ router.post('/:id/toggle-status',
 
       return successRedirect(req, res, 'User status updated', '/admin/users');
     } catch (error) {
-      console.error('Error toggling status:', error);
+      logger.error('Error toggling status', { error: error.message, stack: error.stack });
       return errorRedirect(req, res, error.message || 'Failed to update status', '/admin/users');
     }
   }

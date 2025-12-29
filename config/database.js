@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const logger = require('../utils/logger');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -8,7 +9,7 @@ const pool = new Pool({
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected database error:', err);
+  logger.error('Unexpected database error', { error: err.message, stack: err.stack });
   process.exit(-1);
 });
 

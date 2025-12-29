@@ -2,6 +2,7 @@ const { AUTH_MESSAGES } = require('../constants/messages');
 const { USER_ROLE } = require('../constants/enums');
 const { errorRedirect } = require('../utils/responseHelpers');
 const User = require('../models/User');
+const logger = require('../utils/logger');
 
 async function requireAuth(req, res, next) {
   if (!req.session || !req.session.user) {
@@ -15,7 +16,7 @@ async function requireAuth(req, res, next) {
     if (!user || user.status !== 'active') {
       return new Promise((resolve) => {
         req.session.destroy((err) => {
-          if (err) console.error('Session destruction error:', err);
+          if (err) logger.error('Session destruction error', { error: err.message });
           res.redirect('/auth/login');
           resolve();
         });
@@ -24,7 +25,7 @@ async function requireAuth(req, res, next) {
 
     next();
   } catch (err) {
-    console.error('Auth check error:', err);
+    logger.error('Auth check error', { error: err.message, stack: err.stack });
     return res.redirect('/auth/login');
   }
 }

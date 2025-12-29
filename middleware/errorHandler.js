@@ -1,5 +1,13 @@
+const logger = require('../utils/logger');
+
 function errorHandler(err, req, res, next) {
-  console.error(err.stack);
+  logger.error('Error handler caught exception', {
+    error: err.message,
+    stack: err.stack,
+    status: err.status,
+    url: req.url,
+    method: req.method
+  });
 
   const status = err.status || 500;
   const message = err.message || 'Something went wrong';
