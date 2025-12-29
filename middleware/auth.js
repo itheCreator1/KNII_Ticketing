@@ -3,25 +3,30 @@ const { USER_ROLE } = require('../constants/enums');
 const { errorRedirect } = require('../utils/responseHelpers');
 const User = require('../models/User');
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   if (!req.session || !req.session.user) {
     return errorRedirect(req, res, AUTH_MESSAGES.UNAUTHORIZED, '/auth/login');
   }
 
-  // Check if user is still active (in case status changed after login)
-  User.findById(req.session.user.id).then(user => {
+  try {
+    // Check if user is still active (in case status changed after login)
+    const user = await User.findById(req.session.user.id);
+
     if (!user || user.status !== 'active') {
-      req.session.destroy((err) => {
-        if (err) console.error('Session destruction error:', err);
-        return res.redirect('/auth/login');
+      return new Promise((resolve) => {
+        req.session.destroy((err) => {
+          if (err) console.error('Session destruction error:', err);
+          res.redirect('/auth/login');
+          resolve();
+        });
       });
-      return;
     }
+
     next();
-  }).catch(err => {
+  } catch (err) {
     console.error('Auth check error:', err);
     return res.redirect('/auth/login');
-  });
+  }
 }
 
 function requireAdmin(req, res, next) {
