@@ -9,13 +9,15 @@ class AuthService {
     }
 
     // Check if account is locked due to too many failed attempts
+    // Return null instead of throwing error to prevent user enumeration
     if (user.login_attempts >= 5) {
-      throw new Error('Account locked due to too many failed login attempts. Contact an administrator.');
+      return null;
     }
 
     // Check if account is active
+    // Return null instead of throwing error to prevent user enumeration
     if (user.status !== 'active') {
-      throw new Error('Account is not active');
+      return null;
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
