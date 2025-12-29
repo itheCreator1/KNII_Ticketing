@@ -22,19 +22,8 @@ const loginLimiter = rateLimit({
   }
 });
 
-/**
- * General API rate limiter
- * More permissive than login limiter for general endpoint protection
- */
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later',
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
 module.exports = {
-  loginLimiter,
-  apiLimiter
+  loginLimiter
+  // Note: apiLimiter was removed as it was unused.
+  // Add it back when API endpoints require general rate limiting.
 };
