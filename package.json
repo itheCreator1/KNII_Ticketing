@@ -13,7 +13,10 @@
     "prod:monitor": "pm2 monit",
     "init-db": "node scripts/init-db.js",
     "seed-admin": "node scripts/seed-admin.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:unit": "jest --testPathPattern=tests/unit",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
     "ticketing",
@@ -42,6 +45,10 @@
     "winston": "^3.19.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
+    "node-mocks-http": "^1.17.2",
+    "nodemon": "^3.0.2",
+    "supertest": "^7.1.4"
   }
 }
