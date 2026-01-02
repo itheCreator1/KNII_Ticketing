@@ -5,6 +5,7 @@ const TICKET_STATUS = {
 };
 
 const TICKET_PRIORITY = {
+  UNSET: 'unset',
   LOW: 'low',
   MEDIUM: 'medium',
   HIGH: 'high',
