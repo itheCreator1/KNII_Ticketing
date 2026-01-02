@@ -2,7 +2,7 @@ const pool = require('../config/database');
 const logger = require('../utils/logger');
 
 class Ticket {
-  static async create({ title, description, reporter_name, reporter_email, reporter_phone, priority = 'medium' }) {
+  static async create({ title, description, reporter_name, reporter_email, reporter_phone, priority = 'unset' }) {
     const startTime = Date.now();
     try {
       logger.info('Ticket.create: Creating new ticket', { reporterEmail: reporter_email, priority, titleLength: title?.length });
