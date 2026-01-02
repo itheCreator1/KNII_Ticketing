@@ -79,10 +79,10 @@
 ## ✨ Features
 
 ### 🌐 **Public Portal**
-- 📝 **Ticket Submission** - No authentication required for customer submissions
+- 📝 **Ticket Submission** - No authentication required; includes department & desk classification
 - 🔍 **Status Tracking** - Real-time updates on ticket progress
-- 📧 **Email Notifications** - Automated alerts for ticket updates
-- 📞 **Contact Access** - Easy support contact information
+- 🏢 **Department Tracking** - Submissions categorized by department (IT, HR, Finance, Facilities, General)
+- 📍 **Desk Assignment** - Track submissions by desk location (Director, Manager, Nursing Station, etc.)
 
 ### 👨‍💼 **Admin Dashboard**
 - 🔐 **Secure Authentication** - Session-based auth with bcrypt (cost factor 10)
@@ -375,13 +375,15 @@ KNII_Ticketing/
 │   ├── errorHandler.js    # Global error handling
 │   ├── rateLimiter.js     # Rate limiting config
 │   └── validation.js      # Request validation runner
-├── 📁 migrations/          # Database migrations (6 files)
+├── 📁 migrations/          # Database migrations (8 files)
 │   ├── 001_create_users.sql
 │   ├── 002_create_tickets.sql
 │   ├── 003_create_comments.sql
 │   ├── 004_seed_admin_user.sql
 │   ├── 005_enhance_users_table.sql
-│   └── 006_create_audit_logs.sql
+│   ├── 006_create_audit_logs.sql
+│   ├── 007_add_unset_priority.sql
+│   └── 008_modify_ticket_reporter_fields.sql
 ├── 📁 models/              # Database models (static classes)
 │   ├── User.js            # User operations & session management
 │   ├── Ticket.js          # Ticket CRUD operations
@@ -550,7 +552,7 @@ KNII_Ticketing/
 
 #### **Core Tables**
 - 👤 **users** - Admin accounts with roles
-- 🎫 **tickets** - Support tickets
+- 🎫 **tickets** - Support tickets (with department/desk tracking)
 - 💬 **comments** - Ticket comments
 - 📋 **audit_logs** - User management actions
 - 🎫 **session** - Session storage (auto-managed)
@@ -576,6 +578,8 @@ KNII_Ticketing/
 4. `004_seed_admin_user.sql` - Default admin user
 5. `005_enhance_users_table.sql` - Account locking & status fields
 6. `006_create_audit_logs.sql` - Audit logging table
+7. `007_add_unset_priority.sql` - Add 'unset' priority option & change default
+8. `008_modify_ticket_reporter_fields.sql` - Replace email with department/desk fields
 
 > **Note**: Session storage managed automatically by `connect-pg-simple`
 
@@ -743,6 +747,41 @@ Need help or have questions?
 ---
 
 ## 📋 Changelog
+
+### 🚀 **Version 2.1.0** *(2026-01-02)* - **Department/Desk Tracking Update**
+
+<details>
+<summary><b>🏢 Department & Desk Tracking - Enhanced Ticket Classification</b></summary>
+
+- ✅ **Replaced email with department/desk fields** in public ticket submission
+- ✅ **5 department options**: IT Support, General Support, Human Resources, Finance, Facilities
+- ✅ **6 desk options**: Director, Manager, Nursing Station, Doctors office, Secretary, Not Specified
+- ✅ **Database migration 008** - Replaced `reporter_email` with `reporter_department` and `reporter_desk`
+- ✅ **Enhanced admin view** - Shows department/desk instead of email for better ticket categorization
+- ✅ **Validation constraints** - Dropdown selection with backend validation via enums
+
+</details>
+
+<details>
+<summary><b>🎯 Priority System Enhancement - Unset Priority Option</b></summary>
+
+- ✅ **Added 'unset' priority option** for untriaged tickets
+- ✅ **Changed default priority** from 'medium' to 'unset'
+- ✅ **Database migration 007** - Added 'unset' to priority CHECK constraint
+- ✅ **Admin UI updated** - Can assign or leave priority as 'unset'
+- ✅ **Removed priority from public form** - All submissions default to 'unset' for admin triage
+
+</details>
+
+<details>
+<summary><b>📚 Documentation Updates</b></summary>
+
+- 📘 **Updated CLAUDE.md** - Reflects new database schema and enums
+- 📗 **Updated README.md** - Migration list, features, and schema documentation
+- 📕 **Added new constants** - REPORTER_DEPARTMENT and REPORTER_DESK enums
+- 📙 **Updated validators** - Department and desk validation documentation
+
+</details>
 
 ### 🎉 **Version 2.0.0** *(2025-12-31)* - **Stable Release**
 

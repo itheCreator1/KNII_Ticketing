@@ -131,9 +131,11 @@ users (id, username, email, password_hash, role, status, login_attempts, last_lo
   - role: 'admin' | 'super_admin'
   - status: 'active' | 'inactive' | 'deleted'
 
-tickets (id, title, description, status, priority, reporter_name, reporter_email, reporter_phone, assigned_to → users.id, created_at, updated_at)
+tickets (id, title, description, status, priority, reporter_name, reporter_department, reporter_desk, reporter_phone, assigned_to → users.id, created_at, updated_at)
   - status: 'open' | 'in_progress' | 'closed'
-  - priority: 'low' | 'medium' | 'high' | 'critical'
+  - priority: 'unset' | 'low' | 'medium' | 'high' | 'critical' (default: 'unset')
+  - reporter_department: 'IT Support' | 'General Support' | 'Human Resources' | 'Finance' | 'Facilities'
+  - reporter_desk: 'Director' | 'Manager' | 'Nursing Station' | 'Doctors office' | 'Secretary' | 'Not Specified'
 
 comments (id, ticket_id → tickets.id, user_id → users.id, content, is_internal, created_at)
 
@@ -423,10 +425,12 @@ models/* → config/database.js (pool)
 5. Create view in `/views/` if HTML response
 
 ### Add a database column
-1. Create new migration file: `migrations/007_description.sql`
+1. Create new migration file: `migrations/009_description.sql` (increment number)
 2. Use `ALTER TABLE ... ADD COLUMN`
 3. Update relevant model to use new column
 4. Never modify existing migration files
+
+**Current migration number**: 008 (last: modify_ticket_reporter_fields)
 
 ### Add a new model method
 ```javascript
@@ -547,10 +551,30 @@ TICKET_STATUS.CLOSED = 'closed'
 
 ### Ticket Priority
 ```javascript
+TICKET_PRIORITY.UNSET = 'unset'
 TICKET_PRIORITY.LOW = 'low'
 TICKET_PRIORITY.MEDIUM = 'medium'
 TICKET_PRIORITY.HIGH = 'high'
 TICKET_PRIORITY.CRITICAL = 'critical'
+```
+
+### Reporter Department (constants/enums.js)
+```javascript
+REPORTER_DEPARTMENT.IT_SUPPORT = 'IT Support'
+REPORTER_DEPARTMENT.GENERAL_SUPPORT = 'General Support'
+REPORTER_DEPARTMENT.HUMAN_RESOURCES = 'Human Resources'
+REPORTER_DEPARTMENT.FINANCE = 'Finance'
+REPORTER_DEPARTMENT.FACILITIES = 'Facilities'
+```
+
+### Reporter Desk
+```javascript
+REPORTER_DESK.DIRECTOR = 'Director'
+REPORTER_DESK.MANAGER = 'Manager'
+REPORTER_DESK.NURSING_STATION = 'Nursing Station'
+REPORTER_DESK.DOCTORS_OFFICE = 'Doctors office'
+REPORTER_DESK.SECRETARY = 'Secretary'
+REPORTER_DESK.NOT_SPECIFIED = 'Not Specified'
 ```
 
 ### Validation Messages (constants/validation.js)
@@ -577,6 +601,8 @@ MAX_LENGTHS.PHONE_NUMBER = 20
 MAX_LENGTHS.USERNAME = 50
 MAX_LENGTHS.EMAIL = 100
 MAX_LENGTHS.NAME = 100
+MAX_LENGTHS.DEPARTMENT = 100
+MAX_LENGTHS.DESK = 100
 ```
 
 Used in validators to prevent DoS attacks via large payloads.
