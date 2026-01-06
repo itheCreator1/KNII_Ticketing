@@ -1,0 +1,2247 @@
+# Department Accounts with Client Portal - Implementation Plan
+
+## Overview
+
+Transform the KNII Ticketing System from anonymous public submission to a department-account-based system with a dedicated client portal and Jira-style status workflow.
+
+## Requirements Summary
+
+- **One shared account per department** (IT Support, General Support, HR, Finance, Facilities)
+- **New role**: `department` (in addition to `admin`, `super_admin`)
+- **Client portal features**: View tickets, create tickets, add comments, view history, close tickets
+- **Status workflow**: `waiting_on_admin` ↔ `waiting_on_department` (push mechanism)
+- **Comment visibility**: `public` (both see) vs `internal` (admin only)
+- **Auto-notify admins** when departments create tickets
+
+## Architecture Changes
+
+### Database Schema
+- Add `department` role to users table
+- Add statuses: `waiting_on_admin`, `waiting_on_department` to tickets
+- Add `reporter_id` foreign key to tickets (links to department user)
+- Add `visibility_type` to comments (`public` or `internal`)
+
+### Route Structure
+- `/client/*` - New department portal (requires `department` role)
+- `/admin/*` - Existing admin portal (blocks `department` role)
+- `/auth/login` - Role-based redirect (department → `/client/dashboard`, admin → `/admin/dashboard`)
+
+### Security Model
+- All client routes verify `ticket.reporter_id === session.user.id` (ownership)
+- Comment filtering at DB level (departments NEVER see `visibility_type = 'internal'`)
+- Middleware: `requireDepartment` (new), `requireAdmin` (updated to exclude department)
+
+---
+
+## Implementation Phases
+
+### Phase 1: Database Migrations (4 files)
+
+**Migration 010**: Add `department` role
+```sql
+ALTER TABLE users DROP CONSTRAINT users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check
+  CHECK (role IN ('admin', 'super_admin', 'department'));
+```
+
+**Migration 011**: Add workflow statuses
+```sql
+ALTER TABLE tickets DROP CONSTRAINT tickets_status_check;
+ALTER TABLE tickets ADD CONSTRAINT tickets_status_check
+  CHECK (status IN ('open', 'in_progress', 'closed', 'waiting_on_admin', 'waiting_on_department'));
+```
+
+**Migration 012**: Add `reporter_id` column
+```sql
+ALTER TABLE tickets ADD COLUMN reporter_id INTEGER;
+ALTER TABLE tickets ADD CONSTRAINT fk_tickets_reporter_id
+  FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE SET NULL;
+CREATE INDEX idx_tickets_reporter_id ON tickets(reporter_id);
+
+-- Optional: Auto-link existing tickets by reporter_department text match
+-- (See full plan for DO block implementation)
+```
+
+**Migration 013**: Add comment visibility
+```sql
+ALTER TABLE comments ADD COLUMN visibility_type VARCHAR(20) DEFAULT 'public' NOT NULL;
+ALTER TABLE comments ADD CONSTRAINT comments_visibility_type_check
+  CHECK (visibility_type IN ('public', 'internal'));
+CREATE INDEX idx_comments_visibility ON comments(ticket_id, visibility_type);
+```
+
+**Order**: Run in sequence 010 → 011 → 012 → 013
+
+---
+
+### Phase 2: Create Department Accounts
+
+**Script**: [scripts/create-department-accounts.js](scripts/create-department-accounts.js)
+
+Creates 5 department accounts:
+- `dept_it_support` / `it.support@knii.local` / `ChangeMe2026!IT`
+- `dept_general_support` / `general.support@knii.local` / `ChangeMe2026!GS`
+- `dept_hr` / `hr@knii.local` / `ChangeMe2026!HR`
+- `dept_finance` / `finance@knii.local` / `ChangeMe2026!FIN`
+- `dept_facilities` / `facilities@knii.local` / `ChangeMe2026!FAC`
+
+**Run**: `docker-compose exec web node scripts/create-department-accounts.js`
+
+**⚠️ Security**: Users MUST change passwords on first login
+
+---
+
+### Phase 3: Authentication Updates
+
+**Files to modify**:
+
+1. **[constants/enums.js](constants/enums.js)** - Add `DEPARTMENT: 'department'` to `USER_ROLE`, add new statuses to `TICKET_STATUS`, add new `COMMENT_VISIBILITY` enum
+
+2. **[middleware/auth.js](middleware/auth.js)** - Add `requireDepartment` middleware, update `requireAdmin` to explicitly exclude department role
+
+3. **[routes/auth.js](routes/auth.js)** - Update POST `/login` to redirect based on role:
+   ```javascript
+   const redirectPath = user.role === USER_ROLE.DEPARTMENT
+     ? '/client/dashboard'
+     : '/admin/dashboard';
+   ```
+
+---
+
+### Phase 4: Client Portal Routes & Views
+
+**New file**: [routes/client.js](routes/client.js)
+
+**Endpoints**:
+- `GET /client/dashboard` - List department's tickets (filtered by `reporter_id`)
+- `GET /client/tickets/new` - New ticket form
+- `POST /client/tickets` - Create ticket (status: `waiting_on_admin`)
+- `GET /client/tickets/:id` - View ticket (with ownership check)
+- `POST /client/tickets/:id/comments` - Add comment (visibility: `public`, updates status to `waiting_on_admin`)
+- `POST /client/tickets/:id/close` - Close ticket
+
+**Security pattern** (every route):
+```javascript
+// Verify ownership
+if (ticket.reporter_id !== req.session.user.id) {
+  return errorRedirect(req, res, 'Unauthorized', '/client/dashboard');
+}
+```
+
+**Views to create**:
+- [views/client/dashboard.ejs](views/client/dashboard.ejs) - Ticket list with status filters
+- [views/client/new-ticket.ejs](views/client/new-ticket.ejs) - Ticket creation form
+- [views/client/ticket-detail.ejs](views/client/ticket-detail.ejs) - Single ticket view with comments
+
+**Register routes**: Add `app.use('/client', require('./routes/client'));` in [index.js](index.js)
+
+---
+
+### Phase 5: Model Updates
+
+**[models/Ticket.js](models/Ticket.js)**:
+```javascript
+// NEW METHOD
+static async findByDepartment(userId, filters = {}) {
+  let query = `
+    SELECT t.*, u.username as assigned_to_username
+    FROM tickets t
+    LEFT JOIN users u ON t.assigned_to = u.id
+    WHERE t.reporter_id = $1
+  `;
+  // Add status/search filters if provided
+  return result.rows;
+}
+
+// UPDATE METHOD - add reporter_id and status parameters
+static async create({ title, description, ..., reporter_id = null, status = 'open' }) {
+  // Include reporter_id and status in INSERT
+}
+```
+
+**[models/Comment.js](models/Comment.js)**:
+```javascript
+// NEW METHOD - security-critical
+static async findVisibleByTicketId(ticketId, userRole) {
+  let query = `
+    SELECT c.*, u.username
+    FROM comments c
+    JOIN users u ON c.user_id = u.id
+    WHERE c.ticket_id = $1
+  `;
+
+  // Department users: filter to public only
+  if (userRole === 'department') {
+    query += ` AND c.visibility_type = 'public'`;
+  }
+  // Admins: see all (no filter)
+
+  query += ' ORDER BY c.created_at ASC';
+  return result.rows;
+}
+
+// UPDATE METHOD - add visibility_type parameter
+static async create({ ticket_id, user_id, content, visibility_type = 'public' }) {
+  // Include visibility_type in INSERT
+}
+```
+
+---
+
+### Phase 6: Service Layer
+
+**New file**: [services/clientTicketService.js](services/clientTicketService.js)
+
+**Key methods**:
+- `getTicketsByDepartment(userId, filters)` - Calls `Ticket.findByDepartment()`
+- `createTicket(user, ticketData)` - Creates with `reporter_id = user.id`, `status = 'waiting_on_admin'`, maps department from email
+- `addCommentAndNotify(ticketId, userId, content)` - Creates public comment + updates status to `waiting_on_admin` + TODO: notify admins
+
+**Department mapping**:
+```javascript
+const departmentMapping = {
+  'it.support@knii.local': 'IT Support',
+  'general.support@knii.local': 'General Support',
+  'hr@knii.local': 'Human Resources',
+  'finance@knii.local': 'Finance',
+  'facilities@knii.local': 'Facilities'
+};
+```
+
+---
+
+### Phase 7: Validators
+
+**New file**: [validators/clientValidators.js](validators/clientValidators.js)
+- `validateClientTicketCreation` - Validates title, description, reporter_desk, reporter_phone (no department/name needed)
+
+**Update**: [validators/ticketValidators.js](validators/ticketValidators.js)
+- Add new statuses to `validateTicketUpdate` validation
+
+**Update**: [validators/commentValidators.js](validators/commentValidators.js)
+- Add `validateCommentVisibility` for `is_internal` checkbox
+
+---
+
+### Phase 8: Admin View Updates
+
+**[views/admin/ticket-detail.ejs](views/admin/ticket-detail.ejs)**:
+
+1. **Add internal comment checkbox** to comment form:
+```ejs
+<div class="mb-3 form-check">
+  <input type="checkbox" name="is_internal" id="is_internal" class="form-check-input">
+  <label for="is_internal" class="form-check-label">
+    Internal Note (only visible to admins)
+  </label>
+</div>
+```
+
+2. **Show internal badge** on comments:
+```ejs
+<% if (comment.visibility_type === 'internal') { %>
+  <span class="badge bg-danger ms-2">Internal</span>
+<% } %>
+```
+
+3. **Update status dropdown** with new statuses:
+```ejs
+<option value="waiting_on_admin">Waiting on Admin</option>
+<option value="waiting_on_department">Waiting on Department</option>
+```
+
+4. **Update status badges** with new colors/labels
+
+**[views/admin/dashboard.ejs](views/admin/dashboard.ejs)**:
+- Add new statuses to filter dropdown
+- Update status badges in ticket table
+
+**[routes/admin.js](routes/admin.js)**:
+- Update comment route to read `is_internal` checkbox and set `visibility_type`
+- Update ticket detail route to call `Comment.findVisibleByTicketId(ticketId, 'admin')`
+
+---
+
+### Phase 9: Navigation Updates
+
+**[views/partials/header.ejs](views/partials/header.ejs)**:
+
+- Logo link adapts to role: `user.role === 'department' ? '/client/dashboard' : '/admin/dashboard'`
+- Show role badge: `<span class="badge bg-secondary">Department</span>`
+- Department users see "Create Ticket" link
+
+---
+
+### Phase 10: Constants & Messages
+
+**[constants/messages.js](constants/messages.js)**:
+```javascript
+AUTH_MESSAGES.DEPARTMENT_ONLY = 'This area is only accessible to department users';
+TICKET_MESSAGES.CLOSED = 'Ticket closed successfully';
+TICKET_MESSAGES.UNAUTHORIZED_ACCESS = 'You can only access your department\'s tickets';
+```
+
+---
+
+### Phase 11: Testing
+
+**Unit tests** ([tests/unit/models/](tests/unit/models/)):
+- `Ticket.test.js` - Test `findByDepartment()` filtering, status filter
+- `Comment.test.js` - Test `findVisibleByTicketId()` for department vs admin roles
+
+**Integration tests** ([tests/integration/routes/](tests/integration/routes/)):
+- `client.test.js` (new) - Test all client routes with authentication, ownership verification, role blocking
+
+**E2E tests** ([tests/e2e/](tests/e2e/)):
+- `departmentTicketLifecycle.test.js` (new) - Full workflow: dept creates → admin responds (internal + public) → dept responds → admin closes
+
+**Target**: Maintain 100% test coverage
+
+---
+
+## Workflow Diagram
+
+```
+Department Creates Ticket
+  ↓
+Status: waiting_on_admin (admins notified)
+  ↓
+Admin Responds (can add internal notes)
+  ↓
+Admin Sets Status: waiting_on_department OR in_progress
+  ↓
+Department Responds
+  ↓
+Status: waiting_on_admin (auto-updated)
+  ↓
+... back and forth ...
+  ↓
+Either Party Closes Ticket
+  ↓
+Status: closed
+```
+
+---
+
+## Security Checklist
+
+✅ **Ownership verification**: Every client route checks `ticket.reporter_id === req.session.user.id`
+✅ **Comment filtering**: DB-level filtering (`WHERE visibility_type = 'public'` for department)
+✅ **Role separation**: `requireDepartment` blocks admins, `requireAdmin` blocks departments
+✅ **SQL injection**: All queries use parameterized statements (`$1`, `$2`)
+✅ **CSRF protection**: All forms include `csrfToken`
+✅ **Audit logging**: All actions logged with `actor_id`
+✅ **Input validation**: express-validator on all inputs
+✅ **Rate limiting**: Existing limits apply (login, ticket submission)
+
+---
+
+## Migration Strategy for Existing Tickets
+
+**Recommended**: Automatic linking in migration 012
+
+**How**: Match `reporter_department` text to department email
+```sql
+UPDATE tickets
+SET reporter_id = (
+  SELECT id FROM users
+  WHERE role = 'department'
+    AND email = CASE tickets.reporter_department
+      WHEN 'IT Support' THEN 'it.support@knii.local'
+      -- ... other departments
+    END
+)
+WHERE reporter_id IS NULL;
+```
+
+**Result**:
+- Tickets with matching department are linked to department account
+- Tickets without match remain orphaned (`reporter_id = NULL`)
+- Orphaned tickets visible to admins only
+
+**Alternative**: Leave all existing tickets orphaned, only link new tickets
+
+---
+
+## Public Submission Strategy
+
+**Recommended**: Keep public submission endpoint (Option A)
+
+**Rationale**:
+- Allows walk-ins, external users to submit tickets
+- Tickets created with `reporter_id = NULL` (orphaned)
+- Admins see both orphaned and department tickets
+- Maximum flexibility
+
+**Implementation**: No changes needed to [routes/public.js](routes/public.js)
+
+---
+
+## Deployment Order
+
+1. **Run migrations** (010 → 011 → 012 → 013)
+2. **Create department accounts** (run script)
+3. **Deploy code** (git pull, rebuild containers)
+4. **Test department login**
+5. **Test ticket creation from client portal**
+6. **Test admin internal comments**
+7. **Notify departments** of new credentials (secure channel)
+8. **Monitor logs** for errors
+
+**Estimated time**: 12-16 developer hours
+
+**Rollback plan**: Revert migrations, restore previous code version
+
+---
+
+## Critical Files Summary
+
+### New Files (12)
+1. `migrations/010_add_department_role.sql`
+2. `migrations/011_add_workflow_statuses.sql`
+3. `migrations/012_add_reporter_id_to_tickets.sql`
+4. `migrations/013_add_comment_visibility.sql`
+5. `scripts/create-department-accounts.js`
+6. `routes/client.js`
+7. `services/clientTicketService.js`
+8. `validators/clientValidators.js`
+9. `views/client/dashboard.ejs`
+10. `views/client/new-ticket.ejs`
+11. `views/client/ticket-detail.ejs`
+12. `tests/integration/routes/client.test.js`
+
+### Modified Files (15)
+1. `constants/enums.js` - Add DEPARTMENT, new statuses, COMMENT_VISIBILITY
+2. `constants/messages.js` - Add department messages
+3. `middleware/auth.js` - Add requireDepartment, update requireAdmin
+4. `routes/auth.js` - Role-based redirect
+5. `routes/admin.js` - Internal comment support, visible comment filtering
+6. `models/Ticket.js` - Add findByDepartment(), update create()
+7. `models/Comment.js` - Add findVisibleByTicketId(), update create()
+8. `validators/ticketValidators.js` - Add new statuses
+9. `validators/commentValidators.js` - Add visibility validation
+10. `views/partials/header.ejs` - Role-based navigation
+11. `views/admin/dashboard.ejs` - New status badges/filters
+12. `views/admin/ticket-detail.ejs` - Internal comment UI, new statuses
+13. `index.js` - Register client routes
+14. `tests/unit/models/Ticket.test.js` - Test new methods
+15. `tests/unit/models/Comment.test.js` - Test visibility filtering
+
+---
+
+## Top 5 Most Critical Files
+
+1. **`migrations/012_add_reporter_id_to_tickets.sql`** - Core linking mechanism between tickets and departments
+2. **`routes/client.js`** - All client portal logic with ownership verification
+3. **`services/clientTicketService.js`** - Business logic for department operations
+4. **`models/Comment.js`** - Visibility filtering (security-critical)
+5. **`middleware/auth.js`** - Role-based access control
+
+---
+
+## Next Steps
+
+1. Review and approve this plan
+2. Create git feature branch: `feature/department-accounts`
+3. Start with Phase 1 (database migrations)
+4. Test incrementally after each phase
+5. Write tests alongside implementation
+6. Deploy to staging for UAT
+7. Production deployment with backup strategy
+
+**Complexity**: Medium
+**Risk Level**: Low-Medium (with comprehensive testing)
+**Compliance**: Maintains 97% code quality standards
+
+---
+
+## Detailed Implementation Checklists
+
+### Pre-Implementation Checklist
+
+- [ ] **Git Setup**
+  - [ ] Ensure working tree is clean (`git status`)
+  - [ ] Pull latest changes from main (`git pull origin main`)
+  - [ ] Create feature branch (`git checkout -b feature/department-accounts`)
+  - [ ] Backup database if working with production data
+
+- [ ] **Environment Verification**
+  - [ ] Docker containers running (`docker-compose ps`)
+  - [ ] Database accessible (`docker-compose exec db psql -U ticketing_user -d ticketing_db -c "\dt"`)
+  - [ ] Node.js version 20 confirmed (`node --version`)
+  - [ ] All tests passing (`npm test`)
+
+- [ ] **Documentation Review**
+  - [ ] Read CLAUDE.md department accounts section
+  - [ ] Review git_rules.md for branching strategy
+  - [ ] Check testing_rules.md for new test patterns
+  - [ ] Read debug_rules.md department debugging section
+
+---
+
+### Phase 1 Checklist: Database Migrations
+
+**Estimated Time**: 30-45 minutes
+
+#### Migration 010: Add Department Role
+
+- [ ] **Create Migration File**
+  - [ ] Create `migrations/010_add_department_role.sql`
+  - [ ] Add header comment with description and date
+  - [ ] Write DROP CONSTRAINT statement for users_role_check
+  - [ ] Write ADD CONSTRAINT statement with 'department' role
+  - [ ] Add COMMENT ON COLUMN statement for documentation
+
+- [ ] **Test Migration**
+  - [ ] Run migration: `docker-compose exec db psql -U ticketing_user -d ticketing_db -f /migrations/010_add_department_role.sql`
+  - [ ] Verify constraint: `SELECT conname, pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = 'users'::regclass AND conname = 'users_role_check';`
+  - [ ] Test insert: `INSERT INTO users (username, email, password_hash, role) VALUES ('test_dept', 'test@test.com', 'hash', 'department');`
+  - [ ] Rollback test: `DELETE FROM users WHERE username = 'test_dept';`
+
+- [ ] **Commit**
+  - [ ] Stage file: `git add migrations/010_add_department_role.sql`
+  - [ ] Commit: `git commit -m "feat: add department role to users table
+
+Add 'department' role to users.role CHECK constraint to support
+department-level user accounts for client portal access.
+
+Related to: #<issue-number> (if applicable)"`
+  - [ ] Verify commit: `git log -1 --stat`
+
+#### Migration 011: Add Workflow Statuses
+
+- [ ] **Create Migration File**
+  - [ ] Create `migrations/011_add_workflow_statuses.sql`
+  - [ ] Add header comment
+  - [ ] Write DROP CONSTRAINT for tickets_status_check
+  - [ ] Write ADD CONSTRAINT with new statuses
+  - [ ] Add COMMENT ON COLUMN for documentation
+  - [ ] Add performance index for workflow statuses
+
+- [ ] **Test Migration**
+  - [ ] Run migration
+  - [ ] Verify constraint includes 'waiting_on_admin' and 'waiting_on_department'
+  - [ ] Test ticket status update: `UPDATE tickets SET status = 'waiting_on_admin' WHERE id = 1;`
+  - [ ] Verify index created: `\d tickets` (check indexes)
+  - [ ] Rollback test update
+
+- [ ] **Commit**
+  - [ ] Stage and commit with descriptive message
+
+#### Migration 012: Add Reporter ID
+
+- [ ] **Create Migration File**
+  - [ ] Create `migrations/012_add_reporter_id_to_tickets.sql`
+  - [ ] Add reporter_id column (nullable)
+  - [ ] Add foreign key constraint to users(id) with ON DELETE SET NULL
+  - [ ] Create index on reporter_id
+  - [ ] Add COMMENT ON COLUMN
+  - [ ] **Decision Point**: Include auto-linking DO block or skip?
+    - [ ] If including: Add DO block to link existing tickets
+    - [ ] If skipping: Add comment explaining manual linking process
+
+- [ ] **Test Migration**
+  - [ ] Run migration
+  - [ ] Verify column exists: `\d tickets`
+  - [ ] Verify foreign key: Check pg_constraint
+  - [ ] Verify index: `\di idx_tickets_reporter_id`
+  - [ ] Test insert: Create ticket with reporter_id
+  - [ ] Test NULL handling: Create ticket without reporter_id
+  - [ ] If auto-linking enabled: Check how many tickets were linked
+
+- [ ] **Commit**
+  - [ ] Stage and commit
+
+#### Migration 013: Add Comment Visibility
+
+- [ ] **Create Migration File**
+  - [ ] Create `migrations/013_add_comment_visibility.sql`
+  - [ ] Add visibility_type column (default 'public', NOT NULL)
+  - [ ] Add CHECK constraint for 'public' and 'internal'
+  - [ ] Create composite index on (ticket_id, visibility_type)
+  - [ ] Add COMMENT ON COLUMN
+  - [ ] Update existing comments to 'public'
+
+- [ ] **Test Migration**
+  - [ ] Run migration
+  - [ ] Verify column with default: `\d comments`
+  - [ ] Verify all existing comments are 'public': `SELECT COUNT(*), visibility_type FROM comments GROUP BY visibility_type;`
+  - [ ] Test insert with 'internal': Insert test internal comment
+  - [ ] Verify constraint rejects invalid values
+
+- [ ] **Commit**
+  - [ ] Stage and commit
+
+#### Phase 1 Verification
+
+- [ ] **All Migrations Applied**
+  - [ ] Run `\dt` to see all tables
+  - [ ] Run `\d users` - verify department role in CHECK constraint
+  - [ ] Run `\d tickets` - verify reporter_id column and new status values
+  - [ ] Run `\d comments` - verify visibility_type column
+  - [ ] Check migration order: All 4 files numbered 010-013
+
+- [ ] **Database Integrity Check**
+  - [ ] No broken foreign keys
+  - [ ] All indexes created
+  - [ ] All CHECK constraints valid
+  - [ ] No data corruption in existing records
+
+- [ ] **Git Status**
+  - [ ] 4 new migration files committed
+  - [ ] Commit messages follow convention
+  - [ ] No uncommitted changes
+
+---
+
+### Phase 2 Checklist: Create Department Accounts
+
+**Estimated Time**: 20-30 minutes
+
+#### Create Account Creation Script
+
+- [ ] **Create Script File**
+  - [ ] Create `scripts/create-department-accounts.js`
+  - [ ] Import User model
+  - [ ] Import logger
+  - [ ] Define DEPARTMENTS array with 5 accounts:
+    - [ ] dept_it_support / it.support@knii.local
+    - [ ] dept_general_support / general.support@knii.local
+    - [ ] dept_hr / hr@knii.local
+    - [ ] dept_finance / finance@knii.local
+    - [ ] dept_facilities / facilities@knii.local
+  - [ ] Add strong unique passwords (ChangeMe2026!XX pattern)
+  - [ ] Implement createDepartmentAccounts() function
+  - [ ] Add duplicate check (findByEmail)
+  - [ ] Add error handling for each account
+  - [ ] Add console output for credentials
+  - [ ] Add password change warning
+  - [ ] Add process.exit(0) on success
+
+- [ ] **Test Script Locally**
+  - [ ] Run: `docker-compose exec web node scripts/create-department-accounts.js`
+  - [ ] Verify 5 success messages
+  - [ ] Check database: `SELECT username, email, role FROM users WHERE role = 'department';`
+  - [ ] Verify passwords are hashed (not plain text)
+  - [ ] Test duplicate run (should skip existing accounts)
+
+- [ ] **Document Credentials Securely**
+  - [ ] Copy credentials to secure password manager
+  - [ ] Create credentials.txt.example (without real passwords)
+  - [ ] Add credentials.txt to .gitignore
+  - [ ] Document password change process in README
+
+- [ ] **Verify Accounts**
+  - [ ] Test login with each account via web UI
+  - [ ] Verify all redirect to /client/dashboard (will 404 for now - expected)
+  - [ ] Verify admin accounts still work
+  - [ ] Check audit logs for account creation
+
+- [ ] **Commit**
+  - [ ] Stage script: `git add scripts/create-department-accounts.js`
+  - [ ] Stage .gitignore changes if applicable
+  - [ ] Commit: `git commit -m "feat: add department account creation script
+
+Create script to generate 5 department user accounts with secure
+default passwords. Includes duplicate checking and detailed logging.
+
+Accounts:
+- IT Support
+- General Support
+- Human Resources
+- Finance
+- Facilities
+
+Password change required on first login."`
+
+---
+
+### Phase 3 Checklist: Authentication Updates
+
+**Estimated Time**: 45-60 minutes
+
+#### Update Constants
+
+- [ ] **Update enums.js**
+  - [ ] Add `DEPARTMENT: 'department'` to USER_ROLE
+  - [ ] Add `WAITING_ON_ADMIN: 'waiting_on_admin'` to TICKET_STATUS
+  - [ ] Add `WAITING_ON_DEPARTMENT: 'waiting_on_department'` to TICKET_STATUS
+  - [ ] Create new `COMMENT_VISIBILITY` object:
+    ```javascript
+    const COMMENT_VISIBILITY = {
+      PUBLIC: 'public',
+      INTERNAL: 'internal'
+    };
+    ```
+  - [ ] Export COMMENT_VISIBILITY
+  - [ ] Verify all constants used in codebase are updated
+
+- [ ] **Test Constants**
+  - [ ] Run existing tests: `npm test`
+  - [ ] Verify no broken references to old enum values
+  - [ ] Check all files importing USER_ROLE still work
+
+- [ ] **Commit**
+  - [ ] `git add constants/enums.js`
+  - [ ] Commit with message describing enum additions
+
+#### Update Middleware
+
+- [ ] **Update auth.js**
+  - [ ] Import USER_ROLE from constants
+  - [ ] Update requireAdmin function:
+    - [ ] Create adminRoles array: `[USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN]`
+    - [ ] Use array.includes() to check role
+    - [ ] Update error logging to include attempted path
+  - [ ] Create requireDepartment function:
+    - [ ] Check req.session.user exists
+    - [ ] Verify role === USER_ROLE.DEPARTMENT
+    - [ ] Log access denials with context
+    - [ ] Return errorRedirect on failure
+  - [ ] Export requireDepartment
+  - [ ] Add JSDoc comments for new function
+
+- [ ] **Test Middleware**
+  - [ ] Unit test requireDepartment:
+    - [ ] Test with department user (should pass)
+    - [ ] Test with admin user (should fail)
+    - [ ] Test with no session (should fail)
+  - [ ] Unit test updated requireAdmin:
+    - [ ] Test with admin (should pass)
+    - [ ] Test with super_admin (should pass)
+    - [ ] Test with department (should fail)
+  - [ ] Integration test with routes (Phase 4)
+
+- [ ] **Commit**
+  - [ ] `git add middleware/auth.js`
+  - [ ] Commit: "feat: add requireDepartment middleware and update requireAdmin"
+
+#### Update Login Route
+
+- [ ] **Update routes/auth.js**
+  - [ ] Import USER_ROLE
+  - [ ] Locate POST /login route
+  - [ ] After authentication success, add role-based redirect:
+    ```javascript
+    const redirectPath = user.role === USER_ROLE.DEPARTMENT
+      ? '/client/dashboard'
+      : '/admin/dashboard';
+    ```
+  - [ ] Update successRedirect to use redirectPath
+  - [ ] Add logging with role and redirectPath
+  - [ ] Test redirect logic with mock users
+
+- [ ] **Test Login Redirects**
+  - [ ] Login as admin → verify redirects to /admin/dashboard
+  - [ ] Login as super_admin → verify redirects to /admin/dashboard
+  - [ ] Login as department → verify redirects to /client/dashboard (404 expected)
+  - [ ] Check logs confirm correct redirect path
+
+- [ ] **Commit**
+  - [ ] `git add routes/auth.js`
+  - [ ] Commit: "feat: add role-based redirect after login"
+
+#### Update Messages
+
+- [ ] **Update constants/messages.js**
+  - [ ] Add to AUTH_MESSAGES:
+    - [ ] `DEPARTMENT_ONLY: 'This area is only accessible to department users'`
+  - [ ] Add to TICKET_MESSAGES:
+    - [ ] `CLOSED: 'Ticket closed successfully'`
+    - [ ] `UNAUTHORIZED_ACCESS: 'You can only access your department\'s tickets'`
+  - [ ] Verify message keys follow existing naming convention
+
+- [ ] **Commit**
+  - [ ] `git add constants/messages.js`
+  - [ ] Commit: "feat: add department-related message constants"
+
+#### Phase 3 Verification
+
+- [ ] **All Constants Updated**
+  - [ ] USER_ROLE.DEPARTMENT exists and is exported
+  - [ ] TICKET_STATUS has both new values
+  - [ ] COMMENT_VISIBILITY is defined and exported
+  - [ ] New messages are defined
+
+- [ ] **Middleware Works**
+  - [ ] requireDepartment blocks non-department users
+  - [ ] requireAdmin blocks department users
+  - [ ] requireSuperAdmin unchanged
+  - [ ] All tests pass
+
+- [ ] **Login Redirects Correctly**
+  - [ ] Manual test with each role type successful
+  - [ ] Logs show correct redirect decisions
+
+- [ ] **Git Status**
+  - [ ] 3-4 files modified and committed
+  - [ ] Clear commit messages
+  - [ ] No uncommitted changes
+
+---
+
+### Phase 4 Checklist: Client Portal Routes & Views
+
+**Estimated Time**: 3-4 hours (largest phase)
+
+#### Create Client Routes File
+
+- [ ] **Create routes/client.js**
+  - [ ] Set up Express router
+  - [ ] Import dependencies:
+    - [ ] requireAuth, requireDepartment from middleware/auth
+    - [ ] validateRequest from middleware/validation
+    - [ ] Validators (ticketValidators, clientValidators, commentValidators)
+    - [ ] Messages constants
+    - [ ] responseHelpers
+    - [ ] Services (ticketService, clientTicketService)
+    - [ ] Models (Comment)
+    - [ ] logger
+  - [ ] Apply global middleware:
+    ```javascript
+    router.use(requireAuth);
+    router.use(requireDepartment);
+    ```
+
+- [ ] **Implement Dashboard Route (GET /dashboard)**
+  - [ ] Call clientTicketService.getTicketsByDepartment()
+  - [ ] Pass req.session.user.id and req.query filters
+  - [ ] Render 'client/dashboard' view
+  - [ ] Add error handling with try/catch
+  - [ ] Log errors with userId context
+
+- [ ] **Implement New Ticket Form (GET /tickets/new)**
+  - [ ] Simple render of 'client/new-ticket' view
+  - [ ] Pass title for page
+
+- [ ] **Implement Create Ticket (POST /tickets)**
+  - [ ] Apply validators: validateClientTicketCreation, validateRequest
+  - [ ] Call clientTicketService.createTicket(user, body)
+  - [ ] Redirect to ticket detail on success
+  - [ ] Log creation with ticketId and userId
+  - [ ] Handle errors
+
+- [ ] **Implement Ticket Detail (GET /tickets/:id)**
+  - [ ] Apply validateTicketId, validateRequest
+  - [ ] Call ticketService.getTicketById()
+  - [ ] **SECURITY**: Verify ticket.reporter_id === req.session.user.id
+  - [ ] If unauthorized, redirect with error message
+  - [ ] Call Comment.findVisibleByTicketId(id, 'department')
+  - [ ] Render 'client/ticket-detail' view
+  - [ ] Log access with ticketId and userId
+
+- [ ] **Implement Add Comment (POST /tickets/:id/comments)**
+  - [ ] Apply validators
+  - [ ] Get ticket and verify ownership
+  - [ ] Call clientTicketService.addCommentAndNotify()
+  - [ ] Redirect back to ticket detail
+  - [ ] Log comment creation
+
+- [ ] **Implement Close Ticket (POST /tickets/:id/close)**
+  - [ ] Apply validateTicketId
+  - [ ] Get ticket and verify ownership
+  - [ ] Call ticketService.updateTicket(id, { status: 'closed' })
+  - [ ] Log ticket closure
+  - [ ] Redirect back to ticket detail
+
+- [ ] **Security Review**
+  - [ ] Every route has ownership verification for tickets
+  - [ ] All errors logged with user context
+  - [ ] No sensitive data in logs
+  - [ ] CSRF tokens required (handled by validators)
+
+- [ ] **Commit**
+  - [ ] `git add routes/client.js`
+  - [ ] Commit: "feat: implement client portal routes with ownership verification"
+
+#### Create Client Views
+
+##### Dashboard View
+
+- [ ] **Create views/client/dashboard.ejs**
+  - [ ] Copy structure from admin/dashboard.ejs as starting point
+  - [ ] Update page title: "My Tickets" or "My Department Tickets"
+  - [ ] Add "Create New Ticket" button linking to /client/tickets/new
+  - [ ] Implement filter form:
+    - [ ] Status dropdown (All, Waiting on Support, Waiting on Us, In Progress, Closed)
+    - [ ] Search input for title/description
+    - [ ] Filter and Clear buttons
+  - [ ] Implement ticket table:
+    - [ ] Columns: ID, Title, Status, Priority, Created, Last Updated, Actions
+    - [ ] Status badges with department-friendly labels:
+      - [ ] waiting_on_admin → "Waiting on Support" (badge bg-info)
+      - [ ] waiting_on_department → "Waiting on Us" (badge bg-warning)
+      - [ ] in_progress → "In Progress" (badge bg-primary)
+      - [ ] closed → "Closed" (badge bg-success)
+    - [ ] Priority badges with colors
+    - [ ] View button linking to /client/tickets/:id
+  - [ ] Add empty state message when no tickets
+  - [ ] Add ticket count at bottom
+  - [ ] Include CSRF token in all forms
+
+##### New Ticket Form
+
+- [ ] **Create views/client/new-ticket.ejs**
+  - [ ] Page title: "Create New Support Ticket"
+  - [ ] Breadcrumb: Dashboard → Create New Ticket
+  - [ ] Include partials (header, flash, footer)
+  - [ ] Create form (POST /client/tickets):
+    - [ ] CSRF token hidden field
+    - [ ] Title input (required, maxlength 200)
+    - [ ] Description textarea (required, maxlength 5000, rows 6)
+    - [ ] Reporter desk dropdown (required):
+      - [ ] Options: Director, Manager, Nursing Station, Doctors office, Secretary, Not Specified
+    - [ ] Reporter phone input (optional, maxlength 20)
+    - [ ] Character count helpers for title and description
+    - [ ] Submit button: "Submit Ticket"
+    - [ ] Cancel button linking back to dashboard
+  - [ ] Add Bootstrap 5 styling
+  - [ ] Note: NO reporter_name or reporter_department fields (from account)
+
+##### Ticket Detail View
+
+- [ ] **Create views/client/ticket-detail.ejs**
+  - [ ] Page title: "Ticket #<id>: <title>"
+  - [ ] Breadcrumb: Dashboard → Ticket #<id>
+  - [ ] Ticket info card:
+    - [ ] Status badge (department-friendly label)
+    - [ ] Priority badge
+    - [ ] Created timestamp
+    - [ ] Last updated timestamp
+    - [ ] **Highlight if waiting_on_department**: Add alert-warning class
+  - [ ] Description card with full text
+  - [ ] Comments section:
+    - [ ] Header: "Discussion (<count>)"
+    - [ ] List all comments (only public visible):
+      - [ ] Author username
+      - [ ] Timestamp
+      - [ ] Content
+      - [ ] NO internal badge shown (department can't see internal)
+    - [ ] Empty state: "No comments yet. Support will respond soon!"
+  - [ ] Add response form (if not closed):
+    - [ ] CSRF token
+    - [ ] Textarea for content (maxlength 2000)
+    - [ ] Character count
+    - [ ] "Add Response" button
+    - [ ] Note: Automatically sets status to waiting_on_admin
+  - [ ] Close ticket button (if not closed):
+    - [ ] Form POST to /client/tickets/:id/close
+    - [ ] Confirmation dialog
+    - [ ] "Close Ticket" button (btn-success)
+  - [ ] If closed: Show info message about reopening
+
+- [ ] **View Testing**
+  - [ ] Test dashboard with 0 tickets
+  - [ ] Test dashboard with multiple tickets in different statuses
+  - [ ] Test filters work correctly
+  - [ ] Test new ticket form validation (client-side and server-side)
+  - [ ] Test ticket detail shows correct information
+  - [ ] Test comment form works
+  - [ ] Test close ticket button works
+  - [ ] Test all links work
+  - [ ] Test responsive design on mobile
+
+- [ ] **Commit Views**
+  - [ ] `git add views/client/`
+  - [ ] Commit: "feat: create client portal views for dashboard, ticket creation, and detail"
+
+#### Register Routes in Main App
+
+- [ ] **Update index.js**
+  - [ ] Import client routes: `const clientRoutes = require('./routes/client');`
+  - [ ] Register routes: `app.use('/client', clientRoutes);`
+  - [ ] Verify placement (after middleware setup, before error handlers)
+  - [ ] Check route order doesn't interfere with existing routes
+
+- [ ] **Test Route Registration**
+  - [ ] Start server: `docker-compose up`
+  - [ ] Check logs for no errors
+  - [ ] Access /client/dashboard (should require login)
+  - [ ] Login as department user
+  - [ ] Verify redirects to client dashboard
+  - [ ] Verify 404 for invalid routes
+
+- [ ] **Commit**
+  - [ ] `git add index.js`
+  - [ ] Commit: "feat: register client portal routes in main app"
+
+#### Phase 4 Verification
+
+- [ ] **Routes Work End-to-End**
+  - [ ] Department user can log in
+  - [ ] Dashboard loads without errors
+  - [ ] Can create new ticket
+  - [ ] Can view ticket detail
+  - [ ] Can add comment to ticket
+  - [ ] Can close ticket
+  - [ ] Cannot access other department's tickets (test with 2 accounts)
+
+- [ ] **Admin Users Blocked from Client Portal**
+  - [ ] Admin user accessing /client/dashboard gets redirected
+  - [ ] Error message shown
+  - [ ] Logged to console
+
+- [ ] **Views Render Correctly**
+  - [ ] No Bootstrap errors
+  - [ ] Flash messages display
+  - [ ] CSRF tokens present in all forms
+  - [ ] Navigation works (header links)
+
+- [ ] **Git Status**
+  - [ ] routes/client.js created and committed
+  - [ ] views/client/ directory with 3 files committed
+  - [ ] index.js updated and committed
+  - [ ] Clear, descriptive commits
+
+---
+
+### Phase 5 Checklist: Model Updates
+
+**Estimated Time**: 1-1.5 hours
+
+#### Update Ticket Model
+
+- [ ] **Add findByDepartment Method**
+  - [ ] Open models/Ticket.js
+  - [ ] Add new static async method after existing finders
+  - [ ] Implement query:
+    ```javascript
+    SELECT t.*, u.username as assigned_to_username
+    FROM tickets t
+    LEFT JOIN users u ON t.assigned_to = u.id
+    WHERE t.reporter_id = $1
+    ```
+  - [ ] Add optional status filter: `AND t.status = $2`
+  - [ ] Add optional search filter: `AND (t.title ILIKE $3 OR t.description ILIKE $3)`
+  - [ ] Order by created_at DESC
+  - [ ] Add logging (debug level for query start, warn for slow queries >500ms)
+  - [ ] Return result.rows
+  - [ ] Add error handling and logging
+
+- [ ] **Update create Method**
+  - [ ] Add `reporter_id = null` parameter to destructured args
+  - [ ] Add `status = 'open'` parameter to destructured args
+  - [ ] Update INSERT query to include both fields
+  - [ ] Update VALUES to include parameters
+  - [ ] Update logging to include reporter_id and status
+  - [ ] Test default values work correctly
+
+- [ ] **Test Ticket Model Changes**
+  - [ ] Write unit test for findByDepartment:
+    - [ ] Test returns only tickets with matching reporter_id
+    - [ ] Test excludes tickets with different reporter_id
+    - [ ] Test excludes tickets with NULL reporter_id
+    - [ ] Test status filter works
+    - [ ] Test search filter works
+    - [ ] Test empty result set
+  - [ ] Update create test to include reporter_id and status
+  - [ ] Run tests: `npm run test:unit -- models/Ticket.test.js`
+
+- [ ] **Commit**
+  - [ ] `git add models/Ticket.js tests/unit/models/Ticket.test.js`
+  - [ ] Commit: "feat: add findByDepartment method and update create for reporter_id"
+
+#### Update Comment Model
+
+- [ ] **Add findVisibleByTicketId Method**
+  - [ ] Open models/Comment.js
+  - [ ] Add new static async method
+  - [ ] Parameters: ticketId, userRole
+  - [ ] Base query:
+    ```javascript
+    SELECT c.*, u.username
+    FROM comments c
+    JOIN users u ON c.user_id = u.id
+    WHERE c.ticket_id = $1
+    ```
+  - [ ] Add visibility filter for department users:
+    ```javascript
+    if (userRole === 'department') {
+      query += ` AND c.visibility_type = 'public'`;
+    }
+    ```
+  - [ ] Order by created_at ASC
+  - [ ] Add logging with performance tracking
+  - [ ] Return result.rows
+  - [ ] **SECURITY NOTE**: This is critical - departments must never see internal comments
+
+- [ ] **Update create Method**
+  - [ ] Add `visibility_type = 'public'` parameter
+  - [ ] Update INSERT query to include visibility_type
+  - [ ] Update logging to include visibility_type
+  - [ ] Test default value works
+
+- [ ] **Test Comment Model Changes**
+  - [ ] Write unit test for findVisibleByTicketId:
+    - [ ] Create ticket with public and internal comments
+    - [ ] Test department role gets only public comments
+    - [ ] Test admin role gets all comments
+    - [ ] Test super_admin role gets all comments
+    - [ ] Test empty comment list
+    - [ ] Test ordering (oldest first)
+  - [ ] Update create test to include visibility_type
+  - [ ] Run tests: `npm run test:unit -- models/Comment.test.js`
+  - [ ] **CRITICAL**: Verify department filter works 100%
+
+- [ ] **Security Verification**
+  - [ ] Manual test: Create internal comment as admin
+  - [ ] Login as department user
+  - [ ] Verify internal comment is NOT visible in ticket detail
+  - [ ] Check database directly to confirm comment exists but is filtered
+  - [ ] Check browser developer tools (Network tab) to confirm not sent to client
+
+- [ ] **Commit**
+  - [ ] `git add models/Comment.js tests/unit/models/Comment.test.js`
+  - [ ] Commit: "feat: add comment visibility filtering with security guarantees"
+
+#### Phase 5 Verification
+
+- [ ] **Model Methods Work**
+  - [ ] Ticket.findByDepartment returns correct results
+  - [ ] Ticket.create accepts reporter_id and status
+  - [ ] Comment.findVisibleByTicketId filters correctly
+  - [ ] Comment.create accepts visibility_type
+
+- [ ] **All Unit Tests Pass**
+  - [ ] Run full unit test suite: `npm run test:unit`
+  - [ ] No failing tests
+  - [ ] No skipped tests
+  - [ ] Coverage maintained or improved
+
+- [ ] **Security Verified**
+  - [ ] Department users cannot see internal comments
+  - [ ] Filtering happens at database query level
+  - [ ] No way to bypass filter from client
+
+- [ ] **Git Status**
+  - [ ] 2 model files updated
+  - [ ] 2 test files updated
+  - [ ] All committed with clear messages
+
+---
+
+### Phase 6 Checklist: Service Layer
+
+**Estimated Time**: 1.5-2 hours
+
+#### Create Client Ticket Service
+
+- [ ] **Create services/clientTicketService.js**
+  - [ ] Import dependencies (Ticket, Comment, User, AuditLog, logger, enums)
+  - [ ] Create class ClientTicketService
+  - [ ] Export new instance at bottom
+
+- [ ] **Implement getTicketsByDepartment Method**
+  - [ ] Parameters: userId, filters
+  - [ ] Add performance timing
+  - [ ] Clean filters (remove empty values)
+  - [ ] Call Ticket.findByDepartment(userId, filters)
+  - [ ] Log result with count and duration
+  - [ ] Return tickets
+  - [ ] Add error handling
+
+- [ ] **Implement createTicket Method**
+  - [ ] Parameters: user (full session user object), ticketData
+  - [ ] Add performance timing
+  - [ ] Map department from user email using departmentMapping object:
+    ```javascript
+    const departmentMapping = {
+      'it.support@knii.local': 'IT Support',
+      'general.support@knii.local': 'General Support',
+      'hr@knii.local': 'Human Resources',
+      'finance@knii.local': 'Finance',
+      'facilities@knii.local': 'Facilities'
+    };
+    ```
+  - [ ] Call Ticket.create with:
+    - [ ] reporter_id: user.id
+    - [ ] status: 'waiting_on_admin'
+    - [ ] reporter_department: mapped value
+    - [ ] Other fields from ticketData
+  - [ ] Create audit log entry
+  - [ ] Log success with ticketId
+  - [ ] Add TODO comment for admin notification
+  - [ ] Return ticket
+
+- [ ] **Implement addCommentAndNotify Method**
+  - [ ] Parameters: ticketId, userId, content
+  - [ ] Create comment with visibility_type: 'public'
+  - [ ] Update ticket status to 'waiting_on_admin'
+  - [ ] Create audit log entry
+  - [ ] Log success
+  - [ ] Add TODO comment for admin notification
+  - [ ] Return comment
+
+- [ ] **Test Service Methods**
+  - [ ] Write unit tests (or integration tests):
+    - [ ] Test getTicketsByDepartment with filters
+    - [ ] Test createTicket maps department correctly
+    - [ ] Test createTicket sets waiting_on_admin status
+    - [ ] Test addCommentAndNotify creates public comment
+    - [ ] Test addCommentAndNotify updates ticket status
+  - [ ] Run tests to verify
+
+- [ ] **Commit**
+  - [ ] `git add services/clientTicketService.js tests/unit/services/clientTicketService.test.js`
+  - [ ] Commit: "feat: implement client ticket service for department operations"
+
+#### Update Admin Routes for Comment Visibility
+
+- [ ] **Update routes/admin.js**
+  - [ ] Locate POST /tickets/:id/comments route
+  - [ ] Read is_internal checkbox value:
+    ```javascript
+    const visibilityType = req.body.is_internal === 'on' ? 'internal' : 'public';
+    ```
+  - [ ] Update Comment.create call to include visibility_type
+  - [ ] Add logging with visibility info
+
+- [ ] **Update Admin Ticket Detail Route**
+  - [ ] Locate GET /tickets/:id route
+  - [ ] Change comment query from Comment.findByTicketId() to:
+    ```javascript
+    const comments = await Comment.findVisibleByTicketId(req.params.id, 'admin');
+    ```
+  - [ ] This ensures consistency (even though admins see all)
+
+- [ ] **Test Admin Comment Visibility**
+  - [ ] Create ticket as department user
+  - [ ] Add public comment as admin
+  - [ ] Add internal comment as admin (check is_internal box)
+  - [ ] Verify both comments visible in admin view
+  - [ ] Login as department user
+  - [ ] Verify only public comment visible
+  - [ ] Check database: Both comments exist
+
+- [ ] **Commit**
+  - [ ] `git add routes/admin.js`
+  - [ ] Commit: "feat: add internal comment support for admins"
+
+#### Phase 6 Verification
+
+- [ ] **Service Layer Works**
+  - [ ] Department tickets created with correct status
+  - [ ] Department mapping works for all 5 departments
+  - [ ] Comments created as public by departments
+  - [ ] Status updates work correctly
+
+- [ ] **Admin Internal Comments Work**
+  - [ ] Checkbox appears in admin form
+  - [ ] Internal comments saved correctly
+  - [ ] Internal badge shows on admin view
+  - [ ] Department users cannot see internal comments
+
+- [ ] **Integration Tested**
+  - [ ] End-to-end test: Department creates ticket → Admin responds internally → Department doesn't see internal → Admin responds publicly → Department sees public
+
+- [ ] **Git Status**
+  - [ ] clientTicketService.js created
+  - [ ] routes/admin.js updated
+  - [ ] Tests added/updated
+  - [ ] All committed
+
+---
+
+### Phase 7 Checklist: Validators
+
+**Estimated Time**: 30-45 minutes
+
+#### Create Client Validators
+
+- [ ] **Create validators/clientValidators.js**
+  - [ ] Import express-validator (body)
+  - [ ] Import REPORTER_DESK from constants/enums
+  - [ ] Import VALIDATION_MESSAGES and MAX_LENGTHS
+  - [ ] Create validateClientTicketCreation array:
+    - [ ] title: trim, notEmpty, maxLength 200
+    - [ ] description: trim, notEmpty, maxLength 5000
+    - [ ] reporter_desk: trim, notEmpty, isIn(REPORTER_DESK values)
+    - [ ] reporter_phone: optional, trim, maxLength 20
+  - [ ] Export validateClientTicketCreation
+  - [ ] Note: No reporter_department or reporter_name (from account)
+
+- [ ] **Test Client Validators**
+  - [ ] Write unit tests:
+    - [ ] Valid input passes
+    - [ ] Missing title fails
+    - [ ] Title too long fails
+    - [ ] Invalid desk fails
+    - [ ] Optional phone works
+  - [ ] Run tests
+
+- [ ] **Commit**
+  - [ ] `git add validators/clientValidators.js tests/unit/validators/clientValidators.test.js`
+  - [ ] Commit: "feat: add client ticket creation validators"
+
+#### Update Ticket Validators
+
+- [ ] **Update validators/ticketValidators.js**
+  - [ ] Locate validateTicketUpdate
+  - [ ] Verify status validation includes new statuses:
+    ```javascript
+    .isIn(Object.values(TICKET_STATUS))
+    ```
+  - [ ] This should automatically work if TICKET_STATUS was updated in Phase 3
+  - [ ] Test with new status values
+
+- [ ] **Test Updated Validator**
+  - [ ] Update existing tests to include new statuses
+  - [ ] Test waiting_on_admin passes validation
+  - [ ] Test waiting_on_department passes validation
+  - [ ] Test invalid status fails
+
+- [ ] **Commit**
+  - [ ] `git add validators/ticketValidators.js tests/unit/validators/ticketValidators.test.js`
+  - [ ] Commit: "feat: support new workflow statuses in ticket validators"
+
+#### Update Comment Validators
+
+- [ ] **Update validators/commentValidators.js**
+  - [ ] Add validateCommentVisibility:
+    ```javascript
+    const validateCommentVisibility = [
+      body('is_internal')
+        .optional()
+        .isIn(['on', 'off', ''])
+        .withMessage('Invalid visibility value')
+    ];
+    ```
+  - [ ] Export validateCommentVisibility
+  - [ ] This is optional validation for admin internal checkbox
+
+- [ ] **Test Comment Visibility Validator**
+  - [ ] Test 'on' passes
+  - [ ] Test 'off' passes
+  - [ ] Test empty string passes
+  - [ ] Test missing field passes (optional)
+  - [ ] Test invalid value fails
+
+- [ ] **Commit**
+  - [ ] `git add validators/commentValidators.js`
+  - [ ] Commit: "feat: add comment visibility validator for internal comments"
+
+#### Phase 7 Verification
+
+- [ ] **All Validators Work**
+  - [ ] Client ticket creation validates correctly
+  - [ ] Ticket status accepts new values
+  - [ ] Comment visibility validates checkbox
+
+- [ ] **Validation Tests Pass**
+  - [ ] Run validator tests: `npm run test:unit -- validators/`
+  - [ ] All tests passing
+  - [ ] Coverage maintained
+
+- [ ] **Integration with Routes**
+  - [ ] Client routes use clientValidators
+  - [ ] Admin routes use updated validators
+  - [ ] Form submissions work correctly
+
+- [ ] **Git Status**
+  - [ ] 3 validator files created/updated
+  - [ ] Tests added/updated
+  - [ ] Clear commits
+
+---
+
+### Phase 8 Checklist: Admin View Updates
+
+**Estimated Time**: 1-1.5 hours
+
+#### Update Admin Ticket Detail View
+
+- [ ] **Update views/admin/ticket-detail.ejs**
+  - [ ] Locate comment form section
+  - [ ] Add internal comment checkbox before submit button:
+    ```ejs
+    <div class="mb-3 form-check">
+      <input type="checkbox" name="is_internal" id="is_internal" class="form-check-input">
+      <label for="is_internal" class="form-check-label">
+        Internal Note (only visible to admins)
+      </label>
+    </div>
+    ```
+  - [ ] Locate comment display loop
+  - [ ] Add internal badge next to author/timestamp:
+    ```ejs
+    <% if (comment.visibility_type === 'internal') { %>
+      <span class="badge bg-danger ms-2">Internal</span>
+    <% } %>
+    ```
+  - [ ] Locate ticket update form
+  - [ ] Update status dropdown to include new statuses:
+    - [ ] Add option for 'waiting_on_admin'
+    - [ ] Add option for 'waiting_on_department'
+    - [ ] Maintain existing options (open, in_progress, closed)
+  - [ ] Locate status badge display
+  - [ ] Add new status badge cases:
+    ```ejs
+    <% } else if (ticket.status === 'waiting_on_admin') { %>
+      <span class="badge bg-warning text-dark ms-2">Waiting on Admin</span>
+    <% } else if (ticket.status === 'waiting_on_department') { %>
+      <span class="badge bg-info ms-2">Waiting on Department</span>
+    ```
+
+- [ ] **Test Admin Ticket Detail View**
+  - [ ] View renders without errors
+  - [ ] Internal checkbox appears and is functional
+  - [ ] Internal badge shows on internal comments
+  - [ ] New status options appear in dropdown
+  - [ ] New status badges display correctly
+  - [ ] Can create internal comment
+  - [ ] Can update ticket to new statuses
+
+- [ ] **Commit Admin Ticket Detail**
+  - [ ] `git add views/admin/ticket-detail.ejs`
+  - [ ] Commit: "feat: add internal comment UI and new status support to admin ticket detail"
+
+#### Update Admin Dashboard View
+
+- [ ] **Update views/admin/dashboard.ejs**
+  - [ ] Locate status filter dropdown
+  - [ ] Add new status options:
+    - [ ] 'waiting_on_admin' option
+    - [ ] 'waiting_on_department' option
+  - [ ] Locate ticket table status badge column
+  - [ ] Add new status badge cases (same as ticket detail):
+    ```ejs
+    <% } else if (ticket.status === 'waiting_on_admin') { %>
+      <span class="badge bg-warning text-dark">Waiting on Admin</span>
+    <% } else if (ticket.status === 'waiting_on_department') { %>
+      <span class="badge bg-info">Waiting on Department</span>
+    ```
+
+- [ ] **Test Admin Dashboard View**
+  - [ ] Dashboard loads with new status options
+  - [ ] Filter works with new statuses
+  - [ ] Status badges display correctly for all statuses
+  - [ ] Can filter tickets by waiting_on_admin
+  - [ ] Can filter tickets by waiting_on_department
+
+- [ ] **Commit Admin Dashboard**
+  - [ ] `git add views/admin/dashboard.ejs`
+  - [ ] Commit: "feat: add new workflow statuses to admin dashboard filters and badges"
+
+#### Phase 8 Verification
+
+- [ ] **Admin Views Updated**
+  - [ ] Internal comment checkbox works
+  - [ ] Internal badge shows correctly
+  - [ ] New statuses in dropdowns
+  - [ ] New status badges display
+
+- [ ] **Full Admin Flow Tested**
+  - [ ] Create ticket as department
+  - [ ] View in admin dashboard
+  - [ ] Filter by waiting_on_admin (should appear)
+  - [ ] Open ticket
+  - [ ] Add internal comment
+  - [ ] Verify internal badge shows
+  - [ ] Update status to waiting_on_department
+  - [ ] Verify badge updates
+
+- [ ] **Git Status**
+  - [ ] 2 admin view files updated
+  - [ ] Clear commits describing UI changes
+
+---
+
+### Phase 9 Checklist: Navigation Updates
+
+**Estimated Time**: 20-30 minutes
+
+#### Update Header Navigation
+
+- [ ] **Update views/partials/header.ejs**
+  - [ ] Locate navbar-brand logo link
+  - [ ] Make link role-aware:
+    ```ejs
+    <% if (user) { %>
+      <% if (user.role === 'department') { %>
+        <a class="navbar-brand" href="/client/dashboard">KNII Ticketing</a>
+      <% } else { %>
+        <a class="navbar-brand" href="/admin/dashboard">KNII Ticketing</a>
+      <% } %>
+    <% } else { %>
+      <a class="navbar-brand" href="/">KNII Ticketing</a>
+    <% } %>
+    ```
+
+- [ ] **Add Department Navigation Links**
+  - [ ] Locate navbar-nav section
+  - [ ] Add department-specific link:
+    ```ejs
+    <% if (user.role === 'department') { %>
+      <li class="nav-item">
+        <a href="/client/tickets/new" class="nav-link">Create Ticket</a>
+      </li>
+    <% } %>
+    ```
+
+- [ ] **Add Role Badge**
+  - [ ] Locate user welcome text area
+  - [ ] Add role badge after username:
+    ```ejs
+    <span class="navbar-text text-light">
+      Welcome, <%= user.username %>
+      <% if (user.role === 'department') { %>
+        <span class="badge bg-secondary ms-1">Department</span>
+      <% } else if (user.role === 'admin') { %>
+        <span class="badge bg-primary ms-1">Admin</span>
+      <% } else if (user.role === 'super_admin') { %>
+        <span class="badge bg-danger ms-1">Super Admin</span>
+      <% } %>
+    </span>
+    ```
+
+- [ ] **Test Navigation**
+  - [ ] Login as department user:
+    - [ ] Logo links to /client/dashboard
+    - [ ] "Create Ticket" link appears
+    - [ ] "Department" badge shows
+    - [ ] No admin links visible
+  - [ ] Login as admin:
+    - [ ] Logo links to /admin/dashboard
+    - [ ] "Admin" badge shows
+    - [ ] Admin links visible
+  - [ ] Login as super_admin:
+    - [ ] "User Management" link appears
+    - [ ] "Super Admin" badge shows
+
+- [ ] **Commit**
+  - [ ] `git add views/partials/header.ejs`
+  - [ ] Commit: "feat: add role-based navigation and badges to header"
+
+#### Phase 9 Verification
+
+- [ ] **Navigation Works for All Roles**
+  - [ ] Department users see correct links
+  - [ ] Admin users see correct links
+  - [ ] Super admin users see all links
+  - [ ] Role badges display correctly
+
+- [ ] **No Broken Links**
+  - [ ] All navigation links work
+  - [ ] Logo link adapts to role
+  - [ ] Logout works for all roles
+
+- [ ] **Git Status**
+  - [ ] header.ejs updated and committed
+
+---
+
+### Phase 10 Checklist: Testing
+
+**Estimated Time**: 3-4 hours
+
+#### Unit Tests for Models
+
+- [ ] **Update tests/unit/models/Ticket.test.js**
+  - [ ] Add test suite for findByDepartment:
+    - [ ] Should return only tickets with matching reporter_id
+    - [ ] Should exclude tickets with different reporter_id
+    - [ ] Should exclude tickets with NULL reporter_id
+    - [ ] Should filter by status when provided
+    - [ ] Should filter by search term when provided
+    - [ ] Should return empty array when no matches
+  - [ ] Update create tests to include reporter_id and status
+  - [ ] Run tests: `npm run test:unit -- tests/unit/models/Ticket.test.js`
+
+- [ ] **Update tests/unit/models/Comment.test.js**
+  - [ ] Add test suite for findVisibleByTicketId:
+    - [ ] Should return only public comments for department role
+    - [ ] Should return all comments for admin role
+    - [ ] Should return all comments for super_admin role
+    - [ ] Should return comments in chronological order
+    - [ ] Should return empty array when no comments
+    - [ ] Should join with users table for username
+  - [ ] Update create tests to include visibility_type
+  - [ ] Run tests: `npm run test:unit -- tests/unit/models/Comment.test.js`
+
+#### Integration Tests for Client Routes
+
+- [ ] **Create tests/integration/routes/client.test.js**
+  - [ ] Set up test suite with supertest
+  - [ ] Create test department user and admin user
+  - [ ] Test GET /client/dashboard:
+    - [ ] Requires authentication
+    - [ ] Requires department role
+    - [ ] Shows only user's tickets
+    - [ ] Blocks admin users
+  - [ ] Test POST /client/tickets:
+    - [ ] Creates ticket with waiting_on_admin status
+    - [ ] Links reporter_id to current user
+    - [ ] Validates input (title required, etc.)
+  - [ ] Test GET /client/tickets/:id:
+    - [ ] Shows ticket detail for owned ticket
+    - [ ] Blocks access to other department's tickets
+    - [ ] Shows only public comments
+  - [ ] Test POST /client/tickets/:id/comments:
+    - [ ] Creates public comment
+    - [ ] Updates status to waiting_on_admin
+    - [ ] Blocks access to other department's tickets
+  - [ ] Test POST /client/tickets/:id/close:
+    - [ ] Closes owned ticket
+    - [ ] Blocks closing other department's tickets
+  - [ ] Run tests: `npm run test:integration -- tests/integration/routes/client.test.js`
+
+#### E2E Test for Department Ticket Lifecycle
+
+- [ ] **Create tests/e2e/departmentTicketLifecycle.test.js**
+  - [ ] Set up complete E2E environment
+  - [ ] Create department user and admin user
+  - [ ] Test full workflow:
+    1. Department creates ticket (verify status: waiting_on_admin)
+    2. Admin views ticket
+    3. Admin adds public comment
+    4. Admin adds internal comment
+    5. Admin updates status to waiting_on_department
+    6. Department views ticket (verify no internal comment visible)
+    7. Department adds response (verify status back to waiting_on_admin)
+    8. Admin resolves and closes
+    9. Department verifies ticket closed
+  - [ ] Verify at each step:
+    - [ ] Correct status
+    - [ ] Correct visibility
+    - [ ] Correct permissions
+    - [ ] Audit logs created
+  - [ ] Run test: `npm run test:e2e -- tests/e2e/departmentTicketLifecycle.test.js`
+
+#### Run Full Test Suite
+
+- [ ] **Execute All Tests**
+  - [ ] Run unit tests: `npm run test:unit`
+  - [ ] Run integration tests: `npm run test:integration`
+  - [ ] Run E2E tests: `npm run test:e2e`
+  - [ ] Run full suite: `npm test`
+  - [ ] Verify all tests pass
+  - [ ] Check for any skipped tests
+
+- [ ] **Check Test Coverage**
+  - [ ] Run with coverage: `npm run test:coverage`
+  - [ ] Verify coverage maintained or improved
+  - [ ] Check critical paths are covered (ownership verification, visibility filtering)
+  - [ ] Aim for 100% coverage on new code
+
+#### Phase 10 Verification
+
+- [ ] **All Tests Pass**
+  - [ ] 0 failing tests
+  - [ ] 0 skipped tests
+  - [ ] Test coverage ≥ target %
+  - [ ] No test warnings
+
+- [ ] **Critical Security Paths Tested**
+  - [ ] Ownership verification tested
+  - [ ] Comment visibility tested
+  - [ ] Role separation tested
+  - [ ] CSRF protection tested
+
+- [ ] **Git Status**
+  - [ ] 3 new test files created
+  - [ ] 2 existing test files updated
+  - [ ] All tests committed
+
+---
+
+### Phase 11 Checklist: Final Integration & Polish
+
+**Estimated Time**: 1-2 hours
+
+#### Manual End-to-End Testing
+
+- [ ] **Test Department User Flow**
+  - [ ] Login as dept_it_support
+  - [ ] Verify redirect to /client/dashboard
+  - [ ] Create new ticket
+  - [ ] Verify ticket appears with "Waiting on Support" badge
+  - [ ] View ticket detail
+  - [ ] Add comment
+  - [ ] Verify status changes to "Waiting on Support"
+  - [ ] Close ticket
+  - [ ] Verify cannot add more comments after close
+  - [ ] Logout
+
+- [ ] **Test Admin Response Flow**
+  - [ ] Login as admin
+  - [ ] View dashboard
+  - [ ] Filter by "Waiting on Admin"
+  - [ ] Find department ticket
+  - [ ] Open ticket
+  - [ ] Add public comment
+  - [ ] Add internal comment with checkbox
+  - [ ] Verify internal badge shows
+  - [ ] Update status to "Waiting on Department"
+  - [ ] Logout
+
+- [ ] **Test Security Boundaries**
+  - [ ] Login as dept_it_support
+  - [ ] Note a ticket ID
+  - [ ] Logout
+  - [ ] Login as dept_hr
+  - [ ] Try to access IT dept ticket by URL
+  - [ ] Verify blocked with error message
+  - [ ] Try to access /admin/dashboard by URL
+  - [ ] Verify blocked
+  - [ ] Logout
+  - [ ] Login as admin
+  - [ ] Try to access /client/dashboard by URL
+  - [ ] Verify blocked
+
+- [ ] **Test Comment Visibility**
+  - [ ] As admin, create ticket and add internal comment
+  - [ ] Verify internal badge shows in admin view
+  - [ ] Check database: Verify comment.visibility_type = 'internal'
+  - [ ] Login as department that owns ticket
+  - [ ] View ticket
+  - [ ] Verify internal comment NOT visible
+  - [ ] Check browser Network tab: Verify comment not sent to client
+  - [ ] Add developer console check: Search page source for internal comment content
+
+#### Cross-Browser Testing
+
+- [ ] **Test in Multiple Browsers**
+  - [ ] Chrome/Chromium:
+    - [ ] All features work
+    - [ ] UI renders correctly
+    - [ ] Forms submit properly
+  - [ ] Firefox:
+    - [ ] All features work
+    - [ ] UI renders correctly
+  - [ ] Safari (if available):
+    - [ ] Test basic functionality
+  - [ ] Mobile browser (responsive design):
+    - [ ] Dashboard usable
+    - [ ] Forms workable
+    - [ ] Navigation accessible
+
+#### Performance Check
+
+- [ ] **Check Page Load Times**
+  - [ ] Dashboard loads < 1 second
+  - [ ] Ticket detail loads < 1 second
+  - [ ] Comment submission < 500ms
+  - [ ] No console errors or warnings
+
+- [ ] **Check Database Query Performance**
+  - [ ] Review logs for slow queries (>500ms warnings)
+  - [ ] Check indexes are being used
+  - [ ] Verify no N+1 query problems
+
+#### UI/UX Review
+
+- [ ] **Visual Polish**
+  - [ ] All buttons have correct colors and styling
+  - [ ] Status badges are clear and color-coded
+  - [ ] Forms have proper spacing
+  - [ ] Error messages display clearly
+  - [ ] Success messages display clearly
+  - [ ] Loading states are smooth
+
+- [ ] **Accessibility Check**
+  - [ ] Tab navigation works through forms
+  - [ ] Labels properly associated with inputs
+  - [ ] Color contrast sufficient for badges
+  - [ ] Error messages have appropriate ARIA labels
+
+#### Phase 11 Verification
+
+- [ ] **Complete Manual Test Pass**
+  - [ ] All user flows work end-to-end
+  - [ ] No errors in console
+  - [ ] No broken UI elements
+  - [ ] All forms validate properly
+
+- [ ] **Security Verified**
+  - [ ] Cannot access other department's tickets
+  - [ ] Cannot see internal comments
+  - [ ] Cannot access wrong portal (dept→admin or admin→dept)
+  - [ ] CSRF tokens working
+
+- [ ] **Performance Acceptable**
+  - [ ] Page loads fast
+  - [ ] No slow queries
+  - [ ] Good user experience
+
+---
+
+### Pre-Deployment Checklist
+
+**Before merging to main**
+
+#### Code Quality
+
+- [ ] **Run Linters**
+  - [ ] ESLint passes (if configured)
+  - [ ] No linter warnings
+  - [ ] Code formatting consistent
+
+- [ ] **Code Review**
+  - [ ] Self-review all changes in GitHub UI
+  - [ ] Check for any console.log statements (remove)
+  - [ ] Check for any TODO comments (document or remove)
+  - [ ] Check for any debugging code (remove)
+  - [ ] Verify all error handling present
+  - [ ] Verify all logging appropriate
+
+#### Security Review
+
+- [ ] **SQL Injection Check**
+  - [ ] All queries use parameterized statements ($1, $2, etc.)
+  - [ ] No string concatenation in SQL
+  - [ ] Verify in models: Ticket.js, Comment.js
+
+- [ ] **Access Control Check**
+  - [ ] All client routes verify ownership
+  - [ ] requireDepartment middleware on all client routes
+  - [ ] requireAdmin blocks department users
+  - [ ] Comment visibility filter cannot be bypassed
+
+- [ ] **Input Validation**
+  - [ ] All routes have validators
+  - [ ] All forms have CSRF tokens
+  - [ ] Length limits enforced
+  - [ ] Enum validation on constants
+
+- [ ] **Sensitive Data**
+  - [ ] No passwords logged
+  - [ ] No tokens logged
+  - [ ] No session IDs logged
+  - [ ] Department credentials documented securely
+
+#### Documentation Review
+
+- [ ] **Update CLAUDE.md**
+  - [ ] Document new role: department
+  - [ ] Document new statuses
+  - [ ] Document comment visibility
+  - [ ] Document client portal routes
+  - [ ] Update database schema section
+  - [ ] Update authentication section
+
+- [ ] **Update README**
+  - [ ] Add department accounts section
+  - [ ] Document how to create department accounts
+  - [ ] Document client portal access
+  - [ ] Update deployment instructions if needed
+
+- [ ] **Git Commit History**
+  - [ ] All commits have clear messages
+  - [ ] No "WIP" or "temp" commits
+  - [ ] Commits are logically grouped
+  - [ ] Consider squashing if too many small commits
+
+#### Testing Verification
+
+- [ ] **Full Test Suite**
+  - [ ] Run: `npm test`
+  - [ ] All tests pass
+  - [ ] Coverage maintained
+  - [ ] No test warnings
+
+- [ ] **Manual Testing**
+  - [ ] Test all department user flows
+  - [ ] Test all admin flows
+  - [ ] Test security boundaries
+  - [ ] Test error cases
+
+#### Database Migrations
+
+- [ ] **Migration Verification**
+  - [ ] All 4 migrations numbered sequentially (010-013)
+  - [ ] Migrations can run in order without errors
+  - [ ] Migrations are idempotent (can re-run safely)
+  - [ ] Rollback strategy documented
+
+- [ ] **Migration Testing**
+  - [ ] Test on fresh database
+  - [ ] Test on database with existing data
+  - [ ] Verify no data loss
+  - [ ] Verify no constraint violations
+
+#### Deployment Planning
+
+- [ ] **Create Deployment Checklist**
+  - [ ] Backup database command documented
+  - [ ] Migration run commands documented
+  - [ ] Script run commands documented
+  - [ ] Rollback commands documented
+  - [ ] Estimated downtime calculated
+
+- [ ] **Notify Stakeholders**
+  - [ ] Inform team of new feature
+  - [ ] Schedule deployment window
+  - [ ] Prepare department user credentials
+  - [ ] Plan user training/documentation
+
+---
+
+### Deployment Checklist
+
+**Day of deployment**
+
+#### Pre-Deployment
+
+- [ ] **Backup Everything**
+  - [ ] Backup database:
+    ```bash
+    docker-compose exec db pg_dump -U ticketing_user ticketing_db > backup_$(date +%Y%m%d_%H%M%S).sql
+    ```
+  - [ ] Backup code (already in Git)
+  - [ ] Verify backup file created and not empty
+  - [ ] Store backup in safe location
+
+- [ ] **Final Checks**
+  - [ ] All tests passing locally
+  - [ ] No uncommitted changes
+  - [ ] Feature branch up to date with main
+  - [ ] PR approved (if using PR workflow)
+
+#### Deployment Execution
+
+- [ ] **Stop Application**
+  - [ ] `docker-compose down` (or PM2 stop if production)
+  - [ ] Verify no requests being processed
+
+- [ ] **Run Migrations**
+  - [ ] Run migration 010:
+    ```bash
+    docker-compose exec db psql -U ticketing_user -d ticketing_db -f /migrations/010_add_department_role.sql
+    ```
+  - [ ] Verify success (check for errors)
+  - [ ] Run migration 011
+  - [ ] Verify success
+  - [ ] Run migration 012
+  - [ ] Check auto-linking results if enabled
+  - [ ] Run migration 013
+  - [ ] Verify success
+
+- [ ] **Create Department Accounts**
+  - [ ] Run script:
+    ```bash
+    docker-compose exec web node scripts/create-department-accounts.js
+    ```
+  - [ ] Verify 5 accounts created
+  - [ ] Save credentials output to secure location
+  - [ ] Do NOT commit credentials to Git
+
+- [ ] **Deploy Code**
+  - [ ] Pull latest code: `git pull origin main` (or merge PR)
+  - [ ] Rebuild containers: `docker-compose up --build -d`
+  - [ ] Verify containers start: `docker-compose ps`
+  - [ ] Check logs: `docker-compose logs -f web`
+
+- [ ] **Verify Deployment**
+  - [ ] Application starts without errors
+  - [ ] Health check passes (if configured)
+  - [ ] Can access homepage
+  - [ ] Can access login page
+
+#### Post-Deployment Testing
+
+- [ ] **Test Department Login**
+  - [ ] Login as dept_it_support
+  - [ ] Verify redirects to /client/dashboard
+  - [ ] Dashboard loads without errors
+  - [ ] Navigation works
+
+- [ ] **Test Admin Login**
+  - [ ] Login as existing admin
+  - [ ] Verify redirects to /admin/dashboard
+  - [ ] Verify all admin features still work
+  - [ ] Check for any errors
+
+- [ ] **Test Ticket Creation**
+  - [ ] Create ticket as department user
+  - [ ] Verify ticket appears in admin dashboard
+  - [ ] Add comment as admin (internal)
+  - [ ] Verify department user doesn't see internal comment
+  - [ ] Add public comment as admin
+  - [ ] Verify department user sees public comment
+
+- [ ] **Monitor Logs**
+  - [ ] Watch logs for 15-30 minutes
+  - [ ] Look for errors
+  - [ ] Look for warnings
+  - [ ] Verify no performance issues
+
+#### Rollback (if needed)
+
+- [ ] **If Critical Issues Found**
+  - [ ] Stop application
+  - [ ] Restore database from backup:
+    ```bash
+    docker-compose exec -T db psql -U ticketing_user -d ticketing_db < backup_YYYYMMDD_HHMMSS.sql
+    ```
+  - [ ] Revert code: `git revert <commit>` or `git reset --hard <previous-commit>`
+  - [ ] Rebuild and restart
+  - [ ] Verify old version working
+  - [ ] Document issues found
+
+#### User Notification
+
+- [ ] **Notify Department Users**
+  - [ ] Send credentials via secure channel
+  - [ ] Provide login instructions
+  - [ ] Include link to user guide
+  - [ ] Include support contact info
+  - [ ] Emphasize password change on first login
+
+- [ ] **Notify Admins**
+  - [ ] Explain new features (internal comments, statuses)
+  - [ ] Provide documentation
+  - [ ] Offer training session if needed
+
+#### Final Verification
+
+- [ ] **Success Criteria Met**
+  - [ ] All 5 department accounts working
+  - [ ] Departments can create tickets
+  - [ ] Admins can respond with internal comments
+  - [ ] Status workflow working (waiting_on_admin ↔ waiting_on_department)
+  - [ ] Security boundaries enforced
+  - [ ] No data loss
+  - [ ] Performance acceptable
+
+- [ ] **Documentation Updated**
+  - [ ] Deployment notes documented
+  - [ ] Any issues encountered documented
+  - [ ] Credentials stored securely
+  - [ ] User guides distributed
+
+---
+
+## Post-Implementation Tasks
+
+**After successful deployment**
+
+- [ ] **Monitor for 1 Week**
+  - [ ] Check logs daily for errors
+  - [ ] Monitor user feedback
+  - [ ] Track support tickets related to new feature
+  - [ ] Measure performance metrics
+
+- [ ] **Gather User Feedback**
+  - [ ] Ask department users about usability
+  - [ ] Ask admins about internal comments feature
+  - [ ] Document improvement ideas
+
+- [ ] **Update Documentation**
+  - [ ] Add troubleshooting tips based on issues found
+  - [ ] Update FAQs
+  - [ ] Create video tutorials if helpful
+
+- [ ] **Plan Future Enhancements**
+  - [ ] Email notifications for admins
+  - [ ] Email notifications for departments
+  - [ ] Attachment support
+  - [ ] SLA tracking
+  - [ ] More detailed audit logs
+
+---
+
+## Troubleshooting Guide
+
+### Common Issues During Implementation
+
+#### Migration Fails
+
+**Symptom**: Migration SQL file returns error
+
+**Solutions**:
+- Check PostgreSQL version compatibility
+- Verify constraint names don't conflict
+- Check for syntax errors in SQL
+- Verify table/column names are correct
+- Check if migration already partially applied (DROP IF EXISTS)
+
+#### Department Accounts Not Created
+
+**Symptom**: Script runs but accounts don't appear
+
+**Solutions**:
+- Check for database connection issues
+- Verify User.create() method works
+- Check password hashing (bcryptjs version)
+- Look for duplicate email constraint violations
+- Check script logs for error details
+
+#### Comment Visibility Not Working
+
+**Symptom**: Department users see internal comments
+
+**Solutions**:
+- Verify Comment.findVisibleByTicketId filters correctly
+- Check userRole parameter is 'department' not user object
+- Verify visibility_type column exists in database
+- Check if comments were created before migration 013
+- Clear browser cache
+- Check Network tab in DevTools (verify comment not sent)
+
+#### Status Workflow Broken
+
+**Symptom**: Status doesn't update or shows wrong status
+
+**Solutions**:
+- Verify TICKET_STATUS enum includes new values
+- Check validators allow new statuses
+- Verify migration 011 applied correctly
+- Check service methods update status correctly
+- Look for hardcoded status values in code
+
+#### Ownership Check Fails
+
+**Symptom**: Department user can't access their own tickets
+
+**Solutions**:
+- Verify reporter_id is set correctly on ticket creation
+- Check session.user.id matches reporter_id
+- Verify foreign key constraint allows NULLs (for orphaned tickets)
+- Check if ticket was created before reporter_id added
+
+#### CSRF Token Issues
+
+**Symptom**: Forms fail with CSRF error
+
+**Solutions**:
+- Verify csrfToken passed to all views
+- Check form includes hidden _csrf field
+- Verify doubleCsrfProtection middleware configured
+- Clear browser cookies
+- Check for missing csrf-csrf package
+
+---
+
+## Quick Reference Commands
+
+```bash
+# Database Operations
+docker-compose exec db psql -U ticketing_user -d ticketing_db
+docker-compose exec db psql -U ticketing_user -d ticketing_db -f /migrations/010_add_department_role.sql
+docker-compose exec db pg_dump -U ticketing_user ticketing_db > backup.sql
+
+# Application
+docker-compose up --build -d
+docker-compose down
+docker-compose restart web
+docker-compose logs -f web
+
+# Testing
+npm test
+npm run test:unit
+npm run test:integration
+npm run test:e2e
+npm run test:coverage
+npm run test:watch
+
+# Git
+git checkout -b feature/department-accounts
+git status
+git add <files>
+git commit -m "message"
+git push origin feature/department-accounts
+git log --oneline
+
+# Scripts
+docker-compose exec web node scripts/create-department-accounts.js
+
+# Check Department Accounts
+docker-compose exec db psql -U ticketing_user -d ticketing_db -c "SELECT username, email, role FROM users WHERE role = 'department';"
+
+# Check Ticket Status Values
+docker-compose exec db psql -U ticketing_user -d ticketing_db -c "SELECT DISTINCT status FROM tickets;"
+
+# Check Comment Visibility
+docker-compose exec db psql -U ticketing_user -d ticketing_db -c "SELECT id, ticket_id, visibility_type, substring(content, 1, 50) FROM comments;"
+```
+
+---
+
+## Time Estimate Summary
+
+| Phase | Description | Estimated Time |
+|-------|-------------|----------------|
+| Pre-Implementation | Git setup, environment verification | 15 mins |
+| Phase 1 | Database migrations (4 files) | 30-45 mins |
+| Phase 2 | Create department accounts | 20-30 mins |
+| Phase 3 | Authentication updates | 45-60 mins |
+| Phase 4 | Client portal routes & views | 3-4 hours |
+| Phase 5 | Model updates | 1-1.5 hours |
+| Phase 6 | Service layer | 1.5-2 hours |
+| Phase 7 | Validators | 30-45 mins |
+| Phase 8 | Admin view updates | 1-1.5 hours |
+| Phase 9 | Navigation updates | 20-30 mins |
+| Phase 10 | Testing | 3-4 hours |
+| Phase 11 | Final integration & polish | 1-2 hours |
+| **Total** | **Estimated Implementation Time** | **13-17 hours** |
+| Pre-Deployment | Code review, security check | 1 hour |
+| Deployment | Backup, migrate, deploy, verify | 1-2 hours |
+| **Grand Total** | **Including deployment** | **15-20 hours** |
+
+---
+
+## Success Criteria
+
+✅ **Feature Complete** when all of the following are true:
+
+1. **Database**
+   - [ ] All 4 migrations applied successfully
+   - [ ] 5 department accounts exist and work
+   - [ ] New roles, statuses, and visibility types functional
+
+2. **Client Portal**
+   - [ ] Department users can log in and access /client/dashboard
+   - [ ] Can create tickets with waiting_on_admin status
+   - [ ] Can view only their own tickets
+   - [ ] Can add comments (public only)
+   - [ ] Can close their own tickets
+   - [ ] Cannot access admin portal
+   - [ ] Cannot see internal comments
+
+3. **Admin Portal**
+   - [ ] Admins can see all tickets (orphaned + department)
+   - [ ] Can add internal comments (checkbox works)
+   - [ ] Internal badge shows on internal comments
+   - [ ] Can update tickets to new statuses
+   - [ ] New status badges display correctly
+   - [ ] Cannot access client portal
+
+4. **Security**
+   - [ ] Ownership verification works (tested with 2 department accounts)
+   - [ ] Comment visibility filtering works (tested end-to-end)
+   - [ ] Role separation enforced (tested all boundary cases)
+   - [ ] No SQL injection vulnerabilities
+   - [ ] CSRF protection working
+   - [ ] Audit logs created for all actions
+
+5. **Testing**
+   - [ ] All existing tests still pass
+   - [ ] New tests added for all new features
+   - [ ] Test coverage maintained at ≥100%
+   - [ ] E2E test covers full workflow
+
+6. **Documentation**
+   - [ ] CLAUDE.md updated with new features
+   - [ ] README updated with department info
+   - [ ] Deployment guide updated
+   - [ ] User guides created
+
+7. **Quality**
+   - [ ] Code follows existing patterns (97% compliance)
+   - [ ] All error handling present
+   - [ ] All logging appropriate (no sensitive data)
+   - [ ] No console.log or TODO comments
+   - [ ] UI is polished and user-friendly
+
+---
+
+## Notes
+
+- This checklist is comprehensive but flexible - adjust as needed
+- Some phases can be done in parallel if multiple developers
+- Testing is critical - don't skip it
+- Security verification is mandatory before deployment
+- Document any deviations from the plan
+- Keep stakeholders informed of progress
+
+**Good luck with implementation! 🚀**
