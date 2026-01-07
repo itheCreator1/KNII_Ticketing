@@ -1,6 +1,14 @@
 <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
   <div class="container-fluid px-4">
-    <a class="navbar-brand" href="/admin/dashboard">KNII Ticketing</a>
+    <% if (user) { %>
+      <% if (user.role === 'department') { %>
+        <a class="navbar-brand" href="/client/dashboard">KNII Ticketing</a>
+      <% } else { %>
+        <a class="navbar-brand" href="/admin/dashboard">KNII Ticketing</a>
+      <% } %>
+    <% } else { %>
+      <a class="navbar-brand" href="/">KNII Ticketing</a>
+    <% } %>
 
     <% if (user) { %>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,6 +27,13 @@
         <div class="d-flex align-items-center gap-3">
           <span class="navbar-text text-light">
             Welcome, <%= user.username %>
+            <% if (user.role === 'super_admin') { %>
+              <span class="badge bg-danger ms-2">Super Admin</span>
+            <% } else if (user.role === 'admin') { %>
+              <span class="badge bg-primary ms-2">Admin</span>
+            <% } else if (user.role === 'department') { %>
+              <span class="badge bg-info text-dark ms-2">Department</span>
+            <% } %>
           </span>
           <form action="/auth/logout" method="POST" class="d-inline">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
