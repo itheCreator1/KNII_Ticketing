@@ -91,8 +91,8 @@ describe('Comment Model', () => {
 
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('$1, $2, $3'),
-        [5, 10, 'Test comment content']
+        expect.stringContaining('$1, $2, $3, $4'),
+        [5, 10, 'Test comment content', 'public'] // visibility_type defaults to 'public'
       );
     });
 
