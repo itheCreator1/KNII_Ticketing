@@ -128,16 +128,18 @@ Directory Structure:
 
 ```sql
 users (id, username, email, password_hash, role, status, login_attempts, last_login_at, password_changed_at, deleted_at, created_at, updated_at)
-  - role: 'admin' | 'super_admin'
+  - role: 'admin' | 'super_admin' | 'department'
   - status: 'active' | 'inactive' | 'deleted'
 
-tickets (id, title, description, status, priority, reporter_name, reporter_department, reporter_desk, reporter_phone, assigned_to → users.id, created_at, updated_at)
-  - status: 'open' | 'in_progress' | 'closed'
+tickets (id, title, description, status, priority, reporter_name, reporter_department, reporter_desk, reporter_phone, reporter_id → users.id, assigned_to → users.id, created_at, updated_at)
+  - status: 'open' | 'in_progress' | 'closed' | 'waiting_on_admin' | 'waiting_on_department'
   - priority: 'unset' | 'low' | 'medium' | 'high' | 'critical' (default: 'unset')
   - reporter_department: 'IT Support' | 'General Support' | 'Human Resources' | 'Finance' | 'Facilities'
   - reporter_desk: 'Director' | 'Manager' | 'Nursing Station' | 'Doctors office' | 'Secretary' | 'Not Specified'
+  - reporter_id: Links to department user account (NULL for legacy anonymous tickets)
 
-comments (id, ticket_id → tickets.id, user_id → users.id, content, created_at)
+comments (id, ticket_id → tickets.id, user_id → users.id, content, visibility_type, created_at)
+  - visibility_type: 'public' | 'internal' (default: 'public')
 
 audit_logs (id, actor_id → users.id, action, target_type, target_id, details JSONB, ip_address, created_at)
 
@@ -146,6 +148,7 @@ session (sid, sess JSON, expire)  -- managed by connect-pg-simple
 
 **Foreign Key Constraints**:
 - `tickets.assigned_to` → `users.id` (SET NULL on delete)
+- `tickets.reporter_id` → `users.id` (SET NULL on delete)
 - `comments.ticket_id` → `tickets.id` (CASCADE on delete)
 - `comments.user_id` → `users.id` (CASCADE on delete)
 - `audit_logs.actor_id` → `users.id` (no cascade)
@@ -158,15 +161,16 @@ session (sid, sess JSON, expire)  -- managed by connect-pg-simple
 
 **Middleware chain** (defined in middleware/auth.js):
 ```javascript
-requireAuth      // Checks req.session.user exists, verifies user still active
-requireAdmin     // Checks role is 'admin' or 'super_admin'
+requireAuth       // Checks req.session.user exists, verifies user still active
+requireAdmin      // Checks role is 'admin' or 'super_admin' (excludes department)
 requireSuperAdmin // Checks role is 'super_admin' only
+requireDepartment // Checks role is 'department' only
 ```
 
 **Route protection**:
-- `/admin/*` routes use `requireAuth`
-- Ticket update routes add `requireAdmin`
-- `/admin/users/*` routes add `requireSuperAdmin`
+- `/admin/*` routes use `requireAuth` + `requireAdmin`
+- `/admin/users/*` routes use `requireAuth` + `requireSuperAdmin`
+- `/client/*` routes use `requireAuth` + `requireDepartment`
 
 **Security features**:
 - Account locks after 5 failed login attempts (login_attempts field)
