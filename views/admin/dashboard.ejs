@@ -19,6 +19,7 @@
     <h2 class="mb-4">Ticket Dashboard</h2>
     <%- include('../partials/flash') %>
 
+    <!-- Filter Card -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <form action="/admin/dashboard" method="GET">
@@ -26,10 +27,16 @@
             <div class="col-md-3">
               <label for="status" class="form-label">Status</label>
               <select name="status" id="status" class="form-select">
-                <option value="">All Statuses</option>
-                <option value="open" <%= filters.status === 'open' ? 'selected' : '' %>>Open</option>
-                <option value="in_progress" <%= filters.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
-                <option value="closed" <%= filters.status === 'closed' ? 'selected' : '' %>>Closed</option>
+                <option value="">All Statuses<% if (statusCounts) { %> (<%= Object.values(statusCounts).reduce((a,b) => a+b, 0) %>)<% } %></option>
+                <option value="open" <%= filters.status === 'open' ? 'selected' : '' %>>
+                  Open<% if (statusCounts && statusCounts.open) { %> (<%= statusCounts.open %>)<% } else { %> (0)<% } %>
+                </option>
+                <option value="in_progress" <%= filters.status === 'in_progress' ? 'selected' : '' %>>
+                  In Progress<% if (statusCounts && statusCounts.in_progress) { %> (<%= statusCounts.in_progress %>)<% } else { %> (0)<% } %>
+                </option>
+                <option value="closed" <%= filters.status === 'closed' ? 'selected' : '' %>>
+                  Closed<% if (statusCounts && statusCounts.closed) { %> (<%= statusCounts.closed %>)<% } else { %> (0)<% } %>
+                </option>
               </select>
             </div>
 
@@ -37,11 +44,21 @@
               <label for="priority" class="form-label">Priority</label>
               <select name="priority" id="priority" class="form-select">
                 <option value="">All Priorities</option>
-                <option value="unset" <%= filters.priority === 'unset' ? 'selected' : '' %>>Unset</option>
-                <option value="low" <%= filters.priority === 'low' ? 'selected' : '' %>>Low</option>
-                <option value="medium" <%= filters.priority === 'medium' ? 'selected' : '' %>>Medium</option>
-                <option value="high" <%= filters.priority === 'high' ? 'selected' : '' %>>High</option>
-                <option value="critical" <%= filters.priority === 'critical' ? 'selected' : '' %>>Critical</option>
+                <option value="unset" <%= filters.priority === 'unset' ? 'selected' : '' %>>
+                  Unset<% if (priorityCounts && priorityCounts.unset) { %> (<%= priorityCounts.unset %>)<% } else { %> (0)<% } %>
+                </option>
+                <option value="low" <%= filters.priority === 'low' ? 'selected' : '' %>>
+                  Low<% if (priorityCounts && priorityCounts.low) { %> (<%= priorityCounts.low %>)<% } else { %> (0)<% } %>
+                </option>
+                <option value="medium" <%= filters.priority === 'medium' ? 'selected' : '' %>>
+                  Medium<% if (priorityCounts && priorityCounts.medium) { %> (<%= priorityCounts.medium %>)<% } else { %> (0)<% } %>
+                </option>
+                <option value="high" <%= filters.priority === 'high' ? 'selected' : '' %>>
+                  High<% if (priorityCounts && priorityCounts.high) { %> (<%= priorityCounts.high %>)<% } else { %> (0)<% } %>
+                </option>
+                <option value="critical" <%= filters.priority === 'critical' ? 'selected' : '' %>>
+                  Critical<% if (priorityCounts && priorityCounts.critical) { %> (<%= priorityCounts.critical %>)<% } else { %> (0)<% } %>
+                </option>
               </select>
             </div>
 
@@ -68,62 +85,235 @@
         <p class="mb-0">No tickets found. <%= filters.status || filters.priority || filters.search ? 'Try adjusting your filters.' : 'Tickets will appear here when users submit them.' %></p>
       </div>
     <% } else { %>
-      <div class="card shadow-sm mb-3">
-        <div class="table-responsive">
-          <table class="table table-hover table-striped mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Reporter</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% tickets.forEach(ticket => { %>
-                <tr>
-                  <td>#<%= ticket.id %></td>
-                  <td class="ticket-title"><%= ticket.title %></td>
-                  <td>
-                    <% if (ticket.status === 'open') { %>
-                      <span class="badge bg-info text-dark"><%= ticket.status.replace('_', ' ') %></span>
-                    <% } else if (ticket.status === 'in_progress') { %>
-                      <span class="badge bg-warning text-dark"><%= ticket.status.replace('_', ' ') %></span>
-                    <% } else { %>
-                      <span class="badge bg-success"><%= ticket.status.replace('_', ' ') %></span>
-                    <% } %>
-                  </td>
-                  <td>
-                    <% if (ticket.priority === 'unset') { %>
-                      <span class="badge bg-light text-dark border"><%= ticket.priority %></span>
-                    <% } else if (ticket.priority === 'low') { %>
-                      <span class="badge bg-secondary"><%= ticket.priority %></span>
-                    <% } else if (ticket.priority === 'medium') { %>
-                      <span class="badge bg-info"><%= ticket.priority %></span>
-                    <% } else if (ticket.priority === 'high') { %>
-                      <span class="badge bg-warning text-dark"><%= ticket.priority %></span>
-                    <% } else if (ticket.priority === 'critical') { %>
-                      <span class="badge bg-danger"><%= ticket.priority %></span>
-                    <% } %>
-                  </td>
-                  <td><%= ticket.reporter_name || 'Anonymous' %></td>
-                  <td><%= new Date(ticket.created_at).toLocaleDateString() %></td>
-                  <td>
-                    <a href="/admin/tickets/<%= ticket.id %>" class="btn btn-sm btn-primary">View</a>
-                  </td>
-                </tr>
-              <% }); %>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <!-- Bulk Update Form -->
+      <form method="POST" action="/admin/tickets/bulk-update" id="bulkUpdateForm">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <!-- Preserve current filters -->
+        <input type="hidden" name="status" value="<%= filters.status || '' %>">
+        <input type="hidden" name="priority" value="<%= filters.priority || '' %>">
+        <input type="hidden" name="search" value="<%= filters.search || '' %>">
+        <input type="hidden" name="page" value="<%= filters.page || '1' %>">
 
-      <div class="ticket-stats">
-        Showing <%= tickets.length %> ticket<%= tickets.length !== 1 ? 's' : '' %>
-      </div>
+        <!-- Bulk Update Controls -->
+        <div class="card shadow-sm mb-3">
+          <div class="card-body">
+            <div class="row g-2 align-items-end">
+              <div class="col-auto">
+                <label class="form-label small text-muted">Bulk Update Selected:</label>
+              </div>
+              <div class="col-auto">
+                <select name="status" class="form-select form-select-sm">
+                  <option value="">Status (no change)</option>
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+              <div class="col-auto">
+                <select name="priority" class="form-select form-select-sm">
+                  <option value="">Priority (no change)</option>
+                  <option value="unset">Unset</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+              <div class="col-auto">
+                <select name="assigned_to" class="form-select form-select-sm">
+                  <option value="">Assignment (no change)</option>
+                  <option value="">-- Unassign --</option>
+                  <% users.forEach(user => { %>
+                    <option value="<%= user.id %>"><%= user.username %></option>
+                  <% }); %>
+                </select>
+              </div>
+              <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-sm" id="bulkUpdateBtn" disabled>
+                  Update Selected (<span id="selectedCount">0</span>)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tickets Table -->
+        <div class="card shadow-sm mb-3">
+          <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 40px;">
+                    <input type="checkbox" id="selectAll" class="form-check-input">
+                  </th>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Status</th>
+                  <th>Priority</th>
+                  <th>Age</th>
+                  <th style="min-width: 200px;">Last Comment</th>
+                  <th>Reporter</th>
+                  <th style="min-width: 150px;">Quick Assign</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% tickets.forEach(ticket => {
+                  const age = calculateTicketAge(ticket.created_at);
+                  const lastComment = lastComments[ticket.id];
+                %>
+                  <tr>
+                    <!-- Checkbox -->
+                    <td>
+                      <input type="checkbox" name="ticketIds" value="<%= ticket.id %>" class="form-check-input ticket-checkbox">
+                    </td>
+
+                    <!-- ID -->
+                    <td>#<%= ticket.id %></td>
+
+                    <!-- Title -->
+                    <td class="ticket-title"><%= ticket.title %></td>
+
+                    <!-- Status Badge -->
+                    <td>
+                      <% if (ticket.status === 'open') { %>
+                        <span class="badge bg-info text-dark">Open</span>
+                      <% } else if (ticket.status === 'in_progress') { %>
+                        <span class="badge bg-warning text-dark">In Progress</span>
+                      <% } else { %>
+                        <span class="badge bg-success">Closed</span>
+                      <% } %>
+                    </td>
+
+                    <!-- Priority Badge -->
+                    <td>
+                      <% if (ticket.priority === 'critical') { %>
+                        <span class="badge bg-danger">Critical</span>
+                      <% } else if (ticket.priority === 'high') { %>
+                        <span class="badge bg-warning text-dark">High</span>
+                      <% } else if (ticket.priority === 'medium') { %>
+                        <span class="badge bg-info">Medium</span>
+                      <% } else if (ticket.priority === 'low') { %>
+                        <span class="badge bg-secondary">Low</span>
+                      <% } else { %>
+                        <span class="badge bg-light text-dark border">Unset</span>
+                      <% } %>
+                    </td>
+
+                    <!-- Age Badge -->
+                    <td>
+                      <span class="<%= age.colorClass %>"><%= age.text %></span>
+                    </td>
+
+                    <!-- Last Comment Preview -->
+                    <td class="text-muted small">
+                      <% if (lastComment) { %>
+                        <div class="text-truncate" style="max-width: 250px;" title="<%= lastComment.content %>">
+                          <strong><%= lastComment.username %>:</strong>
+                          <%= lastComment.content.length > 50 ? lastComment.content.substring(0, 50) + '...' : lastComment.content %>
+                        </div>
+                      <% } else { %>
+                        <em class="text-muted">No comments</em>
+                      <% } %>
+                    </td>
+
+                    <!-- Reporter -->
+                    <td><%= ticket.reporter_name || 'Anonymous' %></td>
+
+                    <!-- Quick Assign Dropdown -->
+                    <td>
+                      <form method="POST" action="/admin/tickets/<%= ticket.id %>/quick-assign" class="d-inline">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <input type="hidden" name="status" value="<%= filters.status || '' %>">
+                        <input type="hidden" name="priority" value="<%= filters.priority || '' %>">
+                        <input type="hidden" name="search" value="<%= filters.search || '' %>">
+                        <input type="hidden" name="page" value="<%= filters.page || '1' %>">
+                        <select name="assigned_to" class="form-select form-select-sm" onchange="this.form.submit()">
+                          <option value="">Unassigned</option>
+                          <% users.forEach(user => { %>
+                            <option value="<%= user.id %>" <%= ticket.assigned_to === user.id ? 'selected' : '' %>>
+                              <%= user.username %>
+                            </option>
+                          <% }); %>
+                        </select>
+                      </form>
+                    </td>
+
+                    <!-- View Action -->
+                    <td>
+                      <a href="/admin/tickets/<%= ticket.id %>" class="btn btn-sm btn-primary">View</a>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <% if (pagination && pagination.totalPages > 1) { %>
+          <nav aria-label="Ticket pagination">
+            <ul class="pagination justify-content-center">
+              <!-- Previous Page -->
+              <li class="page-item <%= !pagination.hasPrevPage ? 'disabled' : '' %>">
+                <a class="page-link" href="?page=<%= pagination.currentPage - 1 %><%= filters.status ? '&status=' + filters.status : '' %><%= filters.priority ? '&priority=' + filters.priority : '' %><%= filters.search ? '&search=' + encodeURIComponent(filters.search) : '' %>">
+                  Previous
+                </a>
+              </li>
+
+              <!-- Page Numbers -->
+              <%
+                const startPage = Math.max(1, pagination.currentPage - 2);
+                const endPage = Math.min(pagination.totalPages, pagination.currentPage + 2);
+
+                if (startPage > 1) { %>
+                  <li class="page-item">
+                    <a class="page-link" href="?page=1<%= filters.status ? '&status=' + filters.status : '' %><%= filters.priority ? '&priority=' + filters.priority : '' %><%= filters.search ? '&search=' + encodeURIComponent(filters.search) : '' %>">1</a>
+                  </li>
+                  <% if (startPage > 2) { %>
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                  <% } %>
+                <% }
+
+                for (let i = startPage; i <= endPage; i++) { %>
+                  <li class="page-item <%= i === pagination.currentPage ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %><%= filters.status ? '&status=' + filters.status : '' %><%= filters.priority ? '&priority=' + filters.priority : '' %><%= filters.search ? '&search=' + encodeURIComponent(filters.search) : '' %>">
+                      <%= i %>
+                    </a>
+                  </li>
+                <% }
+
+                if (endPage < pagination.totalPages) {
+                  if (endPage < pagination.totalPages - 1) { %>
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                  <% } %>
+                  <li class="page-item">
+                    <a class="page-link" href="?page=<%= pagination.totalPages %><%= filters.status ? '&status=' + filters.status : '' %><%= filters.priority ? '&priority=' + filters.priority : '' %><%= filters.search ? '&search=' + encodeURIComponent(filters.search) : '' %>">
+                      <%= pagination.totalPages %>
+                    </a>
+                  </li>
+                <% } %>
+
+              <!-- Next Page -->
+              <li class="page-item <%= !pagination.hasNextPage ? 'disabled' : '' %>">
+                <a class="page-link" href="?page=<%= pagination.currentPage + 1 %><%= filters.status ? '&status=' + filters.status : '' %><%= filters.priority ? '&priority=' + filters.priority : '' %><%= filters.search ? '&search=' + encodeURIComponent(filters.search) : '' %>">
+                  Next
+                </a>
+              </li>
+            </ul>
+
+            <!-- Page Info -->
+            <p class="text-center text-muted small">
+              Page <%= pagination.currentPage %> of <%= pagination.totalPages %>
+              (Showing <%= tickets.length %> of <%= pagination.totalCount %> tickets)
+            </p>
+          </nav>
+        <% } else if (pagination) { %>
+          <p class="text-center text-muted small">
+            Showing <%= tickets.length %> ticket<%= tickets.length !== 1 ? 's' : '' %>
+          </p>
+        <% } %>
+      </form>
     <% } %>
   </main>
 
@@ -133,5 +323,63 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
           integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
           crossorigin="anonymous"></script>
+
+  <script>
+  // Select all checkbox functionality
+  document.getElementById('selectAll')?.addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.ticket-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    updateBulkButton();
+  });
+
+  // Individual checkbox change
+  document.querySelectorAll('.ticket-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateBulkButton);
+  });
+
+  // Update bulk button state
+  function updateBulkButton() {
+    const checked = document.querySelectorAll('.ticket-checkbox:checked');
+    const btn = document.getElementById('bulkUpdateBtn');
+    const count = document.getElementById('selectedCount');
+
+    count.textContent = checked.length;
+    btn.disabled = checked.length === 0;
+  }
+
+  // Confirm bulk update
+  document.getElementById('bulkUpdateForm')?.addEventListener('submit', function(e) {
+    const checked = document.querySelectorAll('.ticket-checkbox:checked');
+    if (checked.length === 0) {
+      e.preventDefault();
+      alert('Please select at least one ticket');
+      return false;
+    }
+
+    const status = this.querySelector('select[name="status"]').value;
+    const priority = this.querySelector('select[name="priority"]').value;
+    const assigned_to = this.querySelector('select[name="assigned_to"]').value;
+
+    if (!status && !priority && assigned_to === '') {
+      e.preventDefault();
+      alert('Please select at least one field to update (status, priority, or assignment)');
+      return false;
+    }
+
+    // Build confirmation message
+    const updates = [];
+    if (status) updates.push(`status to ${status}`);
+    if (priority) updates.push(`priority to ${priority}`);
+    if (assigned_to !== '') {
+      const assignedOption = this.querySelector(`select[name="assigned_to"] option[value="${assigned_to}"]`);
+      updates.push(assigned_to ? `assign to ${assignedOption.text}` : 'unassign');
+    }
+
+    if (!confirm(`Update ${checked.length} ticket(s): ${updates.join(', ')}?`)) {
+      e.preventDefault();
+      return false;
+    }
+  });
+  </script>
 </body>
 </html>

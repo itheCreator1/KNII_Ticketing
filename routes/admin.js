@@ -2,24 +2,40 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const Comment = require('../models/Comment');
+const User = require('../models/User');
 const { validateRequest } = require('../middleware/validation');
 const { TICKET_MESSAGES, COMMENT_MESSAGES } = require('../constants/messages');
 const ticketService = require('../services/ticketService');
-const { validateTicketUpdate, validateTicketId } = require('../validators/ticketValidators');
+const { validateTicketUpdate, validateTicketId, validateBulkUpdate, validateQuickAssign } = require('../validators/ticketValidators');
 const { validateCommentCreation } = require('../validators/commentValidators');
 const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
+const logger = require('../utils/logger');
 
 router.use(requireAuth);
 
 router.get('/dashboard', async (req, res, next) => {
   try {
-    const tickets = await ticketService.getAllTickets(req.query);
+    const page = parseInt(req.query.page) || 1;
+    const dashboardData = await ticketService.getDashboardData(req.query, page);
+
+    // Get active users for quick assign dropdown
+    const users = await User.findAllActive();
+
     res.render('admin/dashboard', {
       title: 'Admin Dashboard',
-      tickets,
+      tickets: dashboardData.tickets,
+      pagination: dashboardData.pagination,
+      statusCounts: dashboardData.statusCounts,
+      priorityCounts: dashboardData.priorityCounts,
+      lastComments: dashboardData.lastComments,
+      users: users,
       filters: req.query
     });
   } catch (error) {
+    logger.error('Error loading dashboard', {
+      error: error.message,
+      stack: error.stack
+    });
     next(error);
   }
 });
@@ -65,5 +81,93 @@ router.post('/tickets/:id/comments', validateTicketId, validateCommentCreation, 
     next(error);
   }
 });
+
+// Bulk update (status, priority, assignment)
+router.post('/tickets/bulk-update',
+  requireAdmin,
+  validateBulkUpdate,
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      const { ticketIds, status, priority, assigned_to } = req.body;
+
+      // Build updates object (only include provided fields)
+      const updates = {};
+      if (status) updates.status = status;
+      if (priority) updates.priority = priority;
+      if (assigned_to !== undefined) {
+        updates.assigned_to = assigned_to === '' ? null : parseInt(assigned_to);
+      }
+
+      await ticketService.bulkUpdateTickets(
+        ticketIds,
+        updates,
+        req.session.user.id,
+        req.ip
+      );
+
+      // Build description of what was updated
+      const updateParts = [];
+      if (status) updateParts.push(`status to ${status}`);
+      if (priority) updateParts.push(`priority to ${priority}`);
+      if (assigned_to !== undefined) {
+        updateParts.push(assigned_to ? 'assignment' : 'unassigned');
+      }
+
+      successRedirect(
+        req,
+        res,
+        `Successfully updated ${ticketIds.length} ticket(s): ${updateParts.join(', ')}`,
+        '/admin/dashboard' + buildQueryString(req.query)
+      );
+    } catch (error) {
+      logger.error('Error in bulk update', {
+        error: error.message,
+        ticketIds: req.body.ticketIds,
+        updates: { status: req.body.status, priority: req.body.priority, assigned_to: req.body.assigned_to }
+      });
+      next(error);
+    }
+  }
+);
+
+// Quick assign ticket
+router.post('/tickets/:id/quick-assign',
+  requireAdmin,
+  validateQuickAssign,
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      await ticketService.updateTicket(
+        req.params.id,
+        { assigned_to: req.body.assigned_to || null }
+      );
+
+      successRedirect(
+        req,
+        res,
+        'Ticket assigned successfully',
+        '/admin/dashboard' + buildQueryString(req.query)
+      );
+    } catch (error) {
+      logger.error('Error in quick assign', {
+        error: error.message,
+        ticketId: req.params.id,
+        assignedTo: req.body.assigned_to
+      });
+      next(error);
+    }
+  }
+);
+
+// Helper function to preserve filters and pagination
+function buildQueryString(filters) {
+  const params = new URLSearchParams();
+  if (filters.status) params.append('status', filters.status);
+  if (filters.priority) params.append('priority', filters.priority);
+  if (filters.search) params.append('search', filters.search);
+  if (filters.page) params.append('page', filters.page);
+  return params.toString() ? '?' + params.toString() : '';
+}
 
 module.exports = router;
