@@ -99,6 +99,8 @@
                 <select name="status" id="status" class="form-select">
                   <option value="open" <%= ticket.status === 'open' ? 'selected' : '' %>>Open</option>
                   <option value="in_progress" <%= ticket.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+                  <option value="waiting_on_admin" <%= ticket.status === 'waiting_on_admin' ? 'selected' : '' %>>Waiting on Admin</option>
+                  <option value="waiting_on_department" <%= ticket.status === 'waiting_on_department' ? 'selected' : '' %>>Waiting on Department</option>
                   <option value="closed" <%= ticket.status === 'closed' ? 'selected' : '' %>>Closed</option>
                 </select>
               </div>
@@ -138,6 +140,9 @@
               <div class="comment">
                 <div class="comment-header">
                   <strong><%= comment.username %></strong>
+                  <% if (comment.visibility_type === 'internal') { %>
+                    <span class="badge bg-warning text-dark ms-2">Internal</span>
+                  <% } %>
                   <span class="comment-meta ms-2"><%= new Date(comment.created_at).toLocaleString() %></span>
                 </div>
                 <div class="comment-content mt-2">
@@ -157,6 +162,14 @@
           <div class="mb-3">
             <textarea name="content" id="content" rows="4" class="form-control" placeholder="Write your comment here..." required></textarea>
           </div>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="is_internal" name="is_internal">
+            <label class="form-check-label" for="is_internal">
+              Internal Comment <small class="text-muted">(visible only to admins)</small>
+            </label>
+          </div>
+
           <button type="submit" class="btn btn-primary">Add Comment</button>
         </form>
       </div>

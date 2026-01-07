@@ -29,6 +29,8 @@
                 <option value="">All Statuses</option>
                 <option value="open" <%= filters.status === 'open' ? 'selected' : '' %>>Open</option>
                 <option value="in_progress" <%= filters.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+                <option value="waiting_on_admin" <%= filters.status === 'waiting_on_admin' ? 'selected' : '' %>>Waiting on Admin</option>
+                <option value="waiting_on_department" <%= filters.status === 'waiting_on_department' ? 'selected' : '' %>>Waiting on Department</option>
                 <option value="closed" <%= filters.status === 'closed' ? 'selected' : '' %>>Closed</option>
               </select>
             </div>
