@@ -94,20 +94,7 @@ app.use('/client', clientRoutes);
 app.use('/api/errors', errorReportingRoutes);
 
 app.use((req, res) => {
-  // Generate correlation ID for 404 errors
-  const crypto = require('crypto');
-  const correlationId = crypto.randomBytes(8).toString('hex').toUpperCase();
-
-  res.status(404).render('errors/404', {
-    title: '404 - Page Not Found',
-    status: 404,
-    message: 'The page you are looking for could not be found.',
-    user: res.locals.user || null,
-    correlationId,
-    errorCategory: 'NOT_FOUND',
-    isDevelopment: process.env.NODE_ENV === 'development',
-    stackTrace: null
-  });
+  res.status(404).render('errors/404', { title: '404 - Page Not Found' });
 });
 
 app.use(errorHandler);
