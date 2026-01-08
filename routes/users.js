@@ -42,7 +42,10 @@ router.post('/',
   async (req, res, next) => {
     try {
       const { username, email, password, role, department } = req.body;
-      await userService.createUser({ username, email, password, role, department });
+      // Convert empty string to null for database constraint
+      const cleanDepartment = department && department.trim() !== '' ? department : null;
+
+      await userService.createUser({ username, email, password, role, department: cleanDepartment });
 
       return successRedirect(req, res, 'User created successfully', '/admin/users');
     } catch (error) {

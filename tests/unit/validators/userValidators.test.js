@@ -422,6 +422,223 @@ describe('User Validators', () => {
       expect(req.body.username).toBe('testuser');
       expect(req.body.email).toBe('test@example.com');
     });
+
+    // Department Validation Tests
+    describe('department field validation', () => {
+      it('should pass validation for admin role with empty department', async () => {
+        // Arrange
+        User.findByUsername.mockResolvedValue(null);
+        User.findByEmail.mockResolvedValue(null);
+
+        const req = createMockRequest({
+          body: {
+            username: 'adminuser',
+            email: 'admin@example.com',
+            password: 'ValidPass123!',
+            role: 'admin',
+            department: ''
+          }
+        });
+
+        // Act
+        const result = await runValidators(validateUserCreate, req);
+
+        // Assert
+        expect(result.isEmpty()).toBe(true);
+      });
+
+      it('should pass validation for super_admin role with empty department', async () => {
+        // Arrange
+        User.findByUsername.mockResolvedValue(null);
+        User.findByEmail.mockResolvedValue(null);
+
+        const req = createMockRequest({
+          body: {
+            username: 'superadmin',
+            email: 'super@example.com',
+            password: 'ValidPass123!',
+            role: 'super_admin',
+            department: ''
+          }
+        });
+
+        // Act
+        const result = await runValidators(validateUserCreate, req);
+
+        // Assert
+        expect(result.isEmpty()).toBe(true);
+      });
+
+      it('should fail validation for department role without department', async () => {
+        // Arrange
+        User.findByUsername.mockResolvedValue(null);
+        User.findByEmail.mockResolvedValue(null);
+
+        const req = createMockRequest({
+          body: {
+            username: 'deptuser',
+            email: 'dept@example.com',
+            password: 'ValidPass123!',
+            role: 'department',
+            department: ''
+          }
+        });
+
+        // Act
+        const result = await runValidators(validateUserCreate, req);
+
+        // Assert
+        expect(result.isEmpty()).toBe(false);
+        const errors = result.array();
+        expect(errors.some(e => e.path === 'department' && e.msg.includes('required'))).toBe(true);
+      });
+
+      it('should fail validation for department role with whitespace-only department', async () => {
+        // Arrange
+        User.findByUsername.mockResolvedValue(null);
+        User.findByEmail.mockResolvedValue(null);
+
+        const req = createMockRequest({
+          body: {
+            username: 'deptuser',
+            email: 'dept@example.com',
+            password: 'ValidPass123!',
+            role: 'department',
+            department: '   '
+          }
+        });
+
+        // Act
+        const result = await runValidators(validateUserCreate, req);
+
+        // Assert
+        expect(result.isEmpty()).toBe(false);
+        const errors = result.array();
+        expect(errors.some(e => e.path === 'department' && e.msg.includes('required'))).toBe(true);
+      });
+
+      it('should pass validation for department role with valid department', async () => {
+        // Arrange
+        User.findByUsername.mockResolvedValue(null);
+        User.findByEmail.mockResolvedValue(null);
+
+        const req = createMockRequest({
+          body: {
+            username: 'deptuser',
+            email: 'dept@example.com',
+            password: 'ValidPass123!',
+            role: 'department',
+            department: 'IT Support'
+          }
+        });
+
+        // Act
+        const result = await runValidators(validateUserCreate, req);
+
+        // Assert
+        expect(result.isEmpty()).toBe(true);
+      });
+
+      it('should pass validation for department role with all valid departments', async () => {
+        const validDepartments = [
+          'IT Support',
+          'General Support',
+          'Human Resources',
+          'Finance',
+          'Facilities'
+        ];
+
+        for (const department of validDepartments) {
+          User.findByUsername.mockResolvedValue(null);
+          User.findByEmail.mockResolvedValue(null);
+
+          const req = createMockRequest({
+            body: {
+              username: 'deptuser',
+              email: 'dept@example.com',
+              password: 'ValidPass123!',
+              role: 'department',
+              department
+            }
+          });
+
+          const result = await runValidators(validateUserCreate, req);
+          expect(result.isEmpty()).toBe(true);
+        }
+      });
+
+      it('should fail validation for department role with invalid department', async () => {
+        // Arrange
+        User.findByUsername.mockResolvedValue(null);
+        User.findByEmail.mockResolvedValue(null);
+
+        const req = createMockRequest({
+          body: {
+            username: 'deptuser',
+            email: 'dept@example.com',
+            password: 'ValidPass123!',
+            role: 'department',
+            department: 'Invalid Department'
+          }
+        });
+
+        // Act
+        const result = await runValidators(validateUserCreate, req);
+
+        // Assert
+        expect(result.isEmpty()).toBe(false);
+        const errors = result.array();
+        expect(errors.some(e => e.path === 'department' && e.msg.includes('Invalid'))).toBe(true);
+      });
+
+      it('should fail validation for admin role with department set', async () => {
+        // Arrange
+        User.findByUsername.mockResolvedValue(null);
+        User.findByEmail.mockResolvedValue(null);
+
+        const req = createMockRequest({
+          body: {
+            username: 'adminuser',
+            email: 'admin@example.com',
+            password: 'ValidPass123!',
+            role: 'admin',
+            department: 'IT Support'
+          }
+        });
+
+        // Act
+        const result = await runValidators(validateUserCreate, req);
+
+        // Assert
+        expect(result.isEmpty()).toBe(false);
+        const errors = result.array();
+        expect(errors.some(e => e.path === 'department' && e.msg.includes('only'))).toBe(true);
+      });
+
+      it('should fail validation for super_admin role with department set', async () => {
+        // Arrange
+        User.findByUsername.mockResolvedValue(null);
+        User.findByEmail.mockResolvedValue(null);
+
+        const req = createMockRequest({
+          body: {
+            username: 'superadmin',
+            email: 'super@example.com',
+            password: 'ValidPass123!',
+            role: 'super_admin',
+            department: 'Finance'
+          }
+        });
+
+        // Act
+        const result = await runValidators(validateUserCreate, req);
+
+        // Assert
+        expect(result.isEmpty()).toBe(false);
+        const errors = result.array();
+        expect(errors.some(e => e.path === 'department' && e.msg.includes('only'))).toBe(true);
+      });
+    });
   });
 
   describe('validateUserUpdate', () => {

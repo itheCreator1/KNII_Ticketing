@@ -39,10 +39,39 @@ const validateUserCreate = [
     .withMessage(VALIDATION_MESSAGES.ROLE_INVALID),
 
   body('department')
-    .optional({ nullable: true, checkFalsy: true })
-    .trim()
-    .isIn(Object.values(REPORTER_DEPARTMENT))
-    .withMessage('Invalid department selected')
+    .custom((value, { req }) => {
+      const role = req.body.role;
+      const logger = require('../utils/logger');
+
+      // Trim the value for validation
+      const trimmedValue = value ? value.trim() : '';
+
+      logger.debug('Department validation', {
+        role,
+        department: trimmedValue,
+        originalValue: value,
+        valueType: typeof value,
+        isEmpty: !trimmedValue,
+        validDepartments: Object.values(REPORTER_DEPARTMENT)
+      });
+
+      // If role is department, department must be provided and valid
+      if (role === USER_ROLE.DEPARTMENT) {
+        if (!trimmedValue) {
+          throw new Error('Department is required for department role users');
+        }
+        if (!Object.values(REPORTER_DEPARTMENT).includes(trimmedValue)) {
+          throw new Error('Invalid department selected');
+        }
+      }
+
+      // If role is not department, department should be empty (we'll convert to null in routes)
+      if (role !== USER_ROLE.DEPARTMENT && trimmedValue) {
+        throw new Error('Department can only be set for department role users');
+      }
+
+      return true;
+    })
 ];
 
 const validateUserUpdate = [
@@ -76,8 +105,36 @@ const validateUserUpdate = [
   body('department')
     .optional({ nullable: true, checkFalsy: true })
     .trim()
-    .isIn(Object.values(REPORTER_DEPARTMENT))
-    .withMessage('Invalid department selected')
+    .custom((value, { req }) => {
+      const role = req.body.role;
+
+      // Only validate if role is being updated
+      if (role !== undefined) {
+        // If role is department, department must be provided and valid
+        if (role === USER_ROLE.DEPARTMENT) {
+          if (!value) {
+            throw new Error('Department is required for department role users');
+          }
+          if (!Object.values(REPORTER_DEPARTMENT).includes(value)) {
+            throw new Error('Invalid department selected');
+          }
+        }
+
+        // If role is not department, department should be null/empty
+        if (role !== USER_ROLE.DEPARTMENT && value) {
+          throw new Error('Department can only be set for department role users');
+        }
+      }
+
+      // If role is not being updated, just validate department format if provided
+      if (role === undefined && value) {
+        if (!Object.values(REPORTER_DEPARTMENT).includes(value)) {
+          throw new Error('Invalid department selected');
+        }
+      }
+
+      return true;
+    })
 ];
 
 const validatePasswordReset = [

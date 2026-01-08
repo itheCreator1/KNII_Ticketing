@@ -1,13 +1,25 @@
 const { validationResult } = require('express-validator');
+const logger = require('../utils/logger');
 
 function validateRequest(req, res, next) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    // Log validation errors for debugging
+    logger.warn('Validation failed', {
+      path: req.path,
+      method: req.method,
+      errors: errors.array().map(e => ({ field: e.path, message: e.msg })),
+      body: Object.keys(req.body)
+    });
+
     if (req.accepts('html')) {
       errors.array().forEach(error => {
         req.flash('error_msg', error.msg);
       });
-      return res.redirect('back');
+      // Use Referer header for redirect, fallback to '/' if not present
+      const redirectUrl = req.get('Referer') || '/';
+      logger.debug('Redirecting after validation failure', { redirectUrl, referer: req.get('Referer') });
+      return res.redirect(redirectUrl);
     } else {
       return res.status(400).json({ errors: errors.array() });
     }
