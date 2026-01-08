@@ -52,8 +52,10 @@
                   <td>
                     <% if (u.role === 'super_admin') { %>
                       <span class="badge bg-danger">Super Admin</span>
-                    <% } else { %>
-                      <span class="badge bg-info">Admin</span>
+                    <% } else if (u.role === 'admin') { %>
+                      <span class="badge bg-primary">Admin</span>
+                    <% } else if (u.role === 'department') { %>
+                      <span class="badge bg-info">Department</span>
                     <% } %>
                   </td>
                   <td>
