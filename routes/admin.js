@@ -28,6 +28,15 @@ router.get('/dashboard', async (req, res, next) => {
   }
 });
 
+// GET /admin/tickets/new - Display internal ticket creation form
+// IMPORTANT: Must come before /tickets/:id to avoid matching "new" as an id
+router.get('/tickets/new', requireAdmin, (req, res) => {
+  res.render('admin/new-ticket', {
+    title: 'Create Internal Ticket',
+    REPORTER_DESK
+  });
+});
+
 router.get('/tickets/:id', validateTicketId, validateRequest, async (req, res, next) => {
   try {
     const ticket = await ticketService.getTicketById(req.params.id);
@@ -72,14 +81,6 @@ router.post('/tickets/:id/comments', validateTicketId, validateCommentCreation, 
   } catch (error) {
     next(error);
   }
-});
-
-// GET /admin/tickets/new - Display internal ticket creation form
-router.get('/tickets/new', requireAdmin, (req, res) => {
-  res.render('admin/new-ticket', {
-    title: 'Create Internal Ticket',
-    REPORTER_DESK
-  });
 });
 
 // POST /admin/tickets - Create internal ticket
