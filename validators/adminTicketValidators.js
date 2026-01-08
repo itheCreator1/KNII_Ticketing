@@ -1,11 +1,12 @@
 const { body } = require('express-validator');
-const { TICKET_PRIORITY, TICKET_STATUS, REPORTER_DESK } = require('../constants/enums');
+const { TICKET_PRIORITY, TICKET_STATUS, REPORTER_DESK, REPORTER_DEPARTMENT } = require('../constants/enums');
 const { VALIDATION_MESSAGES, MAX_LENGTHS } = require('../constants/validation');
 
 /**
- * Validator for admin internal ticket creation
- * Admins create tickets as 'Internal' department
- * Unlike client tickets, admins can set priority and status at creation
+ * Validator for admin ticket creation
+ * Admins can select any department (not forced to 'Internal')
+ * Admins can set priority and status at creation (unlike department users)
+ * Visibility is controlled by is_admin_created flag, not department value
  */
 const validateAdminTicketCreation = [
   body('title')
@@ -17,6 +18,11 @@ const validateAdminTicketCreation = [
     .trim()
     .notEmpty().withMessage(VALIDATION_MESSAGES.DESCRIPTION_REQUIRED)
     .isLength({ max: MAX_LENGTHS.TICKET_DESCRIPTION }).withMessage(VALIDATION_MESSAGES.DESCRIPTION_TOO_LONG),
+
+  body('reporter_department')
+    .trim()
+    .notEmpty().withMessage(VALIDATION_MESSAGES.DEPARTMENT_REQUIRED)
+    .isIn(Object.values(REPORTER_DEPARTMENT)).withMessage(VALIDATION_MESSAGES.DEPARTMENT_INVALID),
 
   body('reporter_desk')
     .trim()

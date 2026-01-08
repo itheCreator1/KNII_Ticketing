@@ -133,8 +133,8 @@ describe('Ticket Model', () => {
 
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('$1, $2, $3, $4, $5, $6, $7, $8, $9'),
-        ['Test Ticket', 'Test Description', 'John Doe', 'IT Support', 'Manager', '555-1234', null, 'high', 'open']
+        expect.stringContaining('$1, $2, $3, $4, $5, $6, $7, $8, $9, $10'),
+        ['Test Ticket', 'Test Description', 'John Doe', 'IT Support', 'Manager', '555-1234', null, 'high', 'open', false]
       );
     });
 

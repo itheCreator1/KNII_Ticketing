@@ -2,15 +2,15 @@ const pool = require('../config/database');
 const logger = require('../utils/logger');
 
 class Ticket {
-  static async create({ title, description, reporter_name, reporter_department, reporter_desk, reporter_phone, reporter_id, priority = 'unset', status = 'open' }) {
+  static async create({ title, description, reporter_name, reporter_department, reporter_desk, reporter_phone, reporter_id, priority = 'unset', status = 'open', is_admin_created = false }) {
     const startTime = Date.now();
     try {
-      logger.info('Ticket.create: Creating new ticket', { reporterDepartment: reporter_department, reporterDesk: reporter_desk, reporterId: reporter_id, priority, status, titleLength: title?.length });
+      logger.info('Ticket.create: Creating new ticket', { reporterDepartment: reporter_department, reporterDesk: reporter_desk, reporterId: reporter_id, priority, status, isAdminCreated: is_admin_created, titleLength: title?.length });
       const result = await pool.query(
-        `INSERT INTO tickets (title, description, reporter_name, reporter_department, reporter_desk, reporter_phone, reporter_id, priority, status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `INSERT INTO tickets (title, description, reporter_name, reporter_department, reporter_desk, reporter_phone, reporter_id, priority, status, is_admin_created)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING *`,
-        [title, description, reporter_name || null, reporter_department, reporter_desk, reporter_phone, reporter_id || null, priority, status]
+        [title, description, reporter_name || null, reporter_department, reporter_desk, reporter_phone, reporter_id || null, priority, status, is_admin_created]
       );
       const duration = Date.now() - startTime;
 
@@ -127,7 +127,7 @@ class Ticket {
         FROM tickets t
         LEFT JOIN users u ON t.assigned_to = u.id
         WHERE t.reporter_id = $1
-          AND t.reporter_department != 'Internal'
+          AND t.is_admin_created = false
       `;
       const params = [userId];
       let paramIndex = 2;

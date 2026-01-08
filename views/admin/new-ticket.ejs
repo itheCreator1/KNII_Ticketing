@@ -16,8 +16,8 @@
   <main class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2>
-        <span class="badge bg-warning text-dark me-2">Internal</span>
-        Create Internal Ticket
+        <span class="badge bg-primary text-white me-2">Admin</span>
+        Create Admin Ticket
       </h2>
       <a href="/admin/dashboard" class="btn btn-outline-secondary">Back to Dashboard</a>
     </div>
@@ -25,7 +25,7 @@
     <%- include('../partials/flash') %>
 
     <div class="alert alert-info">
-      <strong>Internal Ticket:</strong> This ticket will only be visible to administrators.
+      <strong>Admin Ticket:</strong> This ticket will only be visible to administrators. Select department for organizational purposes.
     </div>
 
     <div class="card shadow-sm">
@@ -46,6 +46,21 @@
           </div>
 
           <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="reporter_department" class="form-label">Department *</label>
+              <select id="reporter_department" name="reporter_department" class="form-select" required>
+                <option value="">Select Department</option>
+                <% Object.values(REPORTER_DEPARTMENT).forEach(dept => { %>
+                  <option value="<%= dept %>" <%= dept === 'Internal' ? 'selected' : '' %>>
+                    <%= dept %>
+                  </option>
+                <% }) %>
+              </select>
+              <div class="form-text">
+                For categorization. Ticket will be hidden from all department users.
+              </div>
+            </div>
+
             <div class="col-md-6 mb-3">
               <label for="reporter_desk" class="form-label">Desk *</label>
               <select id="reporter_desk" name="reporter_desk" class="form-select" required>
@@ -88,7 +103,7 @@
           </div>
 
           <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary btn-lg">Create Internal Ticket</button>
+            <button type="submit" class="btn btn-primary btn-lg">Create Admin Ticket</button>
             <a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
           </div>
         </form>
