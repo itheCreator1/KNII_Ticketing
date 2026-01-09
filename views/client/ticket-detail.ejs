@@ -96,26 +96,40 @@
           <div class="card-body">
             <h3 class="h5 card-title mb-3">Update Status</h3>
             <% if (ticket.status !== 'closed') { %>
-              <form action="/client/tickets/<%= ticket.id %>/status" method="POST">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="d-grid gap-2">
+                <form action="/client/tickets/<%= ticket.id %>/status" method="POST" class="status-form">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="status" value="waiting_on_admin">
+                  <button type="submit" class="btn w-100 <%= ticket.status === 'waiting_on_admin' ? 'btn-warning' : 'btn-outline-warning' %>">
+                    Waiting on Admin
+                  </button>
+                </form>
 
-                <div class="mb-3">
-                  <label for="status" class="form-label">Change Status</label>
-                  <select name="status" id="status" class="form-select">
-                    <option value="waiting_on_admin" <%= ticket.status === 'waiting_on_admin' ? 'selected' : '' %>>
-                      Waiting on Admin
-                    </option>
-                    <option value="closed" <%= ticket.status === 'closed' ? 'selected' : '' %>>
-                      Closed
-                    </option>
-                  </select>
-                  <div class="form-text">
-                    Use "Waiting on Admin" if you need further assistance. Use "Closed" if your issue is resolved.
-                  </div>
-                </div>
+                <form action="/client/tickets/<%= ticket.id %>/status" method="POST" class="status-form" data-confirm="closed">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="status" value="closed">
+                  <button type="submit" class="btn w-100 <%= ticket.status === 'closed' ? 'btn-success' : 'btn-outline-success' %>">
+                    Close Ticket
+                  </button>
+                </form>
+              </div>
+              <div class="form-text mt-2">
+                Use "Waiting on Admin" if you need further assistance. Use "Close Ticket" if your issue is resolved.
+              </div>
 
-                <button type="submit" class="btn btn-primary w-100">Update Status</button>
-              </form>
+              <!-- JavaScript for Confirmations -->
+              <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.status-form[data-confirm]').forEach(form => {
+                  form.addEventListener('submit', function(e) {
+                    if (!confirm('Are you sure you want to close this ticket? You can contact an administrator to reopen it if needed.')) {
+                      e.preventDefault();
+                      return false;
+                    }
+                  });
+                });
+              });
+              </script>
             <% } else { %>
               <div class="alert alert-success mb-0">
                 <p class="mb-0">This ticket has been closed. If you need to reopen it, please contact an administrator or create a new ticket.</p>

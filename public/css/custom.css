@@ -196,3 +196,26 @@
 .btn .bi {
   font-size: 1rem;
 }
+
+/* Status Button Styling */
+.status-form {
+  margin: 0;
+}
+
+.status-form button {
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.status-form button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Current status button emphasis */
+.status-form .btn-primary,
+.status-form .btn-success,
+.status-form .btn-warning,
+.status-form .btn-info {
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}

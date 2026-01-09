@@ -61,9 +61,25 @@ const validateTicketAssignment = [
     })
 ];
 
+const validateTicketStatusUpdate = [
+  body('status')
+    .trim()
+    .notEmpty().withMessage('Status is required')
+    .isIn(Object.values(TICKET_STATUS)).withMessage(VALIDATION_MESSAGES.STATUS_INVALID)
+];
+
+const validateTicketPriorityUpdate = [
+  body('priority')
+    .trim()
+    .notEmpty().withMessage('Priority is required')
+    .isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
+];
+
 module.exports = {
   validateTicketCreation,
   validateTicketUpdate,
   validateTicketId,
-  validateTicketAssignment
+  validateTicketAssignment,
+  validateTicketStatusUpdate,
+  validateTicketPriorityUpdate
 };

@@ -7,7 +7,7 @@ const { TICKET_MESSAGES, COMMENT_MESSAGES } = require('../constants/messages');
 const ticketService = require('../services/ticketService');
 const adminTicketService = require('../services/adminTicketService');
 const departmentService = require('../services/departmentService');
-const { validateTicketUpdate, validateTicketId } = require('../validators/ticketValidators');
+const { validateTicketUpdate, validateTicketId, validateTicketStatusUpdate, validateTicketPriorityUpdate } = require('../validators/ticketValidators');
 const { validateAdminTicketCreation } = require('../validators/adminTicketValidators');
 const { validateCommentCreation } = require('../validators/commentValidators');
 const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
@@ -67,6 +67,28 @@ router.post('/tickets/:id/update', requireAdmin, validateTicketId, validateTicke
     await ticketService.updateTicket(req.params.id, req.body);
     successRedirect(req, res, TICKET_MESSAGES.UPDATED, `/admin/tickets/${req.params.id}`);
   } catch (error) {
+    next(error);
+  }
+});
+
+// Separate status update route (for button-based status updates)
+router.post('/tickets/:id/status', requireAdmin, validateTicketId, validateTicketStatusUpdate, validateRequest, async (req, res, next) => {
+  try {
+    await ticketService.updateTicket(req.params.id, { status: req.body.status });
+    successRedirect(req, res, 'Status updated successfully', `/admin/tickets/${req.params.id}`);
+  } catch (error) {
+    logger.error('Status update error', { ticketId: req.params.id, error: error.message });
+    next(error);
+  }
+});
+
+// Separate priority update route (for button-based priority updates)
+router.post('/tickets/:id/priority', requireAdmin, validateTicketId, validateTicketPriorityUpdate, validateRequest, async (req, res, next) => {
+  try {
+    await ticketService.updateTicket(req.params.id, { priority: req.body.priority });
+    successRedirect(req, res, 'Priority updated successfully', `/admin/tickets/${req.params.id}`);
+  } catch (error) {
+    logger.error('Priority update error', { ticketId: req.params.id, error: error.message });
     next(error);
   }
 });
