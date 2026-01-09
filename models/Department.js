@@ -155,6 +155,40 @@ class Department {
     );
     return parseInt(result.rows[0].count);
   }
+
+  /**
+   * Get all users assigned to a department
+   * @param {string} name - Department name
+   * @returns {Promise<Array>} Array of users
+   */
+  static async getUsers(name) {
+    const result = await pool.query(
+      `SELECT id, username, email, role, status, created_at
+       FROM users
+       WHERE department = $1
+       ORDER BY username`,
+      [name]
+    );
+    return result.rows;
+  }
+
+  /**
+   * Get all users NOT assigned to this department (for assignment dropdown)
+   * @param {string} name - Department name
+   * @returns {Promise<Array>} Array of available users
+   */
+  static async getAvailableUsers(name) {
+    const result = await pool.query(
+      `SELECT id, username, email, role, status, department
+       FROM users
+       WHERE (department != $1 OR department IS NULL)
+         AND role = 'department'
+         AND status = 'active'
+       ORDER BY username`,
+      [name]
+    );
+    return result.rows;
+  }
 }
 
 module.exports = Department;

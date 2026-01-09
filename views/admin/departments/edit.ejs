@@ -43,7 +43,106 @@
         </form>
       </div>
     </div>
+
+    <!-- User Management Section -->
+    <div class="card shadow-sm mt-4" style="max-width: 900px;">
+      <div class="card-body p-4">
+        <h3 class="h5 card-title mb-3">Assigned Users</h3>
+
+        <% if (users.length > 0) { %>
+          <div class="table-responsive mb-4">
+            <table class="table table-sm table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Active Tickets</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% users.forEach(user => { %>
+                  <tr>
+                    <td><%= user.username %></td>
+                    <td><%= user.email %></td>
+                    <td>
+                      <% if (user.status === 'active') { %>
+                        <span class="badge bg-success">Active</span>
+                      <% } else { %>
+                        <span class="badge bg-secondary"><%= user.status %></span>
+                      <% } %>
+                    </td>
+                    <td><%= user.active_tickets || 0 %></td>
+                    <td>
+                      <form action="/admin/departments/<%= department.id %>/users/<%= user.id %>/remove"
+                            method="POST"
+                            class="d-inline remove-user-form"
+                            data-username="<%= user.username %>"
+                            data-tickets="<%= user.active_tickets || 0 %>">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <p class="text-muted">No users assigned to this department.</p>
+        <% } %>
+
+        <!-- Add User Form -->
+        <h4 class="h6 mb-3 mt-4">Assign User to Department</h4>
+        <% if (availableUsers.length > 0) { %>
+          <form action="/admin/departments/<%= department.id %>/users/add" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-8">
+                <label for="user_id" class="form-label">Select User</label>
+                <select id="user_id" name="user_id" class="form-select" required>
+                  <option value="">Choose a user...</option>
+                  <% availableUsers.forEach(user => { %>
+                    <option value="<%= user.id %>">
+                      <%= user.username %> (<%= user.email %>)
+                      <% if (user.department) { %> - Currently in: <%= user.department %><% } %>
+                    </option>
+                  <% }); %>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">Assign User</button>
+              </div>
+            </div>
+          </form>
+        <% } else { %>
+          <p class="text-muted">No available users to assign.</p>
+        <% } %>
+      </div>
+    </div>
   </main>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.remove-user-form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        const username = this.dataset.username;
+        const tickets = parseInt(this.dataset.tickets);
+
+        let message = `Remove ${username} from this department?`;
+        if (tickets > 0) {
+          message += `\n\nWarning: This user has ${tickets} active ticket(s).`;
+        }
+
+        if (!confirm(message)) {
+          e.preventDefault();
+          return false;
+        }
+      });
+    });
+  });
+  </script>
 
   <%- include('../../partials/footer') %>
 
