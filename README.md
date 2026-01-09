@@ -593,7 +593,7 @@ KNII_Ticketing/
 1. `001_create_users.sql` - User accounts table
 2. `002_create_tickets.sql` - Support tickets table
 3. `003_create_comments.sql` - Ticket comments table
-4. `004_seed_admin_user.sql` - Default admin user
+4. `004_create_sessions.sql` - Session storage table
 5. `005_enhance_users_table.sql` - Account locking & status fields
 6. `006_create_audit_logs.sql` - Audit logging table
 7. `007_add_unset_priority.sql` - Add 'unset' priority option & change default
@@ -602,8 +602,13 @@ KNII_Ticketing/
 10. `010_add_department_role.sql` - Add 'department' role to users
 11. `011_add_workflow_statuses.sql` - Add workflow statuses (waiting_on_admin, waiting_on_department)
 12. `012_add_reporter_id_to_tickets.sql` - Add reporter_id foreign key for ticket ownership
-13. `013_add_comment_visibility.sql` - Add visibility_type column to comments (public/internal)
-14. `013_add_user_department_column.sql` - Add department column to users table
+13. `013_add_user_department_column.sql` - Add department column to users table
+14. `014_add_internal_department.sql` - Add 'Internal' system department
+15. `015_add_is_admin_created_flag.sql` - Add is_admin_created flag to tickets
+16. `016_create_departments_table.sql` - Create departments table with foreign keys
+17. `017_remove_reporter_desk.sql` - Remove reporter_desk column from tickets
+18. `018_increase_status_column_length.sql` - Increase status column length to accommodate new workflow states
+19. `019_add_comment_visibility.sql` - Add visibility_type column to comments (public/internal)
 
 > **Note**: Session storage managed automatically by `connect-pg-simple`
 
@@ -771,6 +776,25 @@ Need help or have questions?
 ---
 
 ## 📋 Changelog
+
+### 🎉 **Version 2.3.2** *(2026-01-09)* - **Migration Sequencing Fix**
+
+<details>
+<summary><b>🔧 Migration Renumbering - Correct Sequential Order</b></summary>
+
+- ✅ **Fixed migration sequence** - Renumbered migrations to maintain proper sequential order
+- ✅ **Migration 018** - Renamed from 012 (increase_status_column_length)
+- ✅ **Migration 019** - Renamed from 013 (add_comment_visibility)
+- ✅ **Updated init-db.js** - Script now correctly references renumbered migrations
+- ✅ **Documentation updates** - README and CLAUDE.md reflect current migration state
+- ✅ **No data loss** - Renumbering preserves all migration history and functionality
+
+**Rationale**: Migrations 012-013 were created out of sequence. This fix ensures migrations run in the correct order and prevents confusion during fresh deployments.
+
+**Commits:**
+- `e727eb2` - refactor: renumber migrations to fix sequence order
+
+</details>
 
 ### 🎉 **Version 2.3.1** *(2026-01-09)* - **Code Cleanup & Consistency Fixes**
 

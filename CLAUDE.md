@@ -10,7 +10,7 @@ KNII Ticketing System - A professional support ticket management application wit
 **Code Quality**: 98% compliance with professional Node.js development standards
 **Security**: Zero SQL injection vulnerabilities, multi-layer defense with ownership verification
 **Testing**: 345+ test cases passing - 17 unit test files, 6 integration tests, 3 E2E tests
-**Version**: v2.1.0 (Department Accounts Feature)
+**Version**: v2.3.1 (Dynamic Departments & Code Cleanup)
 
 ---
 
@@ -531,7 +531,7 @@ models/* → config/database.js (pool)
 3. Update relevant model to use new column
 4. Never modify existing migration files
 
-**Current migration number**: 013 (last: add_user_department_column)
+**Current migration number**: 019 (last: add_comment_visibility)
 
 ### Add a new model method
 ```javascript
