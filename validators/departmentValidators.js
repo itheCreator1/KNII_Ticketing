@@ -50,8 +50,20 @@ const validateDepartmentId = [
     .isInt({ min: 1 }).withMessage('Invalid department ID')
 ];
 
+/**
+ * Validation rules for user assignment to department
+ */
+const validateUserAssignment = [
+  body('user_id')
+    .trim()
+    .notEmpty().withMessage('User is required')
+    .isInt({ min: 1 }).withMessage('Invalid user ID')
+    .toInt()
+];
+
 module.exports = {
   validateDepartmentCreate,
   validateDepartmentUpdate,
-  validateDepartmentId
+  validateDepartmentId,
+  validateUserAssignment
 };

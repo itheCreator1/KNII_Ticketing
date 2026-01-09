@@ -8,15 +8,41 @@
         rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
         crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <link rel="stylesheet" href="/css/custom.css">
 </head>
 <body class="bg-light">
   <%- include('../partials/header') %>
 
   <main class="container-fluid px-4 py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>My Tickets</h2>
-      <a href="/client/tickets/new" class="btn btn-primary">Create New Ticket</a>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h2 class="mb-1">My Tickets</h2>
+        <%
+        const openCount = tickets.filter(t => t.status === 'open').length;
+        const inProgressCount = tickets.filter(t => t.status === 'in_progress').length;
+        const waitingOnYouCount = tickets.filter(t => t.status === 'waiting_on_department').length;
+        %>
+        <div class="quick-stats">
+          <span class="stat-badge stat-open">
+            <i class="bi bi-inbox-fill"></i>
+            <span><%= openCount %> Open</span>
+          </span>
+          <span class="stat-badge stat-progress">
+            <i class="bi bi-gear-fill"></i>
+            <span><%= inProgressCount %> In Progress</span>
+          </span>
+          <% if (waitingOnYouCount > 0) { %>
+            <span class="stat-badge stat-waiting">
+              <i class="bi bi-exclamation-circle-fill"></i>
+              <span><%= waitingOnYouCount %> Waiting on You</span>
+            </span>
+          <% } %>
+        </div>
+      </div>
+      <a href="/client/tickets/new" class="btn btn-success btn-lg">
+        <i class="bi bi-plus-circle"></i> Create New Ticket
+      </a>
     </div>
 
     <%- include('../partials/flash') %>
@@ -68,14 +94,31 @@
     </div>
 
     <% if (tickets.length === 0) { %>
-      <div class="alert alert-secondary text-center">
-        <p class="mb-0">
+      <div class="empty-state text-center py-5 rounded">
+        <i class="bi bi-inbox empty-state-icon"></i>
+        <h4 class="mt-3 mb-2">
           <% if (filters.status || filters.priority || filters.search) { %>
-            No tickets found. Try adjusting your filters.
+            No Tickets Found
           <% } else { %>
-            You haven't created any tickets yet. Click "Create New Ticket" to get started.
+            No Tickets Yet
+          <% } %>
+        </h4>
+        <p class="text-muted mb-4">
+          <% if (filters.status || filters.priority || filters.search) { %>
+            Try adjusting your filters to find what you're looking for.
+          <% } else { %>
+            Create your first ticket to get started. Our support team is here to help!
           <% } %>
         </p>
+        <% if (!filters.status && !filters.priority && !filters.search) { %>
+          <a href="/client/tickets/new" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle"></i> Create Your First Ticket
+          </a>
+        <% } else { %>
+          <a href="/client/dashboard" class="btn btn-secondary">
+            <i class="bi bi-x-circle"></i> Clear Filters
+          </a>
+        <% } %>
       </div>
     <% } else { %>
       <div class="card shadow-sm mb-3">
@@ -83,48 +126,92 @@
           <table class="table table-hover table-striped mb-0">
             <thead class="table-light">
               <tr>
-                <th>ID</th>
+                <th style="width: 80px;">ID</th>
                 <th>Title</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th style="width: 180px;">Status</th>
+                <th style="width: 140px;">Priority</th>
+                <th style="width: 250px;">Last Comment</th>
+                <th style="width: 120px;">Created</th>
+                <th style="width: 100px;">Actions</th>
               </tr>
             </thead>
             <tbody>
               <% tickets.forEach(ticket => { %>
-                <tr>
-                  <td>#<%= ticket.id %></td>
-                  <td><%= ticket.title %></td>
+                <tr class="ticket-row">
+                  <td class="fw-bold text-primary">#<%= ticket.id %></td>
+                  <td>
+                    <a href="/client/tickets/<%= ticket.id %>" class="ticket-link">
+                      <%= ticket.title %>
+                    </a>
+                  </td>
                   <td>
                     <% if (ticket.status === 'open') { %>
-                      <span class="badge bg-primary">Open</span>
+                      <span class="badge-status badge-status-open">
+                        <i class="bi bi-inbox-fill"></i>
+                        <span>Open</span>
+                      </span>
                     <% } else if (ticket.status === 'in_progress') { %>
-                      <span class="badge bg-info text-dark">In Progress</span>
+                      <span class="badge-status badge-status-progress">
+                        <i class="bi bi-gear-fill"></i>
+                        <span>In Progress</span>
+                      </span>
                     <% } else if (ticket.status === 'waiting_on_admin') { %>
-                      <span class="badge bg-warning text-dark">Waiting on Admin</span>
+                      <span class="badge-status badge-status-waiting-admin">
+                        <i class="bi bi-hourglass-split"></i>
+                        <span>Waiting on Admin</span>
+                      </span>
                     <% } else if (ticket.status === 'waiting_on_department') { %>
-                      <span class="badge bg-secondary">Waiting on You</span>
+                      <span class="badge-status badge-status-waiting-dept">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                        <span>Waiting on You</span>
+                      </span>
                     <% } else if (ticket.status === 'closed') { %>
-                      <span class="badge bg-success">Closed</span>
+                      <span class="badge-status badge-status-closed">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Closed</span>
+                      </span>
                     <% } %>
                   </td>
                   <td>
                     <% if (ticket.priority === 'critical') { %>
-                      <span class="badge bg-danger">Critical</span>
+                      <span class="badge-priority badge-priority-critical">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>Critical</span>
+                      </span>
                     <% } else if (ticket.priority === 'high') { %>
-                      <span class="badge bg-warning text-dark">High</span>
+                      <span class="badge-priority badge-priority-high">
+                        <i class="bi bi-arrow-up-circle-fill"></i>
+                        <span>High</span>
+                      </span>
                     <% } else if (ticket.priority === 'medium') { %>
-                      <span class="badge bg-info text-dark">Medium</span>
+                      <span class="badge-priority badge-priority-medium">
+                        <i class="bi bi-dash-circle-fill"></i>
+                        <span>Medium</span>
+                      </span>
                     <% } else if (ticket.priority === 'low') { %>
-                      <span class="badge bg-secondary">Low</span>
+                      <span class="badge-priority badge-priority-low">
+                        <i class="bi bi-arrow-down-circle-fill"></i>
+                        <span>Low</span>
+                      </span>
                     <% } else { %>
-                      <span class="badge bg-light text-dark">Unset</span>
+                      <span class="badge-priority badge-priority-unset">
+                        <i class="bi bi-circle"></i>
+                        <span>Unset</span>
+                      </span>
                     <% } %>
                   </td>
-                  <td><%= new Date(ticket.created_at).toLocaleDateString() %></td>
+                  <td class="comment-snippet">
+                    <% if (ticket.last_comment) { %>
+                      <%= ticket.last_comment.length > 100 ? ticket.last_comment.substring(0, 100) + '...' : ticket.last_comment %>
+                    <% } else { %>
+                      <span class="text-muted">No comments</span>
+                    <% } %>
+                  </td>
+                  <td class="text-muted"><%= new Date(ticket.created_at).toLocaleDateString() %></td>
                   <td>
-                    <a href="/client/tickets/<%= ticket.id %>" class="btn btn-sm btn-outline-primary">View</a>
+                    <a href="/client/tickets/<%= ticket.id %>" class="btn btn-sm btn-primary">
+                      <i class="bi bi-eye"></i> View
+                    </a>
                   </td>
                 </tr>
               <% }) %>
@@ -133,7 +220,8 @@
         </div>
       </div>
 
-      <div class="text-muted">
+      <div class="ticket-stats">
+        <i class="bi bi-list-check"></i>
         Showing <%= tickets.length %> ticket<%= tickets.length !== 1 ? 's' : '' %>
       </div>
     <% } %>

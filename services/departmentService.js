@@ -192,6 +192,119 @@ class DepartmentService {
 
     return reactivated;
   }
+
+  /**
+   * Get users assigned to department
+   * @param {number} departmentId - Department ID
+   * @returns {Promise<Array>} Users in department
+   */
+  async getDepartmentUsers(departmentId) {
+    const department = await this.getDepartmentById(departmentId);
+    return await Department.getUsers(department.name);
+  }
+
+  /**
+   * Get users available for assignment to department
+   * @param {number} departmentId - Department ID
+   * @returns {Promise<Array>} Available users
+   */
+  async getAvailableUsers(departmentId) {
+    const department = await this.getDepartmentById(departmentId);
+    return await Department.getAvailableUsers(department.name);
+  }
+
+  /**
+   * Assign user to department
+   * @param {number} actorId - User performing action
+   * @param {number} departmentId - Department ID
+   * @param {number} userId - User ID to assign
+   * @param {string} ipAddress - Request IP
+   * @returns {Promise<Object>} Updated user
+   */
+  async assignUserToDepartment(actorId, departmentId, userId, ipAddress) {
+    const department = await this.getDepartmentById(departmentId);
+
+    // Prevent assigning users to system department
+    if (department.is_system) {
+      throw new Error('Cannot assign users to system department');
+    }
+
+    // Get user
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    if (user.role !== 'department') {
+      throw new Error('Can only assign department users');
+    }
+
+    // Update user's department
+    const updated = await User.updateDepartment(userId, department.name);
+
+    // Log action
+    await AuditLog.create({
+      actorId,
+      action: 'ASSIGN_USER_TO_DEPARTMENT',
+      targetType: 'user',
+      targetId: userId,
+      details: {
+        userId,
+        username: user.username,
+        departmentId,
+        departmentName: department.name,
+        oldDepartment: user.department
+      },
+      ipAddress
+    });
+
+    return updated;
+  }
+
+  /**
+   * Remove user from department
+   * @param {number} actorId - User performing action
+   * @param {number} departmentId - Department ID
+   * @param {number} userId - User ID to remove
+   * @param {string} ipAddress - Request IP
+   * @returns {Promise<Object>} Updated user
+   */
+  async removeUserFromDepartment(actorId, departmentId, userId, ipAddress) {
+    const department = await this.getDepartmentById(departmentId);
+
+    // Get user
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Safety check: prevent removing user with active tickets
+    const activeTickets = await User.countActiveTickets(userId);
+    if (activeTickets > 0) {
+      throw new Error(`Cannot remove user: ${activeTickets} active ticket(s). Please close or reassign tickets first.`);
+    }
+
+    // Update user's department to null
+    const updated = await User.updateDepartment(userId, null);
+
+    // Log action
+    await AuditLog.create({
+      actorId,
+      action: 'REMOVE_USER_FROM_DEPARTMENT',
+      targetType: 'user',
+      targetId: userId,
+      details: {
+        userId,
+        username: user.username,
+        departmentId,
+        departmentName: department.name
+      },
+      ipAddress
+    });
+
+    return updated;
+  }
 }
 
 module.exports = new DepartmentService();

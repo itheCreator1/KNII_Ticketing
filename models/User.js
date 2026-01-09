@@ -431,6 +431,38 @@ class User {
       throw error;
     }
   }
+
+  /**
+   * Update user's department assignment
+   * @param {number} userId - User ID
+   * @param {string|null} department - Department name or null
+   * @returns {Promise<Object>} Updated user
+   */
+  static async updateDepartment(userId, department) {
+    const result = await pool.query(
+      `UPDATE users
+       SET department = $1, updated_at = NOW()
+       WHERE id = $2 AND role = 'department'
+       RETURNING id, username, email, role, status, department`,
+      [department, userId]
+    );
+    return result.rows[0];
+  }
+
+  /**
+   * Count active tickets for user (safety check before removing from department)
+   * @param {number} userId - User ID
+   * @returns {Promise<number>} Count of active tickets
+   */
+  static async countActiveTickets(userId) {
+    const result = await pool.query(
+      `SELECT COUNT(*) as count
+       FROM tickets
+       WHERE reporter_id = $1 AND status != 'closed'`,
+      [userId]
+    );
+    return parseInt(result.rows[0].count);
+  }
 }
 
 module.exports = User;
