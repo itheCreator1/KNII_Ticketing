@@ -50,6 +50,57 @@ const validateAdminTicketCreation = [
     .isIn(Object.values(TICKET_STATUS)).withMessage(VALIDATION_MESSAGES.STATUS_INVALID)
 ];
 
+/**
+ * Validator for department ticket creation (on behalf of a department)
+ * Used when admins create tickets that ARE visible to department users
+ * Key differences from validateAdminTicketCreation:
+ * - Requires reporter_name (not auto-populated)
+ * - Excludes 'Internal' department (department tickets only)
+ * - No status selection (always 'open')
+ * - reporter_id will be NULL (anonymous ticket)
+ */
+const validateDepartmentTicketCreation = [
+  body('title')
+    .trim()
+    .notEmpty().withMessage(VALIDATION_MESSAGES.TITLE_REQUIRED)
+    .isLength({ max: MAX_LENGTHS.TICKET_TITLE }).withMessage(VALIDATION_MESSAGES.TITLE_TOO_LONG),
+
+  body('description')
+    .trim()
+    .notEmpty().withMessage(VALIDATION_MESSAGES.DESCRIPTION_REQUIRED)
+    .isLength({ max: MAX_LENGTHS.TICKET_DESCRIPTION }).withMessage(VALIDATION_MESSAGES.DESCRIPTION_TOO_LONG),
+
+  body('reporter_name')
+    .trim()
+    .notEmpty().withMessage(VALIDATION_MESSAGES.NAME_REQUIRED)
+    .isLength({ max: MAX_LENGTHS.NAME }).withMessage(VALIDATION_MESSAGES.NAME_TOO_LONG),
+
+  body('reporter_department')
+    .trim()
+    .notEmpty().withMessage(VALIDATION_MESSAGES.DEPARTMENT_REQUIRED)
+    .custom(async (value) => {
+      // Fetch all departments EXCLUDING system ('Internal')
+      const validDepartments = await Department.findAll(false);
+      const validNames = validDepartments.map(d => d.name);
+
+      if (!validNames.includes(value)) {
+        throw new Error('Invalid department. Cannot create department tickets for Internal department.');
+      }
+      return true;
+    }),
+
+  body('reporter_phone')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: MAX_LENGTHS.PHONE_NUMBER }).withMessage(VALIDATION_MESSAGES.PHONE_TOO_LONG),
+
+  // Admins can optionally set priority (defaults to 'unset' if not provided)
+  body('priority')
+    .optional()
+    .isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
+];
+
 module.exports = {
-  validateAdminTicketCreation
+  validateAdminTicketCreation,
+  validateDepartmentTicketCreation
 };

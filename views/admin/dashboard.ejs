@@ -18,7 +18,10 @@
   <main class="container-fluid px-4 py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="mb-0">Ticket Dashboard</h2>
-      <a href="/admin/tickets/new" class="btn btn-success">+ Create Internal Ticket</a>
+      <div class="d-flex gap-2">
+        <a href="/admin/tickets/department/new" class="btn btn-primary">+ Create Department Ticket</a>
+        <a href="/admin/tickets/new" class="btn btn-outline-secondary">+ Create Internal Ticket</a>
+      </div>
     </div>
     <%- include('../partials/flash') %>
 

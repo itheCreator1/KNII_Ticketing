@@ -8,7 +8,7 @@ const ticketService = require('../services/ticketService');
 const adminTicketService = require('../services/adminTicketService');
 const departmentService = require('../services/departmentService');
 const { validateTicketUpdate, validateTicketId, validateTicketStatusUpdate, validateTicketPriorityUpdate } = require('../validators/ticketValidators');
-const { validateAdminTicketCreation } = require('../validators/adminTicketValidators');
+const { validateAdminTicketCreation, validateDepartmentTicketCreation } = require('../validators/adminTicketValidators');
 const { validateCommentCreation } = require('../validators/commentValidators');
 const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
 const logger = require('../utils/logger');
@@ -39,6 +39,22 @@ router.get('/tickets/new', requireAdmin, async (req, res, next) => {
     });
   } catch (error) {
     logger.error('Error loading ticket creation form', { error: error.message });
+    next(error);
+  }
+});
+
+// GET /admin/tickets/department/new - Display department ticket creation form (on behalf of department)
+// IMPORTANT: Must come before /tickets/:id to avoid matching "department" as an id
+router.get('/tickets/department/new', requireAdmin, async (req, res, next) => {
+  try {
+    // Get departments excluding 'Internal' (department tickets only)
+    const departments = await departmentService.getActiveDepartments(false);
+    res.render('admin/new-department-ticket', {
+      title: 'Create Department Ticket',
+      departments
+    });
+  } catch (error) {
+    logger.error('Error loading department ticket creation form', { error: error.message });
     next(error);
   }
 });
@@ -162,6 +178,42 @@ router.post('/tickets', requireAdmin, validateAdminTicketCreation, validateReque
     successRedirect(req, res, TICKET_MESSAGES.ADMIN_CREATED, `/admin/tickets/${ticket.id}`);
   } catch (error) {
     logger.error('Admin internal ticket creation error', {
+      adminId: req.session.user.id,
+      error: error.message,
+      stack: error.stack
+    });
+    next(error);
+  }
+});
+
+// POST /admin/tickets/department - Create department ticket (on behalf of department)
+router.post('/tickets/department', requireAdmin, validateDepartmentTicketCreation, validateRequest, async (req, res, next) => {
+  try {
+    const ticketData = {
+      title: req.body.title,
+      description: req.body.description,
+      reporter_name: req.body.reporter_name,
+      reporter_department: req.body.reporter_department,
+      reporter_phone: req.body.reporter_phone,
+      priority: req.body.priority
+    };
+
+    const ticket = await adminTicketService.createDepartmentTicket(
+      req.session.user.id,
+      ticketData,
+      req.ip
+    );
+
+    logger.info('Admin created department ticket', {
+      ticketId: ticket.id,
+      adminId: req.session.user.id,
+      adminUsername: req.session.user.username,
+      department: ticket.reporter_department
+    });
+
+    successRedirect(req, res, 'Department ticket created successfully', `/admin/tickets/${ticket.id}`);
+  } catch (error) {
+    logger.error('Admin department ticket creation error', {
       adminId: req.session.user.id,
       error: error.message,
       stack: error.stack
