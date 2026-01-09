@@ -83,6 +83,7 @@
                 <th>Status</th>
                 <th>Priority</th>
                 <th>Reporter</th>
+                <th>Last Comment</th>
                 <th>Created</th>
                 <th>Actions</th>
               </tr>
@@ -120,6 +121,13 @@
                     <% } %>
                   </td>
                   <td><%= ticket.reporter_name || 'Anonymous' %></td>
+                  <td class="comment-snippet">
+                    <% if (ticket.last_comment) { %>
+                      <%= ticket.last_comment.length > 100 ? ticket.last_comment.substring(0, 100) + '...' : ticket.last_comment %>
+                    <% } else { %>
+                      <span class="text-muted">No comments</span>
+                    <% } %>
+                  </td>
                   <td><%= new Date(ticket.created_at).toLocaleDateString() %></td>
                   <td>
                     <a href="/admin/tickets/<%= ticket.id %>" class="btn btn-sm btn-primary">View</a>
