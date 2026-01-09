@@ -317,8 +317,7 @@ describe('Auth Middleware Integration Tests', () => {
         title: 'Test',
         description: 'Test',
         reporter_name: 'Test',
-        reporter_department: 'IT Support',
-        reporter_desk: 'Manager'
+        reporter_department: 'IT Support'
       });
 
       const response = await request(app)
@@ -459,8 +458,7 @@ describe('Auth Middleware Integration Tests', () => {
         title: 'Test',
         description: 'Test',
         reporter_name: 'Test',
-        reporter_department: 'IT Support',
-        reporter_desk: 'Manager'
+        reporter_department: 'IT Support'
       });
 
       // Act - No auth, should fail at requireAuth
