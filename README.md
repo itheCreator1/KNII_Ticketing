@@ -772,6 +772,27 @@ Need help or have questions?
 
 ## 📋 Changelog
 
+### 🎉 **Version 2.3.1** *(2026-01-09)* - **Code Cleanup & Consistency Fixes**
+
+<details>
+<summary><b>🧹 Post-Migration Cleanup - Remove reporter_desk Remnants</b></summary>
+
+- ✅ **Removed dead code** - Cleaned up unused reporter_desk extraction in route handlers
+- ✅ **Updated validators** - ticketValidators.js now uses dynamic Department.findAll() instead of hardcoded enum
+- ✅ **Test suite cleanup** - Removed reporter_desk from all test fixtures, factories, and test data
+- ✅ **Added Department mocks** - Proper mocking of Department model in validator tests
+- ✅ **All tests passing** - 354 tests verified passing after cleanup
+- ✅ **Zero technical debt** - No remaining reporter_desk references in active code (only in migrations/docs as expected)
+- ✅ **Improved consistency** - Validators now align with v2.3.0 database-driven department pattern
+
+**Commits:**
+- `684209c` - refactor: remove unused reporter_desk from route handlers
+- `bf71b1a` - refactor: update ticketValidators to use dynamic departments
+- `3efbefe` - test: remove reporter_desk from all test data
+- `3fb7cf7` - test: fix remaining reporter_desk references in auth integration test
+
+</details>
+
 ### 🎉 **Version 2.3.0** *(2026-01-08)* - **Dynamic Departments & Database-Driven Configuration**
 
 <details>
