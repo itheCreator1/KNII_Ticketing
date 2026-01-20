@@ -13,6 +13,8 @@
     "prod:monitor": "pm2 monit",
     "init-db": "node scripts/init-db.js",
     "seed-admin": "node scripts/seed-admin.js",
+    "seed:hospital": "node scripts/seed-hospital-data.js",
+    "seed:sample": "node scripts/seed-sample-data.js",
     "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css --minify",
     "watch:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css --watch",
     "test": "jest",
