@@ -16,13 +16,8 @@ CREATE TABLE IF NOT EXISTS departments (
 -- Add index on active status for efficient filtering
 CREATE INDEX IF NOT EXISTS idx_departments_active ON departments(active);
 
--- Seed initial departments (migration from hardcoded REPORTER_DEPARTMENT constant)
+-- Seed system department only (regular departments seeded via seed-hospital-data.js script)
 INSERT INTO departments (name, description, is_system, active) VALUES
-  ('IT Support', 'Information Technology support and services', false, true),
-  ('General Support', 'General administrative support', false, true),
-  ('Human Resources', 'HR and employee services', false, true),
-  ('Finance', 'Financial services and accounting', false, true),
-  ('Facilities', 'Building maintenance and facilities management', false, true),
   ('Internal', 'System department for admin-only tickets', true, true)
 ON CONFLICT (name) DO NOTHING;
 
