@@ -38,7 +38,7 @@ function createUserData(overrides = {}) {
 
   // Auto-add department for department role users if not explicitly set
   if (baseData.role === 'department' && !baseData.department) {
-    const departments = ['IT Support', 'General Support', 'Human Resources', 'Finance', 'Facilities'];
+    const departments = ['Emergency Department', 'Cardiology', 'Radiology', 'Pharmacy', 'Laboratory'];
     baseData.department = departments[Math.floor(Math.random() * departments.length)];
   }
 
@@ -56,7 +56,7 @@ function createUserData(overrides = {}) {
  * @returns {Object} Ticket data object
  */
 function createTicketData(overrides = {}) {
-  const departments = ['IT Support', 'General Support', 'Human Resources', 'Finance', 'Facilities'];
+  const departments = ['Emergency Department', 'Cardiology', 'Radiology', 'Pharmacy', 'Laboratory'];
 
   return {
     title: `Test Ticket ${Date.now()}`,

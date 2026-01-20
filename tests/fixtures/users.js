@@ -28,7 +28,7 @@ module.exports = {
     password: 'DeptUser123!',
     role: 'department',
     status: 'active',
-    department: 'IT Support'
+    department: 'Emergency Department'
   },
 
   inactiveUser: {

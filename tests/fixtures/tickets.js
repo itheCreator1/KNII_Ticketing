@@ -10,7 +10,7 @@ module.exports = {
     title: 'Valid Test Ticket',
     description: 'This is a valid ticket description with adequate detail.',
     reporter_name: 'John Doe',
-    reporter_department: 'IT Support',
+    reporter_department: 'Emergency Department',
     reporter_phone: '+1234567890',
     priority: 'medium',
     status: 'open'
@@ -20,7 +20,7 @@ module.exports = {
     title: 'Urgent Production Issue',
     description: 'Production system is down and users cannot access the application.',
     reporter_name: 'Jane Smith',
-    reporter_department: 'IT Support',
+    reporter_department: 'Emergency Department',
     reporter_phone: '+1987654321',
     priority: 'critical',
     status: 'open'
@@ -30,7 +30,7 @@ module.exports = {
     title: 'Resolved Issue',
     description: 'This issue has been resolved and closed.',
     reporter_name: 'Bob Johnson',
-    reporter_department: 'General Support',
+    reporter_department: 'Cardiology',
     priority: 'low',
     status: 'closed'
   },
@@ -47,8 +47,8 @@ module.exports = {
   // Invalid priority values
   invalidPriorities: ['urgent', 'normal', '', null, undefined, 123],
 
-  // Valid department values
-  validDepartments: ['IT Support', 'General Support', 'Human Resources', 'Finance', 'Facilities'],
+  // Valid department values (hospital departments)
+  validDepartments: ['Emergency Department', 'Cardiology', 'Radiology', 'Pharmacy', 'Laboratory', 'Surgery', 'Intensive Care Unit', 'Patient Registration', 'Medical Records', 'Facilities Management'],
 
   // Invalid department values
   invalidDepartments: ['Invalid Dept', 'Engineering', '', null, undefined, 123],
