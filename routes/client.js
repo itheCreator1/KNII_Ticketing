@@ -29,7 +29,7 @@ router.get('/dashboard', async (req, res, next) => {
       search: req.query.search
     };
 
-    const tickets = await clientTicketService.getDepartmentTickets(req.session.user.id, filters);
+    const tickets = await clientTicketService.getDepartmentTickets(req.session.user.id, req.session.user.department, filters);
 
     res.render('client/dashboard', {
       title: 'My Tickets',
@@ -102,12 +102,25 @@ router.get('/tickets/:id', validateTicketId, validateRequest, async (req, res, n
       return errorRedirect(req, res, TICKET_MESSAGES.NOT_FOUND, '/client/dashboard');
     }
 
-    // CRITICAL: Ownership verification
-    if (ticket.reporter_id !== req.session.user.id) {
-      logger.warn('Ownership violation attempt', {
+    // CRITICAL: Department-based access control
+    // Allow access if ticket belongs to user's department AND is not an internal admin ticket
+    if (ticket.reporter_department !== req.session.user.department) {
+      logger.warn('Department access violation attempt', {
         ticketId,
         userId: req.session.user.id,
-        ticketReporterId: ticket.reporter_id,
+        userDepartment: req.session.user.department,
+        ticketDepartment: ticket.reporter_department,
+        ip: req.ip
+      });
+      return errorRedirect(req, res, TICKET_MESSAGES.UNAUTHORIZED_ACCESS, '/client/dashboard');
+    }
+
+    // Additional security: Block internal admin tickets (defense in depth)
+    if (ticket.is_admin_created === true) {
+      logger.warn('Internal ticket access attempt', {
+        ticketId,
+        userId: req.session.user.id,
+        userDepartment: req.session.user.department,
         ip: req.ip
       });
       return errorRedirect(req, res, TICKET_MESSAGES.UNAUTHORIZED_ACCESS, '/client/dashboard');
@@ -146,12 +159,25 @@ router.post('/tickets/:id/comments', validateTicketId, validateClientCommentCrea
       return errorRedirect(req, res, TICKET_MESSAGES.NOT_FOUND, '/client/dashboard');
     }
 
-    // CRITICAL: Ownership verification
-    if (ticket.reporter_id !== req.session.user.id) {
-      logger.warn('Comment ownership violation attempt', {
+    // CRITICAL: Department-based access control
+    // Allow access if ticket belongs to user's department AND is not an internal admin ticket
+    if (ticket.reporter_department !== req.session.user.department) {
+      logger.warn('Comment department access violation attempt', {
         ticketId,
         userId: req.session.user.id,
-        ticketReporterId: ticket.reporter_id,
+        userDepartment: req.session.user.department,
+        ticketDepartment: ticket.reporter_department,
+        ip: req.ip
+      });
+      return errorRedirect(req, res, TICKET_MESSAGES.UNAUTHORIZED_ACCESS, '/client/dashboard');
+    }
+
+    // Additional security: Block internal admin tickets (defense in depth)
+    if (ticket.is_admin_created === true) {
+      logger.warn('Internal ticket comment attempt', {
+        ticketId,
+        userId: req.session.user.id,
+        userDepartment: req.session.user.department,
         ip: req.ip
       });
       return errorRedirect(req, res, TICKET_MESSAGES.UNAUTHORIZED_ACCESS, '/client/dashboard');
@@ -189,12 +215,25 @@ router.post('/tickets/:id/status', validateTicketId, validateClientStatusUpdate,
       return errorRedirect(req, res, TICKET_MESSAGES.NOT_FOUND, '/client/dashboard');
     }
 
-    // CRITICAL: Ownership verification
-    if (ticket.reporter_id !== req.session.user.id) {
-      logger.warn('Status update ownership violation attempt', {
+    // CRITICAL: Department-based access control
+    // Allow access if ticket belongs to user's department AND is not an internal admin ticket
+    if (ticket.reporter_department !== req.session.user.department) {
+      logger.warn('Status update department access violation attempt', {
         ticketId,
         userId: req.session.user.id,
-        ticketReporterId: ticket.reporter_id,
+        userDepartment: req.session.user.department,
+        ticketDepartment: ticket.reporter_department,
+        ip: req.ip
+      });
+      return errorRedirect(req, res, TICKET_MESSAGES.UNAUTHORIZED_ACCESS, '/client/dashboard');
+    }
+
+    // Additional security: Block internal admin tickets (defense in depth)
+    if (ticket.is_admin_created === true) {
+      logger.warn('Internal ticket status update attempt', {
+        ticketId,
+        userId: req.session.user.id,
+        userDepartment: req.session.user.department,
         ip: req.ip
       });
       return errorRedirect(req, res, TICKET_MESSAGES.UNAUTHORIZED_ACCESS, '/client/dashboard');
