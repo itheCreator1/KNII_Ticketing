@@ -8,9 +8,9 @@ KNII Ticketing System - A professional support ticket management application wit
 **Production**: PM2 cluster mode
 **No ORM**: Raw SQL with pg driver
 **Code Quality**: 98% compliance with professional Node.js development standards
-**Security**: Zero SQL injection vulnerabilities, multi-layer defense with ownership verification
-**Testing**: 354 test cases passing - 17 unit test files, 6 integration tests, 3 E2E tests
-**Version**: 2.1.0 (Department Accounts & Dual-Portal Architecture)
+**Security**: Zero SQL injection vulnerabilities, multi-layer defense with department-based access control
+**Testing**: 416 test cases passing - 18 unit test files, 6 integration tests, 3 E2E tests
+**Version**: 2.2.0 (Department Accounts with Admin-Created Ticket Visibility Fix)
 
 ---
 
@@ -32,15 +32,15 @@ This file provides a quick reference for AI assistants. For comprehensive docume
 
 ---
 
-## Testing Infrastructure (v2.1.0)
+## Testing Infrastructure (v2.2.0)
 
-**354 Test Cases Passing** - Professional-grade testing infrastructure
+**416 Test Cases Passing** - Professional-grade testing infrastructure
 
 ### Test Statistics
-- **Total Test Files**: 26 (Unit: 17, Integration: 6, E2E: 3)
-- **Test Cases**: 354 passing
-- **Test Code**: 10,000+ lines (extensive unit, integration, and E2E coverage)
-- **Coverage**: Core functionality fully tested, department accounts workflows validated
+- **Total Test Files**: 18 (Unit: 17, Integration: 6, E2E: 3) - Updated v2.2.0
+- **Test Cases**: 416 passing (62 new tests in v2.2.0)
+- **Test Code**: 10,500+ lines (extensive unit, integration, and E2E coverage)
+- **Coverage**: Core functionality fully tested, department accounts workflows validated, department-based access control verified
 - **Test Execution**: Transaction-based isolation, no side effects
 
 ### Test Categories
@@ -238,6 +238,44 @@ The system supports three types of ticket creation:
 
 ---
 
+## Version History & Changes
+
+### v2.2.0 (Current)
+**Critical Fix**: Admin-Created Department Tickets Now Visible to Department Users
+
+**Bug Fixed**:
+- ❌ **Before**: Admin-created department tickets were invisible to department users
+- ✅ **After**: Department users can now see tickets created by admins on their behalf
+
+**Changes**:
+1. **Session Data**: Added `department` field to `req.session.user` for efficient access control
+2. **Ticket Query** (`Ticket.findByDepartment()`): Changed from `reporter_id` to `reporter_department` filtering
+   - Now correctly returns both user-created and admin-created department tickets
+   - Parameter changed: `userId` → `department` (for clarity)
+3. **Service Layer** (`clientTicketService.getDepartmentTickets()`): Updated to accept and pass `department` parameter
+4. **Route Security** (`routes/client.js`): Implemented department-based access control
+   - Changed ownership verification from `reporter_id` match to `department` match
+   - Added defense-in-depth: Blocks internal admin tickets on all client routes
+   - Affects: dashboard, ticket detail, comments, status updates
+
+**Security Implications**:
+- ✅ Department users can view all their department's tickets (including admin-created ones)
+- ✅ Cross-department access remains blocked
+- ✅ Internal admin tickets remain hidden from all department users
+- ✅ Same security posture with improved correctness
+
+**Testing**:
+- All 416 tests passing (62 new tests added)
+- Added comprehensive test coverage for department-based access control
+- Session migration handled gracefully with lazy initialization
+
+### v2.1.0 (Previous)
+- Initial department accounts and dual-portal architecture
+- Department user role with client portal access
+- Admin creation of department tickets on behalf of departments
+
+---
+
 ## Database Schema
 
 ```sql
@@ -305,6 +343,25 @@ requireDepartment // Checks role is 'department' only
 - User enumeration prevention: generic error messages for all login failures
 - Session invalidation: automatic logout when user is deactivated or deleted
 - Ticket ID parameter validation to prevent SQL errors and injection attempts
+- **Department-based access control** for client portal (v2.2.0+)
+
+**Session Data** (created by `authService.createSessionData()`):
+```javascript
+req.session.user = {
+  id: user.id,                    // User ID
+  username: user.username,        // Username
+  email: user.email,              // Email address
+  role: user.role,                // 'admin', 'super_admin', or 'department'
+  department: user.department     // Department name (required for department users)
+}
+```
+
+**Department-Based Access Control** (v2.2.0+):
+- Client routes verify `ticket.reporter_department === req.session.user.department`
+- Allows department users to access both user-created and admin-created department tickets
+- Blocks cross-department access (dept users only see their own department's tickets)
+- Blocks internal admin tickets (`is_admin_created === true`) with defense-in-depth check
+- All client routes (detail, comments, status updates) implement department verification
 
 **CSRF Protection**: Using csrf-csrf (double-submit cookie pattern)
 - All POST/PUT/DELETE requests require CSRF token
@@ -394,6 +451,18 @@ const user = await User.findById(id);
 - `countTickets(name)` - Counts tickets in department (for safety checks)
 
 **Protection**: System departments (is_system=true) cannot be updated or deactivated.
+
+**Ticket model pattern** (v2.2.0+):
+- `findByDepartment(department, filters)` - Returns all non-internal tickets for a department (v2.2.0+)
+  - Filters by `reporter_department = department` AND `is_admin_created = false`
+  - **v2.2.0 change**: Changed from `reporter_id = userId` to `reporter_department = department`
+  - This allows department users to see both user-created and admin-created department tickets
+  - Parameters: `department` (string: dept name), `filters` (status, priority, search)
+  - Used by client portal to fetch department user's tickets
+- `findById(id)` - Returns single ticket by ID (includes assigned_to_username)
+- `create(ticketData)` - Creates new ticket with all fields
+- `update(id, updates)` - Updates ticket fields (status, priority, assigned_to)
+- `findByStatus(status)` - Returns all tickets with given status (admin use)
 
 ### 5. Services
 Business logic lives here. Services call models, handle validation logic:
