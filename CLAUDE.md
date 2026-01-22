@@ -9,8 +9,8 @@ KNII Ticketing System - A professional support ticket management application wit
 **No ORM**: Raw SQL with pg driver
 **Code Quality**: 98% compliance with professional Node.js development standards
 **Security**: Zero SQL injection vulnerabilities, multi-layer defense with ownership verification
-**Testing**: 345+ test cases passing - 17 unit test files, 6 integration tests, 3 E2E tests
-**Version**: v2.4.1 (UI Enhancements & Development Tools)
+**Testing**: 354 test cases passing - 17 unit test files, 6 integration tests, 3 E2E tests
+**Version**: 2.1.0 (Department Accounts & Dual-Portal Architecture)
 
 ---
 
@@ -34,11 +34,11 @@ This file provides a quick reference for AI assistants. For comprehensive docume
 
 ## Testing Infrastructure (v2.1.0)
 
-**345+ Test Cases Passing** - Professional-grade testing infrastructure
+**354 Test Cases Passing** - Professional-grade testing infrastructure
 
 ### Test Statistics
 - **Total Test Files**: 26 (Unit: 17, Integration: 6, E2E: 3)
-- **Test Cases**: 345+ passing
+- **Test Cases**: 354 passing
 - **Test Code**: 10,000+ lines (extensive unit, integration, and E2E coverage)
 - **Coverage**: Core functionality fully tested, department accounts workflows validated
 - **Test Execution**: Transaction-based isolation, no side effects
@@ -382,7 +382,7 @@ const user = await User.findById(id);
 
 **CRITICAL**: Never return password_hash from public model methods. Only `*WithPassword` methods should include it.
 
-**Department model pattern** (added in v2.3.0):
+**Department model pattern**:
 - `findAll(includeSystem)` - Returns active departments (includeSystem=true includes 'Internal')
 - `findAllForAdmin()` - Returns all departments including inactive (for management UI)
 - `findById(id)` - Returns department by ID
@@ -778,7 +778,7 @@ REPORTER_DEPARTMENT.FACILITIES = 'Facilities'
 REPORTER_DEPARTMENT.INTERNAL = 'Internal'  // System department (admin-only, added in v2.2.0)
 ```
 
-**New Approach (v2.3.0+)**: Use the Department model to fetch departments dynamically:
+**New Approach**: Use the Department model to fetch departments dynamically:
 ```javascript
 // Get all active non-system departments (for user dropdowns)
 const departments = await Department.findAll(false);
@@ -787,7 +787,7 @@ const departments = await Department.findAll(false);
 const allDepartments = await Department.findAll(true);
 ```
 
-### Hospital Departments (v2.5.0)
+### Hospital Departments
 
 The system uses hospital-specific departments seeded via the `seed-hospital-data.js` script:
 

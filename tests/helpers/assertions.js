@@ -127,5 +127,28 @@ expect.extend({
           : `expected account ${JSON.stringify(received)} to have login_attempts >= 5`,
       pass
     };
+  },
+
+  /**
+   * Check if an object is a valid department
+   */
+  toBeValidDepartment(received) {
+    const pass =
+      received !== null &&
+      received !== undefined &&
+      typeof received.id === 'number' &&
+      typeof received.name === 'string' &&
+      typeof received.is_system === 'boolean' &&
+      typeof received.active === 'boolean' &&
+      received.created_at instanceof Date &&
+      received.updated_at instanceof Date;
+
+    return {
+      message: () =>
+        pass
+          ? `expected ${JSON.stringify(received)} not to be a valid department`
+          : `expected ${JSON.stringify(received)} to be a valid department with id, name, is_system, active, created_at, and updated_at`,
+      pass
+    };
   }
 });
