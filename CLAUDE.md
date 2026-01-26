@@ -99,6 +99,54 @@ npm run test:watch
 - **Supertest**: HTTP integration testing
 - **Custom Matchers**: Domain-specific assertions (toBeValidUser, toBeValidTicket, etc.)
 
+### Test Coverage
+
+**Coverage Configuration**:
+- **Thresholds**: 70% for branches, functions, lines, statements (enforced by Jest)
+- **Collected from**: models, services, routes, middleware, utils, validators
+- **Reporters**: text (terminal), lcov (file), html (interactive report)
+- **Status**: Run `npm test` - if any threshold is below 70%, the build fails
+
+**Generating Coverage Reports**:
+```bash
+# Generate coverage report (text + HTML)
+npm run test:coverage
+
+# View HTML report in browser (opens automatically on macOS/Linux)
+npm run test:coverage:html
+
+# Manual HTML report viewing
+open coverage/lcov-report/index.html        # macOS
+xdg-open coverage/lcov-report/index.html    # Linux
+start coverage/lcov-report/index.html       # Windows (PowerShell)
+```
+
+**Interpreting Coverage Reports**:
+- **Green**: >80% coverage (excellent)
+- **Yellow**: 70-80% coverage (meets threshold requirement)
+- **Red**: <70% coverage (build fails, must improve)
+
+**Coverage Exclusions**:
+- `scripts/` - Utility/admin scripts not part of core application
+- `migrations/` - SQL files tested via integration migration tests
+- `tests/` - Test code itself (not counted in coverage)
+- Generated files and config directories
+
+**Coverage Files**:
+- `coverage/lcov.info` - LCOV format (for CI/CD integration, IDE plugins)
+- `coverage/lcov-report/` - Interactive HTML report with file-by-file breakdown
+- `.gitignore` includes `coverage/` - never commit coverage reports
+
+**Improving Coverage**:
+1. Run `npm run test:coverage` to see which lines lack coverage
+2. Open HTML report to identify specific uncovered code paths
+3. Add tests focusing on:
+   - Branches (if/else, switch cases, ternary operators)
+   - Error handlers and exception cases
+   - Edge cases and boundary conditions
+   - Less common code paths
+4. Rerun coverage to verify improvements
+
 ---
 
 ## Architecture

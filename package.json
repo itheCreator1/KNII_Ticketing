@@ -21,8 +21,10 @@
     "pretest": "node scripts/check-version-consistency.js",
     "test": "jest",
     "test:unit": "jest --testPathPattern=tests/unit",
+    "test:integration": "jest --testPathPattern=tests/integration --runInBand",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:coverage:html": "jest --coverage && open coverage/lcov-report/index.html 2>/dev/null || echo 'Open coverage/lcov-report/index.html in your browser'"
   },
   "keywords": [
     "ticketing",
