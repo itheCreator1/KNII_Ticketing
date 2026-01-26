@@ -6,7 +6,7 @@
  */
 
 const pool = require('../../../config/database');
-const { setupTestDatabase, teardownTestDatabase } = require('../../helpers/database');
+const { setupTestDatabase, teardownTestDatabase, getTestClient } = require('../../helpers/database');
 const { createUserData } = require('../../helpers/factories');
 const User = require('../../../models/User');
 
@@ -21,17 +21,17 @@ describe('Foreign Key Behavior', () => {
       const user = await User.create(userData);
       const userId = user.id;
 
-      const ticketResult = await pool.query(
+      const ticketResult = await getTestClient().query(
         'INSERT INTO tickets (title, description, status, priority, reporter_id, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
         ['Test', 'Description', 'open', 'unset', userId, 'Reporter', 'Internal']
       );
       const ticketId = ticketResult.rows[0].id;
 
       // Act
-      await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+      await getTestClient().query('DELETE FROM users WHERE id = $1', [userId]);
 
       // Assert
-      const ticket = await pool.query('SELECT reporter_id FROM tickets WHERE id = $1', [ticketId]);
+      const ticket = await getTestClient().query('SELECT reporter_id FROM tickets WHERE id = $1', [ticketId]);
       expect(ticket.rows[0].reporter_id).toBeNull();
     });
 
@@ -41,17 +41,17 @@ describe('Foreign Key Behavior', () => {
       const admin = await User.create(adminData);
       const adminId = admin.id;
 
-      const ticketResult = await pool.query(
+      const ticketResult = await getTestClient().query(
         'INSERT INTO tickets (title, description, status, priority, assigned_to, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
         ['Test', 'Description', 'open', 'unset', adminId, 'Reporter', 'Internal']
       );
       const ticketId = ticketResult.rows[0].id;
 
       // Act
-      await pool.query('DELETE FROM users WHERE id = $1', [adminId]);
+      await getTestClient().query('DELETE FROM users WHERE id = $1', [adminId]);
 
       // Assert
-      const ticket = await pool.query('SELECT assigned_to FROM tickets WHERE id = $1', [ticketId]);
+      const ticket = await getTestClient().query('SELECT assigned_to FROM tickets WHERE id = $1', [ticketId]);
       expect(ticket.rows[0].assigned_to).toBeNull();
     });
   });
@@ -59,7 +59,7 @@ describe('Foreign Key Behavior', () => {
   describe('Comments CASCADE DELETE on Ticket Delete', () => {
     it('should delete comments when ticket is deleted', async () => {
       // Arrange
-      const ticketResult = await pool.query(
+      const ticketResult = await getTestClient().query(
         'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
         ['Test', 'Description', 'open', 'unset', 'Reporter', 'Internal']
       );
@@ -69,17 +69,17 @@ describe('Foreign Key Behavior', () => {
       const user = await User.create(userData);
       const userId = user.id;
 
-      const commentResult = await pool.query(
+      const commentResult = await getTestClient().query(
         'INSERT INTO comments (ticket_id, user_id, content, visibility_type) VALUES ($1, $2, $3, $4) RETURNING id',
         [ticketId, userId, 'Comment content', 'public']
       );
       const commentId = commentResult.rows[0].id;
 
       // Act
-      await pool.query('DELETE FROM tickets WHERE id = $1', [ticketId]);
+      await getTestClient().query('DELETE FROM tickets WHERE id = $1', [ticketId]);
 
       // Assert
-      const comment = await pool.query('SELECT id FROM comments WHERE id = $1', [commentId]);
+      const comment = await getTestClient().query('SELECT id FROM comments WHERE id = $1', [commentId]);
       expect(comment.rows).toHaveLength(0);
     });
   });
@@ -87,7 +87,7 @@ describe('Foreign Key Behavior', () => {
   describe('Comments CASCADE DELETE on User Delete', () => {
     it('should delete comments when user is deleted', async () => {
       // Arrange
-      const ticketResult = await pool.query(
+      const ticketResult = await getTestClient().query(
         'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
         ['Test', 'Description', 'open', 'unset', 'Reporter', 'Internal']
       );
@@ -97,17 +97,17 @@ describe('Foreign Key Behavior', () => {
       const user = await User.create(userData);
       const userId = user.id;
 
-      const commentResult = await pool.query(
+      const commentResult = await getTestClient().query(
         'INSERT INTO comments (ticket_id, user_id, content, visibility_type) VALUES ($1, $2, $3, $4) RETURNING id',
         [ticketId, userId, 'Comment content', 'public']
       );
       const commentId = commentResult.rows[0].id;
 
       // Act
-      await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+      await getTestClient().query('DELETE FROM users WHERE id = $1', [userId]);
 
       // Assert
-      const comment = await pool.query('SELECT id FROM comments WHERE id = $1', [commentId]);
+      const comment = await getTestClient().query('SELECT id FROM comments WHERE id = $1', [commentId]);
       expect(comment.rows).toHaveLength(0);
     });
   });
@@ -115,21 +115,21 @@ describe('Foreign Key Behavior', () => {
   describe('Tickets RESTRICT on Department Delete', () => {
     it('should prevent deletion of department with existing tickets', async () => {
       // Arrange
-      const deptResult = await pool.query(
+      const deptResult = await getTestClient().query(
         'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         ['Test Dept', 'Description', 'Ground Floor', false, true]
       );
       const deptId = deptResult.rows[0].id;
 
       const deptName = 'Test Dept';
-      await pool.query(
+      await getTestClient().query(
         'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6)',
         ['Test', 'Description', 'open', 'unset', 'Reporter', deptName]
       );
 
       // Act & Assert
       await expect(
-        pool.query('DELETE FROM departments WHERE id = $1', [deptId])
+        getTestClient().query('DELETE FROM departments WHERE id = $1', [deptId])
       ).rejects.toThrow();
     });
   });
@@ -137,7 +137,7 @@ describe('Foreign Key Behavior', () => {
   describe('Users RESTRICT on Department Delete', () => {
     it('should prevent deletion of department with assigned users', async () => {
       // Arrange
-      const deptResult = await pool.query(
+      const deptResult = await getTestClient().query(
         'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         ['Test Dept 2', 'Description', 'Ground Floor', false, true]
       );
@@ -149,7 +149,7 @@ describe('Foreign Key Behavior', () => {
 
       // Act & Assert
       await expect(
-        pool.query('DELETE FROM departments WHERE id = $1', [deptId])
+        getTestClient().query('DELETE FROM departments WHERE id = $1', [deptId])
       ).rejects.toThrow();
     });
   });
@@ -160,7 +160,7 @@ describe('Foreign Key Behavior', () => {
       const originalName = 'Original Dept';
       const newName = 'Updated Dept';
 
-      const deptResult = await pool.query(
+      const deptResult = await getTestClient().query(
         'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         [originalName, 'Description', 'Ground Floor', false, true]
       );
@@ -171,10 +171,10 @@ describe('Foreign Key Behavior', () => {
       const userId = user.id;
 
       // Act
-      await pool.query('UPDATE departments SET name = $1 WHERE id = $2', [newName, deptId]);
+      await getTestClient().query('UPDATE departments SET name = $1 WHERE id = $2', [newName, deptId]);
 
       // Assert
-      const updatedUser = await pool.query('SELECT department FROM users WHERE id = $1', [userId]);
+      const updatedUser = await getTestClient().query('SELECT department FROM users WHERE id = $1', [userId]);
       expect(updatedUser.rows[0].department).toBe(newName);
     });
 
@@ -183,23 +183,23 @@ describe('Foreign Key Behavior', () => {
       const originalName = 'Original Dept 2';
       const newName = 'Updated Dept 2';
 
-      const deptResult = await pool.query(
+      const deptResult = await getTestClient().query(
         'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         [originalName, 'Description', 'Ground Floor', false, true]
       );
       const deptId = deptResult.rows[0].id;
 
-      const ticketResult = await pool.query(
+      const ticketResult = await getTestClient().query(
         'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
         ['Test', 'Description', 'open', 'unset', 'Reporter', originalName]
       );
       const ticketId = ticketResult.rows[0].id;
 
       // Act
-      await pool.query('UPDATE departments SET name = $1 WHERE id = $2', [newName, deptId]);
+      await getTestClient().query('UPDATE departments SET name = $1 WHERE id = $2', [newName, deptId]);
 
       // Assert
-      const updatedTicket = await pool.query('SELECT reporter_department FROM tickets WHERE id = $1', [ticketId]);
+      const updatedTicket = await getTestClient().query('SELECT reporter_department FROM tickets WHERE id = $1', [ticketId]);
       expect(updatedTicket.rows[0].reporter_department).toBe(newName);
     });
   });
@@ -208,7 +208,7 @@ describe('Foreign Key Behavior', () => {
     it('should enforce reporter_id FK constraint', async () => {
       // Act & Assert - Try to insert ticket with non-existent user
       await expect(
-        pool.query(
+        getTestClient().query(
           'INSERT INTO tickets (title, description, status, priority, reporter_id, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6, $7)',
           ['Test', 'Description', 'open', 'unset', 99999, 'Reporter', 'Internal']
         )
@@ -218,7 +218,7 @@ describe('Foreign Key Behavior', () => {
     it('should enforce assigned_to FK constraint', async () => {
       // Act & Assert - Try to insert ticket assigned to non-existent user
       await expect(
-        pool.query(
+        getTestClient().query(
           'INSERT INTO tickets (title, description, status, priority, assigned_to, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6, $7)',
           ['Test', 'Description', 'open', 'unset', 99999, 'Reporter', 'Internal']
         )
@@ -233,7 +233,7 @@ describe('Foreign Key Behavior', () => {
 
       // Act & Assert - Try to insert comment for non-existent ticket
       await expect(
-        pool.query(
+        getTestClient().query(
           'INSERT INTO comments (ticket_id, user_id, content, visibility_type) VALUES ($1, $2, $3, $4)',
           [99999, userId, 'Content', 'public']
         )
@@ -242,7 +242,7 @@ describe('Foreign Key Behavior', () => {
 
     it('should enforce user_id FK constraint in comments', async () => {
       // Arrange
-      const ticketResult = await pool.query(
+      const ticketResult = await getTestClient().query(
         'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
         ['Test', 'Description', 'open', 'unset', 'Reporter', 'Internal']
       );
@@ -250,7 +250,7 @@ describe('Foreign Key Behavior', () => {
 
       // Act & Assert - Try to insert comment by non-existent user
       await expect(
-        pool.query(
+        getTestClient().query(
           'INSERT INTO comments (ticket_id, user_id, content, visibility_type) VALUES ($1, $2, $3, $4)',
           [ticketId, 99999, 'Content', 'public']
         )
@@ -261,7 +261,7 @@ describe('Foreign Key Behavior', () => {
       // Act & Assert - Try to insert user with non-existent department
       const userData = createUserData({ role: 'department', department: 'NonexistentDept' });
       await expect(
-        pool.query(
+        getTestClient().query(
           'INSERT INTO users (username, email, password_hash, role, department, status) VALUES ($1, $2, $3, $4, $5, $6)',
           [userData.username, userData.email, userData.password_hash, userData.role, userData.department, userData.status]
         )
@@ -271,7 +271,7 @@ describe('Foreign Key Behavior', () => {
     it('should enforce ticket.reporter_department FK constraint', async () => {
       // Act & Assert - Try to insert ticket with non-existent department
       await expect(
-        pool.query(
+        getTestClient().query(
           'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6)',
           ['Test', 'Description', 'open', 'unset', 'Reporter', 'NonexistentDept']
         )
@@ -290,7 +290,7 @@ describe('Foreign Key Behavior', () => {
       `;
 
       // Act
-      const result = await pool.query(fkConstraintsQuery);
+      const result = await getTestClient().query(fkConstraintsQuery);
       const constraintNames = result.rows.map(r => r.constraint_name);
 
       // Assert - Verify constraints exist and follow naming convention

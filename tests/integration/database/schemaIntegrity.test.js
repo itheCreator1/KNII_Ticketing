@@ -20,7 +20,7 @@ const {
   isColumnNullable,
   getColumnMaxLength
 } = require('../../helpers/schemaHelpers');
-const { setupTestDatabase, teardownTestDatabase } = require('../../helpers/database');
+const { setupTestDatabase, teardownTestDatabase, getTestClient } = require('../../helpers/database');
 
 describe('Database Schema Integrity', () => {
   beforeEach(setupTestDatabase);

@@ -11,7 +11,7 @@
 
 const request = require('supertest');
 const app = require('../../../app');
-const { setupTestDatabase, teardownTestDatabase } = require('../../helpers/database');
+const { setupTestDatabase, teardownTestDatabase, getTestClient } = require('../../helpers/database');
 const { createUserData } = require('../../helpers/factories');
 const User = require('../../../models/User');
 const AuditLog = require('../../../models/AuditLog');

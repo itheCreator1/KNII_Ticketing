@@ -10,7 +10,7 @@
 
 const request = require('supertest');
 const app = require('../../../app');
-const { setupTestDatabase, teardownTestDatabase } = require('../../helpers/database');
+const { setupTestDatabase, teardownTestDatabase, getTestClient } = require('../../helpers/database');
 
 describe('Public Routes Integration Tests', () => {
   beforeEach(async () => {

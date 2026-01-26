@@ -6,7 +6,7 @@
  */
 
 const pool = require('../../../config/database');
-const { setupTestDatabase, teardownTestDatabase } = require('../../helpers/database');
+const { setupTestDatabase, teardownTestDatabase, getTestClient } = require('../../helpers/database');
 const {
   getTableNames,
   getTableColumns,
@@ -128,13 +128,13 @@ describe('Migration Runner (init-db.js)', () => {
   describe('Migration 007: Priority Constraint', () => {
     it('should have unset as default priority', async () => {
       // Arrange
-      await pool.query(
+      await getTestClient().query(
         'INSERT INTO tickets (title, description, status, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5)',
         ['Test', 'Description', 'open', 'Reporter', 'Internal']
       );
 
       // Act
-      const result = await pool.query('SELECT priority FROM tickets WHERE title = $1', ['Test']);
+      const result = await getTestClient().query('SELECT priority FROM tickets WHERE title = $1', ['Test']);
 
       // Assert
       expect(result.rows[0].priority).toBe('unset');
@@ -205,7 +205,7 @@ describe('Migration Runner (init-db.js)', () => {
   describe('Migration 014: Internal Department', () => {
     it('should allow Internal department in tickets (enforced by FK in migration 016)', async () => {
       // Act & Assert - Can create ticket with Internal department (Internal dept created by seed data)
-      const ticketResult = await pool.query(
+      const ticketResult = await getTestClient().query(
         'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
         ['Internal Ticket', 'Admin only', 'open', 'unset', 'Admin', 'Internal']
       );
@@ -243,7 +243,7 @@ describe('Migration Runner (init-db.js)', () => {
 
     it('should have unique name constraint on departments', async () => {
       // Act
-      const constraints = await pool.query(`
+      const constraints = await getTestClient().query(`
         SELECT constraint_name FROM information_schema.table_constraints
         WHERE table_name = 'departments' AND constraint_type = 'UNIQUE'
       `);
@@ -351,35 +351,35 @@ describe('Migration Runner (init-db.js)', () => {
       // Act & Assert - Verify we can insert to all tables
 
       // Department (required for tickets and users)
-      const dept = await pool.query(
+      const dept = await getTestClient().query(
         'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         ['Test Dept', 'Test', 'Ground Floor', false, true]
       );
       expect(dept.rows[0].id).toBeDefined();
 
       // User
-      const user = await pool.query(
+      const user = await getTestClient().query(
         'INSERT INTO users (username, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         ['testuser', 'test@test.com', 'hash', 'admin', 'active']
       );
       expect(user.rows[0].id).toBeDefined();
 
       // Ticket
-      const ticket = await pool.query(
+      const ticket = await getTestClient().query(
         'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
         ['Title', 'Desc', 'open', 'unset', 'Reporter', 'Test Dept']
       );
       expect(ticket.rows[0].id).toBeDefined();
 
       // Comment
-      const comment = await pool.query(
+      const comment = await getTestClient().query(
         'INSERT INTO comments (ticket_id, user_id, content, visibility_type) VALUES ($1, $2, $3, $4) RETURNING id',
         [ticket.rows[0].id, user.rows[0].id, 'Content', 'public']
       );
       expect(comment.rows[0].id).toBeDefined();
 
       // Audit Log
-      const audit = await pool.query(
+      const audit = await getTestClient().query(
         'INSERT INTO audit_logs (actor_id, action, target_type, target_id, ip_address) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         [user.rows[0].id, 'CREATE', 'ticket', ticket.rows[0].id, '127.0.0.1']
       );
@@ -403,7 +403,7 @@ describe('Migration Runner (init-db.js)', () => {
 
     it('should allow inserting valid floor values in departments', async () => {
       // Act & Assert
-      const result = await pool.query(
+      const result = await getTestClient().query(
         'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5) RETURNING floor',
         ['Migration 020 Test', 'Test', '3rd Floor', false, true]
       );
