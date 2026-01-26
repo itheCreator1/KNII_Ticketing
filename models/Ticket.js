@@ -2,11 +2,12 @@ const pool = require('../config/database');
 const logger = require('../utils/logger');
 
 class Ticket {
-  static async create({ title, description, reporter_name, reporter_department, reporter_phone, reporter_id, priority = 'unset', status = 'open', is_admin_created = false }) {
+  static async create({ title, description, reporter_name, reporter_department, reporter_phone, reporter_id, priority = 'unset', status = 'open', is_admin_created = false }, client = null) {
+    const db = client || pool;
     const startTime = Date.now();
     try {
       logger.info('Ticket.create: Creating new ticket', { reporterDepartment: reporter_department, reporterId: reporter_id, priority, status, isAdminCreated: is_admin_created, titleLength: title?.length });
-      const result = await pool.query(
+      const result = await db.query(
         `INSERT INTO tickets (title, description, reporter_name, reporter_department, reporter_phone, reporter_id, priority, status, is_admin_created)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING *`,
@@ -191,7 +192,8 @@ class Ticket {
     }
   }
 
-  static async update(id, { status, priority, assigned_to }) {
+  static async update(id, { status, priority, assigned_to }, client = null) {
+    const db = client || pool;
     const startTime = Date.now();
     const updates = [];
     const params = [];
@@ -226,7 +228,7 @@ class Ticket {
       params.push(id);
       const query = `UPDATE tickets SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
 
-      const result = await pool.query(query, params);
+      const result = await db.query(query, params);
       const duration = Date.now() - startTime;
 
       if (duration > 500) {

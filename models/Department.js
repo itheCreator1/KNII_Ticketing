@@ -61,8 +61,9 @@ class Department {
    * @param {Object} data - {name, description, floor}
    * @returns {Promise<Object>} Created department
    */
-  static async create({ name, description, floor }) {
-    const result = await pool.query(
+  static async create({ name, description, floor }, client = null) {
+    const db = client || pool;
+    const result = await db.query(
       `INSERT INTO departments (name, description, floor, is_system, active)
        VALUES ($1, $2, $3, false, true)
        RETURNING *`,
@@ -77,7 +78,8 @@ class Department {
    * @param {Object} data - {name, description, floor, active}
    * @returns {Promise<Object>} Updated department
    */
-  static async update(id, { name, description, floor, active }) {
+  static async update(id, { name, description, floor, active }, client = null) {
+    const db = client || pool;
     const fields = [];
     const values = [];
     let paramCount = 1;
@@ -109,7 +111,7 @@ class Department {
     fields.push(`updated_at = NOW()`);
     values.push(id);
 
-    const result = await pool.query(
+    const result = await db.query(
       `UPDATE departments
        SET ${fields.join(', ')}
        WHERE id = $${paramCount} AND is_system = false

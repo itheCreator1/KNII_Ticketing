@@ -2,11 +2,12 @@ const pool = require('../config/database');
 const logger = require('../utils/logger');
 
 class Comment {
-  static async create({ ticket_id, user_id, content, visibility_type = 'public' }) {
+  static async create({ ticket_id, user_id, content, visibility_type = 'public' }, client = null) {
+    const db = client || pool;
     const startTime = Date.now();
     try {
       logger.info('Comment.create: Creating new comment', { ticketId: ticket_id, userId: user_id, visibilityType: visibility_type, contentLength: content?.length });
-      const result = await pool.query(
+      const result = await db.query(
         `INSERT INTO comments (ticket_id, user_id, content, visibility_type)
          VALUES ($1, $2, $3, $4)
          RETURNING *`,

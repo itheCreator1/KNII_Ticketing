@@ -2,11 +2,12 @@ const pool = require('../config/database');
 const logger = require('../utils/logger');
 
 class AuditLog {
-  static async create({ actorId, action, targetType, targetId, details, ipAddress }) {
+  static async create({ actorId, action, targetType, targetId, details, ipAddress }, client = null) {
+    const db = client || pool;
     const startTime = Date.now();
     try {
       logger.debug('AuditLog.create: Creating audit log entry', { actorId, action, targetType, targetId, ipAddress });
-      const result = await pool.query(
+      const result = await db.query(
         'INSERT INTO audit_logs (actor_id, action, target_type, target_id, details, ip_address) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
         [actorId, action, targetType, targetId, JSON.stringify(details), ipAddress]
       );
