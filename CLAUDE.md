@@ -216,6 +216,85 @@ start coverage/lcov-report/index.html       # Windows (PowerShell)
    - Less common code paths
 4. Rerun coverage to verify improvements
 
+### Performance Benchmarking (20 benchmarks)
+
+**Location**: `tests/performance/`
+
+**Purpose**: Measure and monitor response times for critical application endpoints across authentication, ticket operations, and comment operations.
+
+**Tool**: autocannon - Native Node.js HTTP load testing
+
+**Benchmarked Operations**:
+
+1. **Authentication** (2 benchmarks)
+   - POST /auth/login - Bcrypt + database query (SLA: P95 <300ms)
+   - GET /admin/dashboard - Session validation (SLA: P95 <200ms)
+
+2. **Ticket Operations** (5 benchmarks)
+   - GET /admin/dashboard - Ticket listing with pagination (SLA: P95 <400ms)
+   - GET /client/dashboard - Filtered department ticket list (SLA: P95 <300ms)
+   - GET /admin/tickets/:id - Ticket detail with comments (SLA: P95 <200ms)
+   - POST /admin/tickets - Create new ticket (SLA: P95 <300ms)
+   - PUT /admin/tickets/:id - Update ticket status (SLA: P95 <300ms)
+
+3. **Comment Operations** (3 benchmarks)
+   - POST /admin/tickets/:id/comments - Create comment + auto-update status (SLA: P95 <400ms)
+   - GET /admin/tickets/:id/comments - List all comments (SLA: P95 <200ms)
+   - GET /client/tickets/:id/comments - List filtered comments (SLA: P95 <200ms)
+
+**Test Configuration**:
+- Duration: 10 seconds per benchmark
+- Concurrent Connections: 5-10 (varies by operation)
+- Metrics: P50, P95, P99 latency, throughput, errors
+
+**Running Benchmarks**:
+```bash
+# Run all benchmarks
+npm run bench
+
+# Run specific benchmark suites
+npm run bench:auth          # Authentication only
+npm run bench:tickets       # Ticket operations only
+npm run bench:comments      # Comment operations only
+```
+
+**Performance Baselines**:
+- Documented in `docs/performance-baseline.md`
+- All endpoints currently 2-8x faster than SLA targets
+- Bcrypt adds ~50ms expected overhead for login
+- No detected slow queries (>500ms threshold)
+
+**SLA Targets**:
+- P95 latency is the key metric (95th percentile response time)
+- All endpoints target P95 <200-400ms depending on operation
+- Zero errors required (errors cause SLA failure)
+
+**Regression Testing**:
+- Performance degradation >10% indicates investigation needed
+- Run benchmarks monthly or after schema/query changes
+- Compare against baseline metrics in performance-baseline.md
+
+**Performance Results Summary**:
+- ✅ All endpoints within SLA targets
+- ✅ Login: 95ms P95 (target: <300ms)
+- ✅ Dashboard: 15-65ms P95 (target: <200-400ms)
+- ✅ Ticket detail: 28ms P95 (target: <200ms)
+- ✅ Comments: 22-58ms P95 (target: <200-400ms)
+
+**Infrastructure Notes**:
+- Benchmarks use minimal Express servers, not full app
+- Real production performance may vary with:
+  - Network latency
+  - Database size (more tickets = slower queries)
+  - Concurrent load on server
+  - Hardware specifications
+
+**Optimization Opportunities** (documented in baseline):
+- Composite indexes on (status, priority) for dashboard filtering
+- Redis caching for session data (save 1-2ms per request)
+- PgBouncer for connection pooling optimization
+- Full-text search index when ticket search added
+
 ---
 
 ## Architecture
