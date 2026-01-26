@@ -139,7 +139,7 @@ async function getForeignKeys(tableName) {
  */
 async function getCheckConstraints(tableName) {
   const result = await pool.query(`
-    SELECT constraint_name, check_clause
+    SELECT cc.constraint_name, cc.check_clause
     FROM information_schema.check_constraints cc
     JOIN information_schema.table_constraints tc
       ON cc.constraint_name = tc.constraint_name

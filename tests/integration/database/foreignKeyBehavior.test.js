@@ -8,6 +8,7 @@
 const pool = require('../../../config/database');
 const { setupTestDatabase, teardownTestDatabase } = require('../../helpers/database');
 const { createUserData } = require('../../helpers/factories');
+const User = require('../../../models/User');
 
 describe('Foreign Key Behavior', () => {
   beforeEach(setupTestDatabase);
@@ -17,11 +18,8 @@ describe('Foreign Key Behavior', () => {
     it('should set ticket reporter_id to NULL when user is deleted', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin' });
-      const user = await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [userData.username, userData.email, userData.password_hash, userData.role, userData.status]
-      );
-      const userId = user.rows[0].id;
+      const user = await User.create(userData);
+      const userId = user.id;
 
       const ticketResult = await pool.query(
         'INSERT INTO tickets (title, description, status, priority, reporter_id, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
@@ -40,11 +38,8 @@ describe('Foreign Key Behavior', () => {
     it('should set ticket assigned_to to NULL when assigned user is deleted', async () => {
       // Arrange
       const adminData = createUserData({ role: 'admin' });
-      const admin = await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [adminData.username, adminData.email, adminData.password_hash, adminData.role, adminData.status]
-      );
-      const adminId = admin.rows[0].id;
+      const admin = await User.create(adminData);
+      const adminId = admin.id;
 
       const ticketResult = await pool.query(
         'INSERT INTO tickets (title, description, status, priority, assigned_to, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
@@ -71,11 +66,8 @@ describe('Foreign Key Behavior', () => {
       const ticketId = ticketResult.rows[0].id;
 
       const userData = createUserData({ role: 'admin' });
-      const user = await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [userData.username, userData.email, userData.password_hash, userData.role, userData.status]
-      );
-      const userId = user.rows[0].id;
+      const user = await User.create(userData);
+      const userId = user.id;
 
       const commentResult = await pool.query(
         'INSERT INTO comments (ticket_id, user_id, content, visibility_type) VALUES ($1, $2, $3, $4) RETURNING id',
@@ -102,11 +94,8 @@ describe('Foreign Key Behavior', () => {
       const ticketId = ticketResult.rows[0].id;
 
       const userData = createUserData({ role: 'admin' });
-      const user = await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [userData.username, userData.email, userData.password_hash, userData.role, userData.status]
-      );
-      const userId = user.rows[0].id;
+      const user = await User.create(userData);
+      const userId = user.id;
 
       const commentResult = await pool.query(
         'INSERT INTO comments (ticket_id, user_id, content, visibility_type) VALUES ($1, $2, $3, $4) RETURNING id',
@@ -156,10 +145,7 @@ describe('Foreign Key Behavior', () => {
 
       const deptName = 'Test Dept 2';
       const userData = createUserData({ role: 'department', department: deptName });
-      await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, department, status) VALUES ($1, $2, $3, $4, $5, $6)',
-        [userData.username, userData.email, userData.password_hash, userData.role, userData.department, userData.status]
-      );
+      await User.create(userData);
 
       // Act & Assert
       await expect(
@@ -181,11 +167,8 @@ describe('Foreign Key Behavior', () => {
       const deptId = deptResult.rows[0].id;
 
       const userData = createUserData({ role: 'department', department: originalName });
-      const user = await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, department, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-        [userData.username, userData.email, userData.password_hash, userData.role, userData.department, userData.status]
-      );
-      const userId = user.rows[0].id;
+      const user = await User.create(userData);
+      const userId = user.id;
 
       // Act
       await pool.query('UPDATE departments SET name = $1 WHERE id = $2', [newName, deptId]);
@@ -245,11 +228,8 @@ describe('Foreign Key Behavior', () => {
     it('should enforce ticket_id FK constraint in comments', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin' });
-      const user = await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [userData.username, userData.email, userData.password_hash, userData.role, userData.status]
-      );
-      const userId = user.rows[0].id;
+      const user = await User.create(userData);
+      const userId = user.id;
 
       // Act & Assert - Try to insert comment for non-existent ticket
       await expect(

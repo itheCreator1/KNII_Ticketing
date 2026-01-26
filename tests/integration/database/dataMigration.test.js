@@ -8,6 +8,7 @@
 const pool = require('../../../config/database');
 const { setupTestDatabase, teardownTestDatabase } = require('../../helpers/database');
 const { createUserData } = require('../../helpers/factories');
+const User = require('../../../models/User');
 
 describe('Data Migration Correctness', () => {
   beforeEach(setupTestDatabase);
@@ -40,11 +41,8 @@ describe('Data Migration Correctness', () => {
     it('should allow setting reporter_id to valid user ID', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin' });
-      const user = await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [userData.username, userData.email, userData.password_hash, userData.role, userData.status]
-      );
-      const userId = user.rows[0].id;
+      const user = await User.create(userData);
+      const userId = user.id;
 
       // Act
       const result = await pool.query(
@@ -95,11 +93,8 @@ describe('Data Migration Correctness', () => {
     it('should distinguish between user-created and admin-created tickets by is_admin_created flag', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin' });
-      const user = await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [userData.username, userData.email, userData.password_hash, userData.role, userData.status]
-      );
-      const userId = user.rows[0].id;
+      const user = await User.create(userData);
+      const userId = user.id;
 
       // Create a user-created ticket
       await pool.query(
@@ -208,11 +203,8 @@ describe('Data Migration Correctness', () => {
     it('should handle duplicate inserts gracefully (reporter_id)', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin' });
-      const user = await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [userData.username, userData.email, userData.password_hash, userData.role, userData.status]
-      );
-      const userId = user.rows[0].id;
+      const user = await User.create(userData);
+      const userId = user.id;
 
       // Act - Insert same ticket twice should fail on second attempt due to constraints
       const firstInsert = await pool.query(
@@ -223,7 +215,7 @@ describe('Data Migration Correctness', () => {
 
       // Assert - Verify only one record exists
       const count = await pool.query('SELECT COUNT(*) as count FROM tickets WHERE id = $1', [ticketId]);
-      expect(count.rows[0].count).toBe(1);
+      expect(parseInt(count.rows[0].count)).toBe(1);
     });
 
     it('should handle NULL reporter_id safely', async () => {
@@ -251,11 +243,8 @@ describe('Data Migration Correctness', () => {
     it('should maintain data consistency across multiple related tables', async () => {
       // Arrange - Create user, department, and ticket
       const userData = createUserData({ role: 'department', department: 'Internal' });
-      const user = await pool.query(
-        'INSERT INTO users (username, email, password_hash, role, department, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-        [userData.username, userData.email, userData.password_hash, userData.role, userData.department, userData.status]
-      );
-      const userId = user.rows[0].id;
+      const user = await User.create(userData);
+      const userId = user.id;
 
       const ticket = await pool.query(
         'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department, reporter_id, is_admin_created) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',

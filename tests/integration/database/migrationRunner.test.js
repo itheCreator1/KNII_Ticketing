@@ -203,19 +203,14 @@ describe('Migration Runner (init-db.js)', () => {
   });
 
   describe('Migration 014: Internal Department', () => {
-    it('should have Internal department in CHECK constraint', async () => {
-      // Arrange
-      const deptConstraintCheck = ['Internal'];
-
-      // Act
-      const constraints = await getCheckConstraints('tickets');
-      const deptConstraint = constraints.find(c =>
-        c.check_clause && c.check_clause.includes('reporter_department')
+    it('should allow Internal department in tickets (enforced by FK in migration 016)', async () => {
+      // Act & Assert - Can create ticket with Internal department (Internal dept created by seed data)
+      const ticketResult = await pool.query(
+        'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+        ['Internal Ticket', 'Admin only', 'open', 'unset', 'Admin', 'Internal']
       );
 
-      // Assert
-      expect(deptConstraint).toBeDefined();
-      expect(deptConstraint.check_clause).toContain('Internal');
+      expect(ticketResult.rows[0].id).toBeDefined();
     });
   });
 
