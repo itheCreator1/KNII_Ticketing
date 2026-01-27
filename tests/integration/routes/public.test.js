@@ -10,15 +10,15 @@
 
 const request = require('supertest');
 const app = require('../../../app');
-const { setupTestDatabase, teardownTestDatabase, getTestClient } = require('../../helpers/database');
+const { setupIntegrationTest, teardownIntegrationTest } = require('../../helpers/database');
 
 describe('Public Routes Integration Tests', () => {
   beforeEach(async () => {
-    await setupTestDatabase();
+    await setupIntegrationTest();
   });
 
   afterEach(async () => {
-    await teardownTestDatabase();
+    await teardownIntegrationTest();
   });
 
   describe('GET /', () => {

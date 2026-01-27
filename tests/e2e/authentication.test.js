@@ -12,25 +12,25 @@
 
 const request = require('supertest');
 const app = require('../../app');
-const { setupTestDatabase, teardownTestDatabase, getTestClient } = require('../helpers/database');
+const { setupIntegrationTest, teardownIntegrationTest } = require('../helpers/database');
 const { createUserData } = require('../helpers/factories');
 const User = require('../../models/User');
 const AuditLog = require('../../models/AuditLog');
 
 describe('Authentication E2E Tests', () => {
   beforeEach(async () => {
-    await setupTestDatabase();
+    await setupIntegrationTest();
   });
 
   afterEach(async () => {
-    await teardownTestDatabase();
+    await teardownIntegrationTest();
   });
 
   describe('Account Locking Workflow', () => {
     it('should complete full account locking and unlock workflow', async () => {
       // Step 1: Create user
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData, getTestClient());
+      const user = await User.create(userData);
 
       // Step 2: Attempt login with wrong password 5 times
       for (let i = 1; i <= 5; i++) {
@@ -66,7 +66,7 @@ describe('Authentication E2E Tests', () => {
       expect(lockedLoginResponse.headers.location).toBe('/auth/login');
 
       // Step 5: Super admin unlocks account (reset login_attempts)
-      await User.update(user.id, { login_attempts: 0 }, getTestClient());
+      await User.update(user.id, { login_attempts: 0 });
 
       // Step 6: Verify successful login works after unlock
       const successResponse = await request(app)
@@ -94,7 +94,7 @@ describe('Authentication E2E Tests', () => {
     it('should increment login_attempts on each failed attempt', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData, getTestClient());
+      const user = await User.create(userData);
 
       // Act & Assert - Test incremental locking
       for (let attempt = 1; attempt <= 5; attempt++) {
@@ -113,10 +113,10 @@ describe('Authentication E2E Tests', () => {
     it('should prevent login even with correct password when locked', async () => {
       // Arrange - Create locked account
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData, getTestClient());
+      const user = await User.create(userData);
 
       // Lock account
-      await User.update(user.id, { login_attempts: 5 }, getTestClient());
+      await User.update(user.id, { login_attempts: 5 });
 
       // Act - Try to login with correct password
       const response = await request(app)
@@ -135,10 +135,10 @@ describe('Authentication E2E Tests', () => {
     it('should reset login_attempts to 0 on successful login', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData, getTestClient());
+      const user = await User.create(userData);
 
       // Simulate some failed attempts
-      await User.update(user.id, { login_attempts: 3 }, getTestClient());
+      await User.update(user.id, { login_attempts: 3 });
 
       // Act - Successful login
       await request(app)
@@ -158,7 +158,7 @@ describe('Authentication E2E Tests', () => {
     it('should complete full session lifecycle', async () => {
       // Step 1: Create user
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData, getTestClient());
+      const user = await User.create(userData);
 
       // Step 2: Login - Session created
       const loginResponse = await request(app)
@@ -205,7 +205,7 @@ describe('Authentication E2E Tests', () => {
     it('should maintain session across multiple page views', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin', status: 'active' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       const loginResponse = await request(app)
         .post('/auth/login')
@@ -236,7 +236,7 @@ describe('Authentication E2E Tests', () => {
     it('should invalidate session after logout', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin', status: 'active' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       const loginResponse = await request(app)
         .post('/auth/login')
@@ -264,7 +264,7 @@ describe('Authentication E2E Tests', () => {
     it('should redirect authenticated users away from login page', async () => {
       // Arrange - Login
       const userData = createUserData({ role: 'admin', status: 'active' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       const loginResponse = await request(app)
         .post('/auth/login')
@@ -292,8 +292,8 @@ describe('Authentication E2E Tests', () => {
       const user1Data = createUserData({ role: 'admin', status: 'active' });
       const user2Data = createUserData({ role: 'super_admin', status: 'active' });
 
-      const user1 = await User.create(user1Data, getTestClient());
-      const user2 = await User.create(user2Data, getTestClient());
+      const user1 = await User.create(user1Data);
+      const user2 = await User.create(user2Data);
 
       // Step 2: Login both users
       const login1 = await request(app)
@@ -348,8 +348,8 @@ describe('Authentication E2E Tests', () => {
       const user1Data = createUserData({ role: 'admin', status: 'active' });
       const user2Data = createUserData({ role: 'admin', status: 'active' });
 
-      await User.create(user1Data, getTestClient());
-      await User.create(user2Data, getTestClient());
+      await User.create(user1Data);
+      await User.create(user2Data);
 
       // Act - Login both
       const login1 = await request(app)
@@ -390,7 +390,7 @@ describe('Authentication E2E Tests', () => {
     it('should reject login for inactive users throughout workflow', async () => {
       // Step 1: Create inactive user
       const userData = createUserData({ role: 'admin', status: 'inactive' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       // Step 2: Attempt login
       const response = await request(app)
@@ -409,7 +409,7 @@ describe('Authentication E2E Tests', () => {
     it('should reject login for deleted users', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin', status: 'deleted' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       // Act
       const response = await request(app)
@@ -427,7 +427,7 @@ describe('Authentication E2E Tests', () => {
     it('should invalidate session when user is deactivated', async () => {
       // Step 1: Login
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData, getTestClient());
+      const user = await User.create(userData);
 
       const loginResponse = await request(app)
         .post('/auth/login')
@@ -446,7 +446,7 @@ describe('Authentication E2E Tests', () => {
       expect(beforeDeactivate.status).toBe(200);
 
       // Step 3: Deactivate user
-      await User.update(user.id, { status: 'inactive' }, getTestClient());
+      await User.update(user.id, { status: 'inactive' });
 
       // Step 4: Try to access - should be redirected
       const afterDeactivate = await request(app)
@@ -460,7 +460,7 @@ describe('Authentication E2E Tests', () => {
     it('should update last_login_at timestamp on successful login', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData, getTestClient());
+      const user = await User.create(userData);
 
       const userBefore = await User.findById(user.id);
       expect(userBefore.last_login_at).toBeNull();
@@ -482,7 +482,7 @@ describe('Authentication E2E Tests', () => {
     it('should prevent timing attacks during authentication', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin', status: 'active' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       // Act - Test timing for existing user
       const start1 = Date.now();

@@ -12,18 +12,18 @@
 
 const request = require('supertest');
 const app = require('../../../app');
-const { setupTestDatabase, teardownTestDatabase, getTestClient } = require('../../helpers/database');
+const { setupIntegrationTest, teardownIntegrationTest } = require('../../helpers/database');
 const { createUserData, createTicketData } = require('../../helpers/factories');
 const User = require('../../../models/User');
 const Ticket = require('../../../models/Ticket');
 
 describe('Validation Middleware Integration Tests', () => {
   beforeEach(async () => {
-    await setupTestDatabase();
+    await setupIntegrationTest();
   });
 
   afterEach(async () => {
-    await teardownTestDatabase();
+    await teardownIntegrationTest();
   });
 
   describe('CSRF Protection Integration', () => {
@@ -94,7 +94,7 @@ describe('Validation Middleware Integration Tests', () => {
 
       // Create user for login
       const userData = createUserData({ role: 'admin', status: 'active' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       // Act - POST with CSRF token
       const response = await request(app)
@@ -113,7 +113,7 @@ describe('Validation Middleware Integration Tests', () => {
     it('should reject POST without CSRF token', async () => {
       // Arrange
       const userData = createUserData({ role: 'admin', status: 'active' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       // Act - POST without CSRF token
       const response = await request(app)
@@ -130,7 +130,7 @@ describe('Validation Middleware Integration Tests', () => {
     it('should reject PUT without CSRF token', async () => {
       // Arrange - Create admin user and login
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData, getTestClient());
+      const user = await User.create(userData);
 
       const loginResponse = await request(app)
         .post('/auth/login')
@@ -142,7 +142,7 @@ describe('Validation Middleware Integration Tests', () => {
       const cookies = loginResponse.headers['set-cookie'];
 
       // Create a ticket
-      const ticket = await Ticket.create(createTicketData(, getTestClient()));
+      const ticket = await Ticket.create(createTicketData());
 
       // Act - PUT without CSRF token (if app supports PUT)
       const response = await request(app)
@@ -157,7 +157,7 @@ describe('Validation Middleware Integration Tests', () => {
     it('should reject DELETE without CSRF token', async () => {
       // Arrange - Create admin user and login
       const userData = createUserData({ role: 'super_admin', status: 'active' });
-      const user = await User.create(userData, getTestClient());
+      const user = await User.create(userData);
 
       const loginResponse = await request(app)
         .post('/auth/login')
@@ -169,7 +169,7 @@ describe('Validation Middleware Integration Tests', () => {
       const cookies = loginResponse.headers['set-cookie'];
 
       // Create another user to delete
-      const targetUser = await User.create(createUserData(), getTestClient());
+      const targetUser = await User.create(createUserData());
 
       // Act - DELETE without CSRF token (if app supports DELETE)
       const response = await request(app)
@@ -189,7 +189,7 @@ describe('Validation Middleware Integration Tests', () => {
 
       // Create user for login attempt
       const userData = createUserData({ role: 'admin', status: 'active' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       // Act - POST with mismatched token (wrong token)
       const response = await request(app)
@@ -208,7 +208,7 @@ describe('Validation Middleware Integration Tests', () => {
     it('should accept POST with token from authenticated session', async () => {
       // Arrange - Create user and login
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData, getTestClient());
+      const user = await User.create(userData);
 
       const loginResponse = await request(app)
         .post('/auth/login')
@@ -229,7 +229,7 @@ describe('Validation Middleware Integration Tests', () => {
       const csrfToken = csrfMatch ? csrfMatch[1] : null;
 
       // Create ticket for update
-      const ticket = await Ticket.create(createTicketData(, getTestClient()));
+      const ticket = await Ticket.create(createTicketData());
 
       // Act - POST with valid CSRF token
       const response = await request(app)
@@ -312,7 +312,7 @@ describe('Validation Middleware Integration Tests', () => {
 
       // Arrange
       const userData = createUserData({ role: 'admin', status: 'active' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       // Act - POST with no cookies (simulates expired)
       const response = await request(app)
@@ -357,7 +357,7 @@ describe('Validation Middleware Integration Tests', () => {
       const csrfToken = csrfMatch ? csrfMatch[1] : null;
 
       const userData = createUserData({ role: 'admin', status: 'active' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       // Act - Submit with token
       const response = await request(app)
@@ -380,7 +380,7 @@ describe('Validation Middleware Integration Tests', () => {
 
       const cookies = getResponse.headers['set-cookie'];
       const userData = createUserData({ role: 'admin', status: 'active' });
-      await User.create(userData, getTestClient());
+      await User.create(userData);
 
       // Act - POST with cookies but no _csrf field
       const response = await request(app)

@@ -22,7 +22,15 @@
       "Bash(docker-compose logs:*)",
       "Bash(xargs:*)",
       "Bash(dos2unix:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(powershell -Command \"Start-Process ''C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe''\")",
+      "Bash(for f in tests/integration/middleware/auth.test.js tests/integration/middleware/validation.test.js tests/integration/routes/public.test.js)",
+      "Bash(do sed -i 's/, getTestClient\\(\\)//g' \"$f\")",
+      "Bash(done)",
+      "Bash(for:*)",
+      "Bash(do grep -c \"User\\\\.\\\\|Ticket\\\\.\\\\|Comment\\\\.\\\\|Department\\\\.\" \"$f\")",
+      "Bash(do sed -i 's/setupIntegrationTest/setupTestDatabase/g; s/teardownIntegrationTest/teardownTestDatabase/g' \"$f\")",
+      "Bash(do sed -i 's/setupTestDatabase/setupIntegrationTest/g; s/teardownTestDatabase/teardownIntegrationTest/g' \"$f\")"
     ]
   }
 }
