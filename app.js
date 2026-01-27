@@ -79,11 +79,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session(sessionConfig));
 
-// Set default language to Greek in session if not present
-// This ensures new users see Greek by default
+// Set default language in session if not present
+// Uses I18N_DEFAULTLANGUAGE env variable (set in tests to 'en')
+// Falls back to 'el' (Greek) for production/development
 app.use((req, res, next) => {
   if (!req.session.language) {
-    req.session.language = 'el';
+    req.session.language = process.env.I18N_DEFAULTLANGUAGE || 'el';
   }
   next();
 });
