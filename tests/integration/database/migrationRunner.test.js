@@ -387,6 +387,131 @@ describe('Migration Runner (init-db.js)', () => {
     });
   });
 
+  describe('Migration 021: Fix Audit Log FK Constraint', () => {
+    it('should have audit_logs table with proper FK constraints', async () => {
+      // Act
+      const columns = await getTableColumns('audit_logs');
+      const actorIdColumn = columns.find(c => c.column_name === 'actor_id');
+
+      // Assert
+      expect(actorIdColumn).toBeDefined();
+      expect(actorIdColumn.is_nullable).toBe('YES'); // FK uses ON DELETE SET NULL
+    });
+  });
+
+  describe('Migration 022: Create Floors Table', () => {
+    it('should have created floors table', async () => {
+      // Act
+      const columns = await getTableColumns('floors');
+      const columnNames = columns.map(c => c.column_name);
+
+      // Assert
+      expect(columnNames).toContain('id');
+      expect(columnNames).toContain('name');
+      expect(columnNames).toContain('sort_order');
+      expect(columnNames).toContain('is_system');
+      expect(columnNames).toContain('active');
+    });
+
+    it('should have unique name constraint on floors', async () => {
+      // Act
+      const constraints = await getTestClient().query(`
+        SELECT constraint_name FROM information_schema.table_constraints
+        WHERE table_name = 'floors' AND constraint_type = 'UNIQUE'
+      `);
+      const constraintNames = constraints.rows.map(r => r.constraint_name);
+
+      // Assert
+      expect(constraintNames.some(name => name.includes('name'))).toBe(true);
+    });
+
+    it('should allow inserting floors', async () => {
+      // Act & Assert
+      const result = await getTestClient().query(
+        'INSERT INTO floors (name, sort_order, is_system, active) VALUES ($1, $2, $3, $4) RETURNING id',
+        ['Test Floor', 0, false, true]
+      );
+      expect(result.rows[0].id).toBeDefined();
+    });
+  });
+
+  describe('Migration 023: Convert Floor to FK', () => {
+    it('should have floor column as VARCHAR (references floors.name)', async () => {
+      // Act
+      const columns = await getTableColumns('departments');
+      const floorColumn = columns.find(c => c.column_name === 'floor');
+
+      // Assert
+      expect(floorColumn).toBeDefined();
+      expect(floorColumn.is_nullable).toBe('NO');
+      expect(floorColumn.data_type).toBe('character varying');
+    });
+
+    it('should enforce FK constraint when inserting departments', async () => {
+      // Arrange - Create a valid floor first
+      await getTestClient().query(
+        'INSERT INTO floors (name, sort_order, is_system, active) VALUES ($1, $2, $3, $4)',
+        ['Valid Floor', 0, false, true]
+      );
+
+      // Act & Assert - Valid floor should work
+      const result = await getTestClient().query(
+        'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5) RETURNING floor',
+        ['Test Dept', 'Test', 'Valid Floor', false, true]
+      );
+      expect(result.rows[0].floor).toBe('Valid Floor');
+
+      // Act & Assert - Invalid floor should fail
+      await expect(
+        getTestClient().query(
+          'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5)',
+          ['Test Dept 2', 'Test', 'Non-Existent Floor', false, true]
+        )
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('Migration 024: Remove Hardcoded System Floors', () => {
+    it('should have removed hardcoded system floors from new installations', async () => {
+      // Act - Query floors table
+      const result = await getTestClient().query(
+        'SELECT COUNT(*) as count FROM floors WHERE is_system = true'
+      );
+
+      // Assert - Should be 0 after Migration 024
+      expect(result.rows[0].count).toBe(0);
+    });
+
+    it('should allow creating custom floors via config after migration', async () => {
+      // Act - Create floors from config
+      const result = await getTestClient().query(
+        'INSERT INTO floors (name, sort_order, is_system, active) VALUES ($1, $2, $3, $4) RETURNING id',
+        ['Custom Floor', 0, false, true]
+      );
+
+      // Assert
+      expect(result.rows[0].id).toBeDefined();
+
+      // Verify it was created
+      const verify = await getTestClient().query(
+        'SELECT * FROM floors WHERE name = $1',
+        ['Custom Floor']
+      );
+      expect(verify.rows.length).toBe(1);
+      expect(verify.rows[0].is_system).toBe(false);
+    });
+
+    it('should require floors to be seeded via config for departments', async () => {
+      // Act & Assert - Cannot create department without a floor reference
+      await expect(
+        getTestClient().query(
+          'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5)',
+          ['Test Dept', 'Test', 'Non-Existent Floor', false, true]
+        )
+      ).rejects.toThrow();
+    });
+  });
+
   describe('Regression: Migration 020 Included', () => {
     it('should include migration 020 in init-db.js', async () => {
       // This test verifies the critical bug fix: migration 020 must be included
@@ -402,12 +527,77 @@ describe('Migration Runner (init-db.js)', () => {
     });
 
     it('should allow inserting valid floor values in departments', async () => {
+      // Arrange - Create a floor first (since migration 024 removes hardcoded ones)
+      await getTestClient().query(
+        'INSERT INTO floors (name, sort_order, is_system, active) VALUES ($1, $2, $3, $4)',
+        ['Test Migration Floor', 0, false, true]
+      );
+
       // Act & Assert
       const result = await getTestClient().query(
         'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5) RETURNING floor',
-        ['Migration 020 Test', 'Test', '3rd Floor', false, true]
+        ['Migration 020 Test', 'Test', 'Test Migration Floor', false, true]
       );
-      expect(result.rows[0].floor).toBe('3rd Floor');
+      expect(result.rows[0].floor).toBe('Test Migration Floor');
+    });
+  });
+
+  describe('Complete Migration Sequence (v2.4.0)', () => {
+    it('should execute all 24 migrations successfully', async () => {
+      // Act - Verify all tables exist
+      const tables = await getTableNames();
+
+      // Assert - All required tables
+      expect(tables).toContain('users');
+      expect(tables).toContain('tickets');
+      expect(tables).toContain('comments');
+      expect(tables).toContain('session');
+      expect(tables).toContain('audit_logs');
+      expect(tables).toContain('departments');
+      expect(tables).toContain('floors');
+    });
+
+    it('should have empty floors table after Migration 024', async () => {
+      // Act
+      const result = await getTestClient().query('SELECT COUNT(*) as count FROM floors');
+
+      // Assert - Migration 024 removes all hardcoded floors
+      expect(result.rows[0].count).toBe(0);
+    });
+
+    it('should support dynamic floor and department seeding via config', async () => {
+      // Act - Create floors and departments dynamically
+      await getTestClient().query(
+        'INSERT INTO floors (name, sort_order, is_system, active) VALUES ($1, $2, $3, $4)',
+        ['Basement', 0, false, true]
+      );
+      await getTestClient().query(
+        'INSERT INTO floors (name, sort_order, is_system, active) VALUES ($1, $2, $3, $4)',
+        ['Ground Floor', 1, false, true]
+      );
+
+      await getTestClient().query(
+        'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5)',
+        ['Emergency', 'Emergency services', 'Ground Floor', false, true]
+      );
+      await getTestClient().query(
+        'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5)',
+        ['Internal', 'Admin only', 'Basement', true, true]
+      );
+
+      // Assert
+      const floorsResult = await getTestClient().query('SELECT COUNT(*) as count FROM floors');
+      const deptsResult = await getTestClient().query('SELECT COUNT(*) as count FROM departments');
+
+      expect(floorsResult.rows[0].count).toBe(2);
+      expect(deptsResult.rows[0].count).toBe(2);
+
+      // Verify Internal is marked as system
+      const internal = await getTestClient().query(
+        'SELECT is_system FROM departments WHERE name = $1',
+        ['Internal']
+      );
+      expect(internal.rows[0].is_system).toBe(true);
     });
   });
 });
