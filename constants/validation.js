@@ -10,6 +10,7 @@ const MAX_LENGTHS = {
 };
 
 const VALIDATION_MESSAGES = {
+  ID_INVALID: 'Invalid ID provided',
   TITLE_REQUIRED: 'Title is required',
   TITLE_TOO_LONG: `Title cannot exceed ${MAX_LENGTHS.TICKET_TITLE} characters`,
   DESCRIPTION_REQUIRED: 'Description is required',

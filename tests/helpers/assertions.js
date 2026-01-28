@@ -150,5 +150,29 @@ expect.extend({
           : `expected ${JSON.stringify(received)} to be a valid department with id, name, is_system, active, created_at, and updated_at`,
       pass
     };
+  },
+
+  /**
+   * Check if an object is a valid floor
+   */
+  toBeValidFloor(received) {
+    const pass =
+      received !== null &&
+      received !== undefined &&
+      typeof received.id === 'number' &&
+      typeof received.name === 'string' &&
+      typeof received.sort_order === 'number' &&
+      typeof received.is_system === 'boolean' &&
+      typeof received.active === 'boolean' &&
+      received.created_at instanceof Date &&
+      received.updated_at instanceof Date;
+
+    return {
+      message: () =>
+        pass
+          ? `expected ${JSON.stringify(received)} not to be a valid floor`
+          : `expected ${JSON.stringify(received)} to be a valid floor with id, name, sort_order, is_system, active, created_at, and updated_at`,
+      pass
+    };
   }
 });

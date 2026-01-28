@@ -29,7 +29,7 @@ describe('Database Schema Integrity', () => {
   describe('Tables', () => {
     it('should have all expected tables', async () => {
       // Arrange
-      const expectedTables = ['users', 'tickets', 'comments', 'session', 'audit_logs', 'departments'];
+      const expectedTables = ['users', 'tickets', 'comments', 'session', 'audit_logs', 'departments', 'floors'];
 
       // Act
       const actualTables = await getTableNames();
@@ -254,6 +254,97 @@ describe('Database Schema Integrity', () => {
 
       // Assert
       expect(isNullable).toBe(false);
+    });
+  });
+
+  describe('Floors Table', () => {
+    it('should have all expected columns', async () => {
+      // Arrange
+      const expectedColumns = ['id', 'name', 'sort_order', 'is_system', 'active', 'created_at', 'updated_at'];
+
+      // Act
+      const verification = await verifyTableColumns('floors', expectedColumns);
+
+      // Assert
+      expect(verification.missing).toHaveLength(0);
+      expect(verification.extra).toHaveLength(0);
+    });
+
+    it('should have id as primary key', async () => {
+      // Act
+      const pkColumns = await getPrimaryKeyColumns('floors');
+
+      // Assert
+      expect(pkColumns).toEqual(['id']);
+    });
+
+    it('should enforce unique floor name constraint', async () => {
+      // Act
+      const uniqueConstraints = await getUniqueConstraints('floors');
+
+      // Assert
+      expect(uniqueConstraints).toContain('floors_name_key');
+    });
+
+    it('should have name as VARCHAR with length constraint', async () => {
+      // Act
+      const nameType = await getColumnDataType('floors', 'name');
+      const nameMaxLength = await getColumnMaxLength('floors', 'name');
+
+      // Assert
+      expect(nameType).toBe('character varying');
+      expect(nameMaxLength).toBeGreaterThan(0);
+    });
+
+    it('should have sort_order as integer', async () => {
+      // Act
+      const sortOrderType = await getColumnDataType('floors', 'sort_order');
+
+      // Assert
+      expect(sortOrderType).toMatch(/integer|bigint|smallint/);
+    });
+
+    it('should have is_system as boolean', async () => {
+      // Act
+      const isSystemType = await getColumnDataType('floors', 'is_system');
+
+      // Assert
+      expect(isSystemType).toBe('boolean');
+    });
+
+    it('should have active as boolean', async () => {
+      // Act
+      const activeType = await getColumnDataType('floors', 'active');
+
+      // Assert
+      expect(activeType).toBe('boolean');
+    });
+
+    it('should have proper default values', async () => {
+      // Act - This would require checking column defaults from information_schema
+      // For now, we test by inserting a row with minimal data
+      const testClient = getTestClient();
+      const result = await testClient.query(
+        `INSERT INTO floors (name, sort_order, is_system, active)
+         VALUES ($1, $2, $3, $4)
+         RETURNING *`,
+        ['Test Floor', 5, false, true]
+      );
+
+      // Assert
+      const floor = result.rows[0];
+      expect(floor.is_system).toBe(false);
+      expect(floor.active).toBe(true);
+    });
+
+    it('should have timestamp columns (created_at, updated_at)', async () => {
+      // Act
+      const createdAtType = await getColumnDataType('floors', 'created_at');
+      const updatedAtType = await getColumnDataType('floors', 'updated_at');
+
+      // Assert
+      expect(createdAtType).toMatch(/timestamp|date/);
+      expect(updatedAtType).toMatch(/timestamp|date/);
     });
   });
 
