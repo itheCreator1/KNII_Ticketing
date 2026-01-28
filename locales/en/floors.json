@@ -1,0 +1,34 @@
+{
+  "title": "Floor Management",
+  "createFloor": "Create Floor",
+  "editFloor": "Edit Floor",
+  "fields": {
+    "name": "Floor Name",
+    "sortOrder": "Sort Order",
+    "status": "Status",
+    "type": "Type",
+    "active": "Active Floor"
+  },
+  "actions": {
+    "create": "Create Floor",
+    "update": "Update Floor",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate"
+  },
+  "messages": {
+    "created": "Floor created successfully",
+    "updated": "Floor updated successfully",
+    "deactivated": "Floor deactivated successfully",
+    "reactivated": "Floor reactivated successfully",
+    "cannotDeactivate": "Cannot deactivate floor with assigned departments",
+    "systemFloor": "System floors cannot be edited or deactivated"
+  },
+  "help": {
+    "sortOrder": "Lower numbers appear first in dropdowns",
+    "deactivated": "This floor is currently deactivated. Reactivate it to make it available again."
+  },
+  "placeholders": {
+    "name": "e.g., 7th Floor, Basement Level 2"
+  },
+  "confirmDeactivate": "Are you sure you want to deactivate this floor? If departments are assigned, you must reassign them first."
+}
