@@ -177,21 +177,63 @@
   .badge-status {
     @apply inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md;
   }
-  .badge-status-open { @apply bg-status-open text-white; }
-  .badge-status-progress { @apply bg-status-progress text-black; }
-  .badge-status-waiting-admin { @apply bg-status-waiting-admin text-black; }
-  .badge-status-waiting-dept { @apply bg-status-waiting-dept text-white animate-pulse-subtle; }
-  .badge-status-closed { @apply bg-status-closed text-white; }
+  .badge-status-open {
+    background-color: var(--status-open-bg);
+    color: var(--status-open-text);
+    border: 1px solid var(--status-open-border);
+  }
+  .badge-status-progress {
+    background-color: var(--status-in_progress-bg);
+    color: var(--status-in_progress-text);
+    border: 1px solid var(--status-in_progress-border);
+  }
+  .badge-status-waiting-admin {
+    background-color: var(--status-waiting_on_admin-bg);
+    color: var(--status-waiting_on_admin-text);
+    border: 1px solid var(--status-waiting_on_admin-border);
+  }
+  .badge-status-waiting-dept {
+    background-color: var(--status-waiting_on_department-bg);
+    color: var(--status-waiting_on_department-text);
+    border: 1px solid var(--status-waiting_on_department-border);
+    animation: pulse-subtle 2s ease-in-out infinite;
+  }
+  .badge-status-closed {
+    background-color: var(--status-closed-bg);
+    color: var(--status-closed-text);
+    border: 1px solid var(--status-closed-border);
+  }
 
   /* Priority Badges */
   .badge-priority {
     @apply inline-flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md;
   }
-  .badge-priority-critical { @apply bg-priority-critical text-white shadow-[0_0_8px_rgba(220,53,69,0.5)]; }
-  .badge-priority-high { @apply bg-priority-high text-white; }
-  .badge-priority-medium { @apply bg-priority-medium text-black; }
-  .badge-priority-low { @apply bg-priority-low text-white; }
-  .badge-priority-unset { @apply bg-priority-unset text-bs-secondary border border-gray-300; }
+  .badge-priority-critical {
+    background-color: var(--priority-critical-bg);
+    color: var(--priority-critical-text);
+    border: 1px solid var(--priority-critical-border);
+    box-shadow: var(--shadow-glow);
+  }
+  .badge-priority-high {
+    background-color: var(--priority-high-bg);
+    color: var(--priority-high-text);
+    border: 1px solid var(--priority-high-border);
+  }
+  .badge-priority-medium {
+    background-color: var(--priority-medium-bg);
+    color: var(--priority-medium-text);
+    border: 1px solid var(--priority-medium-border);
+  }
+  .badge-priority-low {
+    background-color: var(--priority-low-bg);
+    color: var(--priority-low-text);
+    border: 1px solid var(--priority-low-border);
+  }
+  .badge-priority-unset {
+    background-color: var(--priority-unset-bg);
+    color: var(--priority-unset-text);
+    border: 1px solid var(--priority-unset-border);
+  }
 
   /* Comments */
   .comment {
