@@ -1,5 +1,9 @@
 # Deployment Guide - KNII Ticketing System
 
+**Version:** 2.2.1
+**Last Updated:** January 2026
+**Target Project:** KNII Ticketing System (Node.js 20 + Express 5 + PostgreSQL 16)
+
 This guide covers deploying the ticketing system in a production environment on your local server.
 
 ## Quick Start (Docker)
@@ -13,14 +17,28 @@ cp .env.example .env
 docker-compose build
 docker-compose up -d
 
-# 3. Create admin user
+# 3. Create floors, departments, and admin user
+# Option A: Use JSON configuration (recommended for customization)
+docker-compose exec web npm run seed:hospital
+# This reads from config/seed-data/floors.json and config/seed-data/departments.json
+
+# Option B: Interactive admin setup (minimal setup)
 docker-compose exec web npm run seed-admin
-# Follow prompts or use the non-interactive method in section 4 below
+# Follow prompts to create a super admin user
+
+# Option C: Seed with sample data (for testing)
+docker-compose exec web npm run seed:sample
+# Creates sample tickets and comments for demonstration
 
 # 4. Access the application
 # Public: http://localhost:3000
 # Admin: http://localhost:3000/auth/login
 ```
+
+**Seeding Options Explained**:
+- **`seed:hospital`** - Recommended. Creates floors and departments from JSON config files, fully customizable
+- **`seed-admin`** - Quick setup with just a super admin user
+- **`seed:sample`** - Adds realistic sample tickets and comments for testing/demo purposes
 
 ---
 
@@ -192,9 +210,20 @@ Install and configure PostgreSQL locally, then run migrations:
 # Run migrations
 npm run init-db
 
-# Create admin user
+# Option A: Create floors, departments, and users from JSON config
+npm run seed:hospital
+
+# Option B: Interactive admin user setup
 npm run seed-admin
+
+# Option C: Add sample data for testing
+npm run seed:sample
 ```
+
+**Seeding Options**:
+- **`seed:hospital`** - Creates floors and departments from `config/seed-data/` JSON files (recommended)
+- **`seed-admin`** - Interactive prompt to create a super admin user
+- **`seed:sample`** - Adds sample tickets and comments for demonstration
 
 #### 4. Start with PM2
 

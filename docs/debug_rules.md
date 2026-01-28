@@ -1,7 +1,7 @@
 # Debugging & Troubleshooting Rules - KNII Ticketing System
 
-**Version:** 1.0
-**Last Updated:** December 2025
+**Version:** 2.2.1
+**Last Updated:** January 2026
 **Target Project:** KNII Ticketing System (Node.js 20 + Express 5 + PostgreSQL 16)
 
 ---

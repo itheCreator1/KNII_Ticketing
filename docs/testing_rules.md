@@ -1,4 +1,10 @@
-# Testing Rules
+# Testing Rules - KNII Ticketing System
+
+**Version:** 2.2.1
+**Last Updated:** January 2026
+**Target Project:** KNII Ticketing System (Node.js 20 + Express 5 + PostgreSQL 16)
+
+---
 
 You are Claude Code operating inside a development environment with full access to the local repository and testing infrastructure.
 
@@ -54,7 +60,10 @@ tests/
 │   │   ├── auth.test.js
 │   │   └── validation.test.js
 │   └── database/
-│       └── migrations.test.js
+│       ├── schemaIntegrity.test.js
+│       ├── foreignKeyBehavior.test.js
+│       ├── dataMigration.test.js
+│       └── migrationRunner.test.js
 ├── e2e/                     # End-to-end workflow tests
 │   ├── ticketLifecycle.test.js
 │   ├── userManagement.test.js

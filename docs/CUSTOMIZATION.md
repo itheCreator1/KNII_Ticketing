@@ -1,4 +1,8 @@
-# Customization Guide: Floors and Departments (v2.4.0+)
+# Customization Guide: Floors and Departments
+
+**Version:** 2.2.1
+**Last Updated:** January 2026
+**Target Project:** KNII Ticketing System (Node.js 20 + Express 5 + PostgreSQL 16)
 
 This guide explains how to customize floors and departments for your organization without modifying code.
 
@@ -644,9 +648,9 @@ A: Extend the Department model in `models/Department.js` and add migrations.
 
 ## Version History
 
-- **v2.4.0** (Jan 2026) - Introduced fully dynamic floors and departments via JSON configuration
-- **v2.3.0** - Initial floor management feature
-- **v2.2.0** - Department accounts and dual-portal
+- **v2.2.1** (Jan 2026) - Department accounts, dual-portal, and floor management feature
+- **v2.2.0** - Initial dual-portal architecture for department accounts
+- **v2.1.0** - Department user role and client portal access
 
 ---
 

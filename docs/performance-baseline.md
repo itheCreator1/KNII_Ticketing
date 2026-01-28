@@ -1,7 +1,8 @@
 # Performance Baseline Metrics
 
 **Established**: 2026-01-26
-**Version**: 2.2.0
+**Version**: 2.2.1
+**Last Updated**: January 2026
 **Environment**: Local Development (Node.js 20, PostgreSQL 16)
 **Test Duration**: 10 seconds per benchmark
 **Concurrent Connections**: 5-10 (varies by endpoint)

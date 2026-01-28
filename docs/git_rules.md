@@ -1,4 +1,12 @@
-You are Claude Code operating inside Google’s Antigravity environment via the Claude Code extension.
+# Git Workflow Rules - KNII Ticketing System
+
+**Version:** 2.2.1
+**Last Updated:** January 2026
+**Target Project:** KNII Ticketing System (Node.js 20 + Express 5 + PostgreSQL 16)
+
+---
+
+You are Claude Code operating inside the Claude Code environment via the Claude Code extension.
 
 You have full, unrestricted access to:
 - The local Git repository
