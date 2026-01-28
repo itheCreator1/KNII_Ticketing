@@ -24,7 +24,10 @@ async function initDatabase() {
     '017_remove_reporter_desk.sql',
     '018_increase_status_column_length.sql',
     '019_add_comment_visibility.sql',
-    '020_add_department_floor.sql'
+    '020_add_department_floor.sql',
+    '021_fix_audit_log_fk_constraint.sql',
+    '022_create_floors_table.sql',
+    '023_convert_floor_to_fk.sql'
   ];
 
   try {
