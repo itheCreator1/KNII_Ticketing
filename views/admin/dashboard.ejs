@@ -92,34 +92,14 @@
                   <td>
                     <%= ticket.title %>
                     <% if (ticket.reporter_department === 'Internal') { %>
-                      <span class="badge badge-warning ml-2"><%= t('tickets:badges.internal') %></span>
+                      <%- include('../partials/badges/badge', { color: 'warning', text: t('tickets:badges.internal'), size: 'sm', cssClass: 'ml-2' }) %>
                     <% } %>
                   </td>
                   <td>
-                    <% if (ticket.status === 'open') { %>
-                      <span class="badge badge-info"><%= t('tickets:status.open') %></span>
-                    <% } else if (ticket.status === 'in_progress') { %>
-                      <span class="badge badge-warning"><%= t('tickets:status.in_progress') %></span>
-                    <% } else if (ticket.status === 'waiting_on_admin') { %>
-                      <span class="badge badge-info"><%= t('tickets:status.waiting_on_admin') %></span>
-                    <% } else if (ticket.status === 'waiting_on_department') { %>
-                      <span class="badge badge-danger"><%= t('tickets:status.waiting_on_department') %></span>
-                    <% } else { %>
-                      <span class="badge badge-success"><%= t('tickets:status.closed') %></span>
-                    <% } %>
+                    <%- include('../partials/badges/status-badge', { status: ticket.status, withIcon: false }) %>
                   </td>
                   <td>
-                    <% if (ticket.priority === 'unset') { %>
-                      <span class="badge badge-light"><%= t('tickets:priority.unset') %></span>
-                    <% } else if (ticket.priority === 'low') { %>
-                      <span class="badge badge-secondary"><%= t('tickets:priority.low') %></span>
-                    <% } else if (ticket.priority === 'medium') { %>
-                      <span class="badge badge-info"><%= t('tickets:priority.medium') %></span>
-                    <% } else if (ticket.priority === 'high') { %>
-                      <span class="badge badge-warning"><%= t('tickets:priority.high') %></span>
-                    <% } else if (ticket.priority === 'critical') { %>
-                      <span class="badge badge-danger"><%= t('tickets:priority.critical') %></span>
-                    <% } %>
+                    <%- include('../partials/badges/priority-badge', { priority: ticket.priority, withIcon: false }) %>
                   </td>
                   <td><%= ticket.reporter_name || t('tickets:table.anonymous') %></td>
                   <td class="text-sm text-gray-600 max-w-xs truncate">
