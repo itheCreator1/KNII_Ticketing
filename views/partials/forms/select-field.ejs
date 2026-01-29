@@ -1,0 +1,114 @@
+<%#
+  Select Field Component - Reusable dropdown with label, help text, and error handling
+
+  Consolidates duplicated dropdown HTML for department, priority, and status selectors
+  across form templates. Provides consistent styling and validation feedback.
+
+  Required Parameters:
+  - id: string - Select element ID (must be unique in form)
+  - name: string - Select name attribute (form field name)
+  - label: string - Field label text (displayed to user)
+  - options: array - Array of option objects with { value, text } structure
+
+  Optional Parameters:
+  - selected: string - Pre-selected option value [default: '']
+  - required: boolean - Required field marker (red asterisk) [default: false]
+  - disabled: boolean - Disabled field (grayed out, not submittable) [default: false]
+  - helpText: string - Help text displayed below select [default: null]
+  - error: string - Error message (shows red styling + message) [default: null]
+  - placeholder: string - Placeholder option text (no value, prompt to select) [default: null]
+
+  Usage Examples:
+  <%- include('partials/forms/select-field', {
+    id: 'department',
+    name: 'department',
+    label: t('users:fields.department'),
+    options: departments.map(d => ({ value: d.name, text: d.name })),
+    placeholder: 'Select a department',
+    required: true
+  }) %>
+
+  <%- include('partials/forms/select-field', {
+    id: 'priority',
+    name: 'priority',
+    label: 'Priority',
+    options: [
+      { value: 'unset', text: 'Unset' },
+      { value: 'low', text: 'Low' },
+      { value: 'medium', text: 'Medium' },
+      { value: 'high', text: 'High' },
+      { value: 'critical', text: 'Critical' }
+    ],
+    selected: ticket.priority
+  }) %>
+
+  <%- include('partials/forms/select-field', {
+    id: 'status',
+    name: 'status',
+    label: 'Status',
+    options: [
+      { value: 'open', text: 'Open' },
+      { value: 'in_progress', text: 'In Progress' },
+      { value: 'closed', text: 'Closed' }
+    ],
+    required: true,
+    error: errors && errors.status ? errors.status[0].msg : null
+  }) %>
+
+  Design Features:
+  - Placeholder option: helpful prompt text without value
+  - Pre-selection: selected option highlighted automatically
+  - Required asterisk (*) displays when required=true
+  - Help text displays in small gray text below select
+  - Error state: red border + error message displayed
+  - Disabled state: grayed out, prevents interaction
+  - Accessibility: proper label association via id/for
+%>
+
+<%
+  // Defaults
+  const selectedValue = typeof selected !== 'undefined' ? selected : '';
+  const isRequired = typeof required !== 'undefined' ? required : false;
+  const isDisabled = typeof disabled !== 'undefined' ? disabled : false;
+  const helpMessage = typeof helpText !== 'undefined' ? helpText : null;
+  const errorMessage = typeof error !== 'undefined' ? error : null;
+  const placeholderText = typeof placeholder !== 'undefined' ? placeholder : null;
+
+  // Error state class - red border when error present
+  const errorClass = errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : '';
+%>
+
+<div class="mb-4">
+  <label for="<%= id %>" class="form-label">
+    <%= label %><% if (isRequired) { %> <span class="text-red-600">*</span><% } %>
+  </label>
+
+  <select
+    id="<%= id %>"
+    name="<%= name %>"
+    class="form-select <%= errorClass %>"
+    <% if (isRequired) { %>required<% } %>
+    <% if (isDisabled) { %>disabled<% } %>
+  >
+    <% if (placeholderText) { %>
+      <option value=""><%= placeholderText %></option>
+    <% } %>
+
+    <% options.forEach(option => { %>
+      <option
+        value="<%= option.value %>"
+        <%= option.value === selectedValue ? 'selected' : '' %>
+      >
+        <%= option.text %>
+      </option>
+    <% }) %>
+  </select>
+
+  <% if (helpMessage) { %>
+    <small class="text-sm text-gray-600 mt-1 block"><%= helpMessage %></small>
+  <% } %>
+
+  <% if (errorMessage) { %>
+    <p class="text-sm text-red-600 mt-1"><%= errorMessage %></p>
+  <% } %>
+</div>
