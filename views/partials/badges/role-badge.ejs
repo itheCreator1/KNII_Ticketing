@@ -1,4 +1,4 @@
-<%#
+<!--
   Role Badge Component - Reusable user role rendering
 
   Consolidates 3 duplicated role badge blocks across admin user list and header navigation.
@@ -11,16 +11,11 @@
   - withIcon: boolean - Show Bootstrap icon [default: false]
   - size: string - Badge size (sm, md, lg) [default: 'md']
 
-  Usage Examples:
-  <%- include('partials/badges/role-badge', { role: user.role }) %>
-  <%- include('partials/badges/role-badge', { role: user.role, withIcon: true }) %>
-  <%- include('partials/badges/role-badge', { role: 'admin', withIcon: true, size: 'sm' }) %>
-
   Design Tokens:
   - Icons come from tokens.semantic.role[role]
   - Colors mapped: super_admin=danger (red), admin=primary (blue), department=info (cyan)
   - I18n labels from 'users:roles.*' translation keys
-%>
+-->
 
 <%
   // Get role badge data from design tokens

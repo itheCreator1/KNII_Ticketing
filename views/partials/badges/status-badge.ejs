@@ -1,4 +1,4 @@
-<%#
+<!--
   Status Badge Component - Reusable status rendering
 
   Consolidates 10+ duplicated status badge rendering blocks across admin/client dashboards.
@@ -11,16 +11,11 @@
   - withIcon: boolean - Show Bootstrap icon [default: false]
   - size: string - Badge size (sm, md, lg) [default: 'md']
 
-  Usage Examples:
-  <%- include('partials/badges/status-badge', { status: ticket.status }) %>
-  <%- include('partials/badges/status-badge', { status: ticket.status, withIcon: true }) %>
-  <%- include('partials/badges/status-badge', { status: 'open', withIcon: true, size: 'sm' }) %>
-
   Design Tokens:
   - Colors, icons, and labels come from tokens.semantic.status[status]
   - Pulse animation auto-applied to waiting_on_department status
   - I18n labels from 'tickets:status.*' translation keys
-%>
+-->
 
 <%
   // Get status badge data from design tokens

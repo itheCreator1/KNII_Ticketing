@@ -1,4 +1,4 @@
-<%#
+<!--
   Priority Badge Component - Reusable priority rendering
 
   Consolidates 8+ duplicated priority badge rendering blocks across admin/client dashboards.
@@ -11,16 +11,11 @@
   - withIcon: boolean - Show Bootstrap icon [default: false]
   - size: string - Badge size (sm, md, lg) [default: 'md']
 
-  Usage Examples:
-  <%- include('partials/badges/priority-badge', { priority: ticket.priority }) %>
-  <%- include('partials/badges/priority-badge', { priority: ticket.priority, withIcon: true }) %>
-  <%- include('partials/badges/priority-badge', { priority: 'critical', withIcon: true, size: 'sm' }) %>
-
   Design Tokens:
   - Colors, icons, and labels come from tokens.semantic.priority[priority]
   - Glow effect auto-applied to critical priority (visual emphasis)
   - I18n labels from 'tickets:priority.*' translation keys
-%>
+-->
 
 <%
   // Get priority badge data from design tokens
