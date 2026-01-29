@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="<%= language %>">
+<head>
+  <%- include('partials/head') %>
+  <title><%= title %></title>
+</head>
+<body class="bg-gray-50">
+  <%- include('partials/header') %>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-2"><%= t('components:title') || 'Component Tester' %></h1>
+        <p class="text-gray-600"><%= t('components:subtitle') || 'Visual validation and API documentation for all UI components' %></p>
+      </div>
+
+      <!-- Status Badges Section -->
+      <section class="card mb-8">
+        <div class="card-header">
+          <h2 class="text-xl font-semibold"><%= t('components:statusBadges') || 'Status Badges' %></h2>
+        </div>
+        <div class="card-body space-y-6">
+          <div>
+            <h3 class="font-medium mb-3"><%= t('components:withoutIcons') || 'Without Icons (Admin Style)' %></h3>
+            <div class="flex flex-wrap gap-2">
+              <%- include('partials/badges/status-badge', { status: 'open' }) %>
+              <%- include('partials/badges/status-badge', { status: 'in_progress' }) %>
+              <%- include('partials/badges/status-badge', { status: 'waiting_on_admin' }) %>
+              <%- include('partials/badges/status-badge', { status: 'waiting_on_department' }) %>
+              <%- include('partials/badges/status-badge', { status: 'closed' }) %>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-medium mb-3"><%= t('components:withIcons') || 'With Icons (Client Style)' %></h3>
+            <div class="flex flex-wrap gap-2">
+              <%- include('partials/badges/status-badge', { status: 'open', withIcon: true }) %>
+              <%- include('partials/badges/status-badge', { status: 'in_progress', withIcon: true }) %>
+              <%- include('partials/badges/status-badge', { status: 'waiting_on_admin', withIcon: true }) %>
+              <%- include('partials/badges/status-badge', { status: 'waiting_on_department', withIcon: true }) %>
+              <%- include('partials/badges/status-badge', { status: 'closed', withIcon: true }) %>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-medium mb-3"><%= t('components:smallSize') || 'Small Size' %></h3>
+            <div class="flex flex-wrap gap-2">
+              <%- include('partials/badges/status-badge', { status: 'open', size: 'sm', withIcon: true }) %>
+              <%- include('partials/badges/status-badge', { status: 'in_progress', size: 'sm', withIcon: true }) %>
+              <%- include('partials/badges/status-badge', { status: 'closed', size: 'sm', withIcon: true }) %>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Priority Badges Section -->
+      <section class="card mb-8">
+        <div class="card-header">
+          <h2 class="text-xl font-semibold"><%= t('components:priorityBadges') || 'Priority Badges' %></h2>
+        </div>
+        <div class="card-body space-y-6">
+          <div>
+            <h3 class="font-medium mb-3"><%= t('components:withoutIcons') || 'Without Icons' %></h3>
+            <div class="flex flex-wrap gap-2">
+              <%- include('partials/badges/priority-badge', { priority: 'unset' }) %>
+              <%- include('partials/badges/priority-badge', { priority: 'low' }) %>
+              <%- include('partials/badges/priority-badge', { priority: 'medium' }) %>
+              <%- include('partials/badges/priority-badge', { priority: 'high' }) %>
+              <%- include('partials/badges/priority-badge', { priority: 'critical' }) %>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-medium mb-3"><%= t('components:withIcons') || 'With Icons' %></h3>
+            <div class="flex flex-wrap gap-2">
+              <%- include('partials/badges/priority-badge', { priority: 'unset', withIcon: true }) %>
+              <%- include('partials/badges/priority-badge', { priority: 'low', withIcon: true }) %>
+              <%- include('partials/badges/priority-badge', { priority: 'medium', withIcon: true }) %>
+              <%- include('partials/badges/priority-badge', { priority: 'high', withIcon: true }) %>
+              <%- include('partials/badges/priority-badge', { priority: 'critical', withIcon: true }) %>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Role Badges Section -->
+      <section class="card mb-8">
+        <div class="card-header">
+          <h2 class="text-xl font-semibold"><%= t('components:roleBadges') || 'Role Badges' %></h2>
+        </div>
+        <div class="card-body space-y-6">
+          <div>
+            <h3 class="font-medium mb-3"><%= t('components:withoutIcons') || 'Without Icons' %></h3>
+            <div class="flex flex-wrap gap-2">
+              <%- include('partials/badges/role-badge', { role: 'super_admin' }) %>
+              <%- include('partials/badges/role-badge', { role: 'admin' }) %>
+              <%- include('partials/badges/role-badge', { role: 'department' }) %>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-medium mb-3"><%= t('components:withIcons') || 'With Icons' %></h3>
+            <div class="flex flex-wrap gap-2">
+              <%- include('partials/badges/role-badge', { role: 'super_admin', withIcon: true }) %>
+              <%- include('partials/badges/role-badge', { role: 'admin', withIcon: true }) %>
+              <%- include('partials/badges/role-badge', { role: 'department', withIcon: true }) %>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Generic Badges Section -->
+      <section class="card mb-8">
+        <div class="card-header">
+          <h2 class="text-xl font-semibold"><%= t('components:genericBadges') || 'Generic Badges' %></h2>
+        </div>
+        <div class="card-body space-y-6">
+          <div>
+            <h3 class="font-medium mb-3"><%= t('components:colors') || 'Colors' %></h3>
+            <div class="flex flex-wrap gap-2">
+              <%- include('partials/badges/badge', { text: 'Primary', color: 'primary' }) %>
+              <%- include('partials/badges/badge', { text: 'Success', color: 'success' }) %>
+              <%- include('partials/badges/badge', { text: 'Danger', color: 'danger' }) %>
+              <%- include('partials/badges/badge', { text: 'Warning', color: 'warning' }) %>
+              <%- include('partials/badges/badge', { text: 'Info', color: 'info' }) %>
+              <%- include('partials/badges/badge', { text: 'Secondary', color: 'secondary' }) %>
+              <%- include('partials/badges/badge', { text: 'Light', color: 'light' }) %>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-medium mb-3"><%= t('components:withIcons') || 'With Icons' %></h3>
+            <div class="flex flex-wrap gap-2">
+              <%- include('partials/badges/badge', { text: 'Internal', color: 'warning', icon: 'lock-fill' }) %>
+              <%- include('partials/badges/badge', { text: 'Active', color: 'success', icon: 'check-circle-fill' }) %>
+              <%- include('partials/badges/badge', { text: '2nd Floor', color: 'light', icon: 'building' }) %>
+              <%- include('partials/badges/badge', { text: 'Verified', color: 'info', icon: 'shield-check' }) %>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Form Components Section -->
+      <section class="card mb-8">
+        <div class="card-header">
+          <h2 class="text-xl font-semibold"><%= t('components:formComponents') || 'Form Components' %></h2>
+        </div>
+        <div class="card-body">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <%- include('partials/forms/form-field', {
+              id: 'example-text',
+              name: 'example_text',
+              label: t('components:textInput') || 'Text Input',
+              placeholder: t('components:enterTextHere') || 'Enter text here',
+              helpText: t('components:thisIsHelpText') || 'This is help text below the input'
+            }) %>
+
+            <%- include('partials/forms/form-field', {
+              id: 'example-required',
+              name: 'example_required',
+              label: t('components:requiredField') || 'Required Field',
+              required: true,
+              helpText: t('components:thisFieldIsRequired') || 'This field is required'
+            }) %>
+
+            <%- include('partials/forms/form-field', {
+              id: 'example-email',
+              name: 'example_email',
+              label: t('components:emailInput') || 'Email Input',
+              type: 'email',
+              placeholder: 'user@example.com'
+            }) %>
+
+            <%- include('partials/forms/form-field', {
+              id: 'example-error',
+              name: 'example_error',
+              label: t('components:fieldWithError') || 'Field with Error',
+              error: t('components:fieldHasError') || 'This field has a validation error'
+            }) %>
+
+            <%- include('partials/forms/select-field', {
+              id: 'example-select',
+              name: 'example_select',
+              label: t('components:selectDropdown') || 'Select Dropdown',
+              options: [
+                { value: 'option1', text: t('components:option1') || 'Option 1' },
+                { value: 'option2', text: t('components:option2') || 'Option 2' },
+                { value: 'option3', text: t('components:option3') || 'Option 3' }
+              ],
+              placeholder: t('components:chooseOption') || 'Choose an option'
+            }) %>
+
+            <%- include('partials/forms/select-field', {
+              id: 'example-select-required',
+              name: 'example_select_required',
+              label: t('components:requiredSelect') || 'Required Select',
+              options: [
+                { value: 'a', text: 'Choice A' },
+                { value: 'b', text: 'Choice B' }
+              ],
+              required: true
+            }) %>
+          </div>
+        </div>
+      </section>
+
+      <!-- API Documentation Section -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="text-xl font-semibold"><%= t('components:apiDocumentation') || 'Component API Documentation' %></h2>
+        </div>
+        <div class="card-body">
+          <div class="space-y-8">
+            <!-- Status Badge API -->
+            <div class="border-b pb-6 last:border-b-0">
+              <h3 class="font-medium text-lg mb-3"><%= t('components:statusBadge') || 'Status Badge' %></h3>
+              <code class="block bg-gray-100 p-3 rounded text-sm mb-3 overflow-x-auto">
+                &lt;%- include('partials/badges/status-badge', { status: 'open', withIcon: true }) %&gt;
+              </code>
+              <div class="text-sm text-gray-700">
+                <p><strong><%= t('components:required') || 'Required' %>:</strong> status (string: open, in_progress, waiting_on_admin, waiting_on_department, closed)</p>
+                <p><strong><%= t('components:optional') || 'Optional' %>:</strong> withIcon (boolean, default: false), size (string: sm/md/lg, default: 'md')</p>
+              </div>
+            </div>
+
+            <!-- Priority Badge API -->
+            <div class="border-b pb-6">
+              <h3 class="font-medium text-lg mb-3"><%= t('components:priorityBadge') || 'Priority Badge' %></h3>
+              <code class="block bg-gray-100 p-3 rounded text-sm mb-3 overflow-x-auto">
+                &lt;%- include('partials/badges/priority-badge', { priority: 'high', withIcon: true }) %&gt;
+              </code>
+              <div class="text-sm text-gray-700">
+                <p><strong><%= t('components:required') || 'Required' %>:</strong> priority (string: unset, low, medium, high, critical)</p>
+                <p><strong><%= t('components:optional') || 'Optional' %>:</strong> withIcon (boolean, default: false), size (string: sm/md/lg, default: 'md')</p>
+              </div>
+            </div>
+
+            <!-- Role Badge API -->
+            <div class="border-b pb-6">
+              <h3 class="font-medium text-lg mb-3"><%= t('components:roleBadge') || 'Role Badge' %></h3>
+              <code class="block bg-gray-100 p-3 rounded text-sm mb-3 overflow-x-auto">
+                &lt;%- include('partials/badges/role-badge', { role: 'admin', withIcon: true }) %&gt;
+              </code>
+              <div class="text-sm text-gray-700">
+                <p><strong><%= t('components:required') || 'Required' %>:</strong> role (string: super_admin, admin, department)</p>
+                <p><strong><%= t('components:optional') || 'Optional' %>:</strong> withIcon (boolean, default: false), size (string: sm/md/lg, default: 'md')</p>
+              </div>
+            </div>
+
+            <!-- Generic Badge API -->
+            <div class="border-b pb-6">
+              <h3 class="font-medium text-lg mb-3"><%= t('components:genericBadge') || 'Generic Badge' %></h3>
+              <code class="block bg-gray-100 p-3 rounded text-sm mb-3 overflow-x-auto">
+                &lt;%- include('partials/badges/badge', { text: 'Internal', color: 'warning', icon: 'lock-fill' }) %&gt;
+              </code>
+              <div class="text-sm text-gray-700">
+                <p><strong><%= t('components:required') || 'Required' %>:</strong> text (string)</p>
+                <p><strong><%= t('components:optional') || 'Optional' %>:</strong> color (string: primary/success/danger/warning/info/secondary/light, default: 'light'), icon (string, default: null), size (string: sm/md/lg, default: 'md')</p>
+              </div>
+            </div>
+
+            <!-- Form Field API -->
+            <div class="border-b pb-6">
+              <h3 class="font-medium text-lg mb-3"><%= t('components:formField') || 'Form Field' %></h3>
+              <code class="block bg-gray-100 p-3 rounded text-sm mb-3 overflow-x-auto">
+                &lt;%- include('partials/forms/form-field', { id: 'name', name: 'name', label: 'Full Name', required: true }) %&gt;
+              </code>
+              <div class="text-sm text-gray-700">
+                <p><strong><%= t('components:required') || 'Required' %>:</strong> id, name, label</p>
+                <p><strong><%= t('components:optional') || 'Optional' %>:</strong> type (text/email/tel/password/number/date, default: 'text'), value, placeholder, required (boolean), disabled (boolean), helpText, error, maxLength, pattern, autocomplete</p>
+              </div>
+            </div>
+
+            <!-- Select Field API -->
+            <div class="pb-6">
+              <h3 class="font-medium text-lg mb-3"><%= t('components:selectField') || 'Select Field' %></h3>
+              <code class="block bg-gray-100 p-3 rounded text-sm mb-3 overflow-x-auto">
+                &lt;%- include('partials/forms/select-field', { id: 'dept', name: 'dept', label: 'Department', options: [...] }) %&gt;
+              </code>
+              <div class="text-sm text-gray-700">
+                <p><strong><%= t('components:required') || 'Required' %>:</strong> id, name, label, options (array of {value, text})</p>
+                <p><strong><%= t('components:optional') || 'Optional' %>:</strong> selected (string), required (boolean), disabled (boolean), helpText, error, placeholder</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

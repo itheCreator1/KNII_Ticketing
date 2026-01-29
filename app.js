@@ -23,6 +23,7 @@ const floorRoutes = require('./routes/floors');
 const clientRoutes = require('./routes/client');
 const errorReportingRoutes = require('./routes/errorReporting');
 const languageRoutes = require('./routes/language');
+const testComponentsRoutes = require('./routes/test-components');
 
 const app = express();
 
@@ -132,6 +133,11 @@ app.use('/admin/floors', floorRoutes);
 app.use('/client', clientRoutes);
 app.use('/api/errors', errorReportingRoutes);
 app.use('/language', languageRoutes);
+
+// Component tester page (development/staging only, not production)
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/', testComponentsRoutes);
+}
 
 app.use((req, res) => {
   // Generate correlation ID for 404 errors
