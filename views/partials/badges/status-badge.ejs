@@ -1,0 +1,48 @@
+<%#
+  Status Badge Component - Reusable status rendering
+
+  Consolidates 10+ duplicated status badge rendering blocks across admin/client dashboards.
+  Supports both simple (admin style) and enhanced (client style with icons) rendering.
+
+  Required Parameters:
+  - status: string - Ticket status value (open, in_progress, waiting_on_admin, waiting_on_department, closed)
+
+  Optional Parameters:
+  - withIcon: boolean - Show Bootstrap icon [default: false]
+  - size: string - Badge size (sm, md, lg) [default: 'md']
+
+  Usage Examples:
+  <%- include('partials/badges/status-badge', { status: ticket.status }) %>
+  <%- include('partials/badges/status-badge', { status: ticket.status, withIcon: true }) %>
+  <%- include('partials/badges/status-badge', { status: 'open', withIcon: true, size: 'sm' }) %>
+
+  Design Tokens:
+  - Colors, icons, and labels come from tokens.semantic.status[status]
+  - Pulse animation auto-applied to waiting_on_department status
+  - I18n labels from 'tickets:status.*' translation keys
+%>
+
+<%
+  // Get status badge data from design tokens
+  const statusData = tokens.semantic.status[status];
+
+  // Defaults
+  const showIcon = typeof withIcon !== 'undefined' ? withIcon : false;
+  const badgeSize = typeof size !== 'undefined' ? size : 'md';
+
+  // Determine CSS class based on size
+  const sizeClass = badgeSize === 'sm' ? 'text-xs px-3 py-1.5' : 'px-4 py-2 text-sm';
+
+  // Add animation for waiting_on_department status (pulse effect for user action needed)
+  const animationClass = status === 'waiting_on_department' ? 'pulse-subtle' : '';
+
+  // Convert underscores to hyphens for CSS class name
+  const statusClass = status.replace(/_/g, '-');
+%>
+
+<span class="badge-status badge-status-<%= statusClass %> <%= sizeClass %> <%= animationClass %>">
+  <% if (showIcon && statusData && statusData.icon) { %>
+    <i class="bi bi-<%= statusData.icon %>"></i>
+  <% } %>
+  <span><%= t('tickets:status.' + status) %></span>
+</span>
