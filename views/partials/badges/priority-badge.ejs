@@ -1,0 +1,45 @@
+<%#
+  Priority Badge Component - Reusable priority rendering
+
+  Consolidates 8+ duplicated priority badge rendering blocks across admin/client dashboards.
+  Supports both simple (admin style) and enhanced (client style with icons) rendering.
+
+  Required Parameters:
+  - priority: string - Ticket priority (unset, low, medium, high, critical)
+
+  Optional Parameters:
+  - withIcon: boolean - Show Bootstrap icon [default: false]
+  - size: string - Badge size (sm, md, lg) [default: 'md']
+
+  Usage Examples:
+  <%- include('partials/badges/priority-badge', { priority: ticket.priority }) %>
+  <%- include('partials/badges/priority-badge', { priority: ticket.priority, withIcon: true }) %>
+  <%- include('partials/badges/priority-badge', { priority: 'critical', withIcon: true, size: 'sm' }) %>
+
+  Design Tokens:
+  - Colors, icons, and labels come from tokens.semantic.priority[priority]
+  - Glow effect auto-applied to critical priority (visual emphasis)
+  - I18n labels from 'tickets:priority.*' translation keys
+%>
+
+<%
+  // Get priority badge data from design tokens
+  const priorityData = tokens.semantic.priority[priority];
+
+  // Defaults
+  const showIcon = typeof withIcon !== 'undefined' ? withIcon : false;
+  const badgeSize = typeof size !== 'undefined' ? size : 'md';
+
+  // Determine CSS class based on size
+  const sizeClass = badgeSize === 'sm' ? 'text-xs px-3 py-1.5' : 'px-3 py-1.5 text-sm';
+
+  // Add glow effect for critical priority (visual emphasis for urgent tickets)
+  const glowClass = priority === 'critical' ? 'shadow-glow' : '';
+%>
+
+<span class="badge-priority badge-priority-<%= priority %> <%= sizeClass %> <%= glowClass %>">
+  <% if (showIcon && priorityData && priorityData.icon) { %>
+    <i class="bi bi-<%= priorityData.icon %>"></i>
+  <% } %>
+  <span><%= t('tickets:priority.' + priority) %></span>
+</span>
