@@ -37,21 +37,13 @@
             <% departments.forEach(dept => { %>
               <tr>
                 <td><strong><%= dept.name %></strong></td>
-                <td><span class="badge badge-light"><%= dept.floor %></span></td>
+                <td><%- include('../../partials/badges/badge', { color: 'light', text: dept.floor, size: 'sm' }) %></td>
                 <td><% if (dept.description) { %><%= dept.description %><% } else { %><em class="text-gray-500"><%= t('departments:fields.noDescription') %></em><% } %></td>
                 <td>
-                  <% if (dept.active) { %>
-                    <span class="badge badge-success"><%= t('departments:status.active') %></span>
-                  <% } else { %>
-                    <span class="badge badge-secondary"><%= t('departments:status.inactive') %></span>
-                  <% } %>
+                  <%- include('../../partials/badges/badge', { color: dept.active ? 'success' : 'secondary', text: t(dept.active ? 'departments:status.active' : 'departments:status.inactive'), size: 'sm' }) %>
                 </td>
                 <td>
-                  <% if (dept.is_system) { %>
-                    <span class="badge badge-info"><%= t('departments:status.system') %></span>
-                  <% } else { %>
-                    <span class="badge badge-light"><%= t('departments:management.custom') %></span>
-                  <% } %>
+                  <%- include('../../partials/badges/badge', { color: dept.is_system ? 'info' : 'light', text: t(dept.is_system ? 'departments:status.system' : 'departments:management.custom'), size: 'sm' }) %>
                 </td>
                 <td class="text-right">
                   <% if (!dept.is_system) { %>
