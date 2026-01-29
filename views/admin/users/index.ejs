@@ -48,29 +48,18 @@
                   <td><%= u.username %></td>
                   <td><%= u.email %></td>
                   <td>
-                    <% if (u.role === 'super_admin') { %>
-                      <span class="badge badge-danger"><%= t('users:roles.super_admin') %></span>
-                    <% } else if (u.role === 'admin') { %>
-                      <span class="badge badge-primary"><%= t('users:roles.admin') %></span>
-                    <% } else if (u.role === 'department') { %>
-                      <span class="badge badge-info"><%= t('users:roles.department') %></span>
-                    <% } %>
+                    <%- include('../../partials/badges/role-badge', { role: u.role, withIcon: false }) %>
                   </td>
                   <td>
                     <% if (u.department) { %>
-                      <span class="badge badge-secondary"><%= u.department %></span>
+                      <%- include('../../partials/badges/badge', { color: 'secondary', text: u.department, size: 'sm' }) %>
                     <% } else { %>
                       <span class="text-gray-500"><%= t('common:labels.na') %></span>
                     <% } %>
                   </td>
                   <td>
-                    <% if (u.status === 'active') { %>
-                      <span class="badge badge-success"><%= t('users:status.active') %></span>
-                    <% } else if (u.status === 'inactive') { %>
-                      <span class="badge badge-secondary"><%= t('users:status.inactive') %></span>
-                    <% } else { %>
-                      <span class="badge badge-secondary"><%= t('users:status.deleted') %></span>
-                    <% } %>
+                    <% const statusColorMap = { active: 'success', inactive: 'secondary', deleted: 'secondary' }; %>
+                    <%- include('../../partials/badges/badge', { color: statusColorMap[u.status] || 'secondary', text: t(`users:status.${u.status}`), size: 'sm' }) %>
                   </td>
                   <td><%= u.last_login_at ? new Date(u.last_login_at).toLocaleString(language === 'el' ? 'el-GR' : 'en-US') : t('common:labels.never') %></td>
                   <td><%= new Date(u.created_at).toLocaleDateString(language === 'el' ? 'el-GR' : 'en-US') %></td>
