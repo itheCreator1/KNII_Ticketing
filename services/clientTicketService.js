@@ -36,6 +36,7 @@ class ClientTicketService {
       const ticket = await Ticket.create({
         title: ticketData.title,
         description: ticketData.description,
+        reporter_name: user.username,  // AUTO-POPULATED from user (fixes "Anonymous" display)
         reporter_department: user.department,  // AUTO-POPULATED from user
         reporter_phone: ticketData.reporter_phone,
         reporter_id: userId,  // Ownership enforcement
