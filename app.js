@@ -134,8 +134,8 @@ app.use('/client', clientRoutes);
 app.use('/api/errors', errorReportingRoutes);
 app.use('/language', languageRoutes);
 
-// Component tester page (development/staging only, not production)
-if (process.env.NODE_ENV !== 'production') {
+// Component tester page (development only - not available in staging or production)
+if (process.env.NODE_ENV === 'development') {
   app.use('/', testComponentsRoutes);
 }
 

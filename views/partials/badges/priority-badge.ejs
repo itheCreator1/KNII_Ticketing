@@ -10,6 +10,7 @@
   Optional Parameters:
   - withIcon: boolean - Show Bootstrap icon [default: false]
   - size: string - Badge size (sm, md, lg) [default: 'md']
+  - cssClass: string - Additional CSS classes [default: '']
 
   Design Tokens:
   - Colors, icons, and labels come from tokens.semantic.priority[priority]
@@ -18,12 +19,19 @@
 -->
 
 <%
+  // Validate priority against whitelist for XSS protection
+  const validPriorities = ['unset', 'low', 'medium', 'high', 'critical'];
+  if (!validPriorities.includes(priority)) {
+    priority = 'unset'; // Fallback to safe default
+  }
+
   // Get priority badge data from design tokens
   const priorityData = tokens.semantic.priority[priority];
 
   // Defaults
   const showIcon = typeof withIcon !== 'undefined' ? withIcon : false;
   const badgeSize = typeof size !== 'undefined' ? size : 'md';
+  const additionalClass = typeof cssClass !== 'undefined' ? cssClass : '';
 
   // Determine CSS class based on size
   const sizeClass = badgeSize === 'sm' ? 'text-xs px-3 py-1.5' : 'px-3 py-1.5 text-sm';
@@ -32,9 +40,9 @@
   const glowClass = priority === 'critical' ? 'shadow-glow' : '';
 %>
 
-<span class="badge-priority badge-priority-<%= priority %> <%= sizeClass %> <%= glowClass %>">
+<span class="badge-priority badge-priority-<%= priority %> <%= sizeClass %> <%= glowClass %> <%= additionalClass %>">
   <% if (showIcon && priorityData && priorityData.icon) { %>
-    <i class="bi bi-<%= priorityData.icon %>"></i>
+    <i class="bi bi-<%= priorityData.icon %>" aria-hidden="true"></i>
   <% } %>
   <span><%= t('tickets:priority.' + priority) %></span>
 </span>

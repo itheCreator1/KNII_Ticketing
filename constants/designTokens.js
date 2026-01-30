@@ -292,18 +292,21 @@ const DESIGN_TOKENS = {
         background: '#fee2e2',  // red[100]
         text: '#7f1d1d',        // red[900]
         border: '#fca5a5',      // red[300]
+        icon: 'shield-fill-check',  // Security shield for highest privilege
         label: 'Super Admin'
       },
       admin: {
         background: '#dbeafe',  // blue[100]
         text: '#1e3a8a',        // blue[900]
         border: '#93c5fd',      // blue[300]
+        icon: 'person-badge-fill',  // Badge for administrative authority
         label: 'Admin'
       },
       department: {
         background: '#cffafe',  // cyan[100]
         text: '#164e63',        // cyan[900]
         border: '#06b6d4',      // cyan[500]
+        icon: 'building',  // Building for organizational unit
         label: 'Department User'
       }
     },

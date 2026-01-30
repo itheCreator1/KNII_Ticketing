@@ -18,6 +18,12 @@
 -->
 
 <%
+  // Validate role against whitelist for XSS protection
+  const validRoles = ['super_admin', 'admin', 'department'];
+  if (!validRoles.includes(role)) {
+    role = 'department'; // Fallback to safe default (lowest privilege)
+  }
+
   // Get role badge data from design tokens
   const roleData = tokens.semantic.role[role];
 
@@ -40,7 +46,7 @@
 
 <span class="badge badge-<%= badgeColor %> <%= sizeClass %>">
   <% if (showIcon && roleData && roleData.icon) { %>
-    <i class="bi bi-<%= roleData.icon %>"></i>
+    <i class="bi bi-<%= roleData.icon %>" aria-hidden="true"></i>
   <% } %>
   <span><%= t('users:roles.' + role) %></span>
 </span>

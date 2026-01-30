@@ -10,6 +10,7 @@
   Optional Parameters:
   - withIcon: boolean - Show Bootstrap icon [default: false]
   - size: string - Badge size (sm, md, lg) [default: 'md']
+  - cssClass: string - Additional CSS classes [default: '']
 
   Design Tokens:
   - Colors, icons, and labels come from tokens.semantic.status[status]
@@ -18,12 +19,19 @@
 -->
 
 <%
+  // Validate status against whitelist for XSS protection
+  const validStatuses = ['open', 'in_progress', 'waiting_on_admin', 'waiting_on_department', 'closed'];
+  if (!validStatuses.includes(status)) {
+    status = 'open'; // Fallback to safe default
+  }
+
   // Get status badge data from design tokens
   const statusData = tokens.semantic.status[status];
 
   // Defaults
   const showIcon = typeof withIcon !== 'undefined' ? withIcon : false;
   const badgeSize = typeof size !== 'undefined' ? size : 'md';
+  const additionalClass = typeof cssClass !== 'undefined' ? cssClass : '';
 
   // Determine CSS class based on size
   const sizeClass = badgeSize === 'sm' ? 'text-xs px-3 py-1.5' : 'px-4 py-2 text-sm';
@@ -33,11 +41,18 @@
 
   // Convert underscores to hyphens for CSS class name
   const statusClass = status.replace(/_/g, '-');
+
+  // Context-aware translation for waiting_on_department status
+  // Admins see "Waiting on Department", Department users see "Waiting on You"
+  let translationKey = status;
+  if (status === 'waiting_on_department' && user && user.role === 'department') {
+    translationKey = 'waiting_on_you';
+  }
 %>
 
-<span class="badge-status badge-status-<%= statusClass %> <%= sizeClass %> <%= animationClass %>">
+<span class="badge-status badge-status-<%= statusClass %> <%= sizeClass %> <%= animationClass %> <%= additionalClass %>">
   <% if (showIcon && statusData && statusData.icon) { %>
-    <i class="bi bi-<%= statusData.icon %>"></i>
+    <i class="bi bi-<%= statusData.icon %>" aria-hidden="true"></i>
   <% } %>
-  <span><%= t('tickets:status.' + status) %></span>
+  <span><%= t('tickets:status.' + translationKey) %></span>
 </span>
