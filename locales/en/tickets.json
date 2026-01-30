@@ -127,7 +127,12 @@
     "lastComment": "Last Comment",
     "created": "Created",
     "actions": "Actions",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "allTickets": "All Tickets",
+    "myTickets": "My Tickets"
+  },
+  "filters": {
+    "title": "Filters"
   },
   "search": {
     "placeholder": "Search tickets..."

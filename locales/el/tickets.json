@@ -127,7 +127,12 @@
     "lastComment": "Τελευταίο Σχόλιο",
     "created": "Δημιουργήθηκε",
     "actions": "Ενέργειες",
-    "anonymous": "Ανώνυμος"
+    "anonymous": "Ανώνυμος",
+    "allTickets": "Όλα τα Αιτήματα",
+    "myTickets": "Τα Αιτήματά μου"
+  },
+  "filters": {
+    "title": "Φίλτρα"
   },
   "search": {
     "placeholder": "Αναζήτηση αιτημάτων..."
