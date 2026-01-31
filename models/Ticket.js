@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const logger = require('../utils/logger');
+const { sanitizeSearchInput } = require('../utils/sanitizeSearch');
 
 class Ticket {
   static async create({ title, description, reporter_name, reporter_department, reporter_phone, reporter_id, priority = 'unset', status = 'open', is_admin_created = false }, client = null) {
@@ -102,7 +103,8 @@ class Ticket {
 
       if (filters.search) {
         query += ` AND (t.title ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`;
-        params.push(`%${filters.search}%`);
+        const sanitizedSearch = sanitizeSearchInput(filters.search);
+        params.push(`%${sanitizedSearch}%`);
         paramIndex++;
       }
 
@@ -165,7 +167,8 @@ class Ticket {
 
       if (filters.search) {
         query += ` AND (t.title ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`;
-        params.push(`%${filters.search}%`);
+        const sanitizedSearch = sanitizeSearchInput(filters.search);
+        params.push(`%${sanitizedSearch}%`);
         paramIndex++;
       }
 
