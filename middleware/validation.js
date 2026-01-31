@@ -16,10 +16,10 @@ function validateRequest(req, res, next) {
       errors.array().forEach(error => {
         req.flash('error_msg', error.msg);
       });
-      // Use Referer header for redirect, fallback to '/' if not present
-      const redirectUrl = req.get('Referer') || '/';
-      logger.debug('Redirecting after validation failure', { redirectUrl, referer: req.get('Referer') });
-      return res.redirect(redirectUrl);
+      // Use 'back' for redirect to return to previous page
+      // Express converts 'back' to req.get('Referer') || '/'
+      logger.debug('Redirecting after validation failure', { referer: req.get('Referer') });
+      return res.redirect('back');
     } else {
       return res.status(400).json({ errors: errors.array() });
     }

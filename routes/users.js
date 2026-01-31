@@ -6,7 +6,7 @@ const { validateRequest } = require('../middleware/validation');
 const userService = require('../services/userService');
 const departmentService = require('../services/departmentService');
 const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
-const { loginLimiter } = require('../middleware/rateLimiter');
+const { adminMutationLimiter } = require('../middleware/rateLimiter');
 const logger = require('../utils/logger');
 
 // GET /admin/users - List all users
@@ -43,6 +43,7 @@ router.get('/new', requireAuth, requireSuperAdmin, async (req, res, next) => {
 router.post('/',
   requireAuth,
   requireSuperAdmin,
+  adminMutationLimiter,
   validateUserCreate,
   validateRequest,
   async (req, res, next) => {
@@ -56,7 +57,7 @@ router.post('/',
       return successRedirect(req, res, 'User created successfully', '/admin/users');
     } catch (error) {
       logger.error('Error creating user', { error: error.message, stack: error.stack });
-      next(error);
+      return errorRedirect(req, res, error.message, 'back');
     }
   }
 );
@@ -91,6 +92,7 @@ router.get('/:id/edit', requireAuth, requireSuperAdmin, async (req, res, next) =
 router.post('/:id',
   requireAuth,
   requireSuperAdmin,
+  adminMutationLimiter,
   validateUserUpdate,
   validateRequest,
   async (req, res, next) => {
@@ -115,7 +117,7 @@ router.post('/:id',
       return successRedirect(req, res, 'User updated successfully', '/admin/users');
     } catch (error) {
       logger.error('Error updating user', { error: error.message, stack: error.stack });
-      next(error);
+      return errorRedirect(req, res, error.message, 'back');
     }
   }
 );
@@ -124,6 +126,7 @@ router.post('/:id',
 router.post('/:id/delete',
   requireAuth,
   requireSuperAdmin,
+  adminMutationLimiter,
   async (req, res, next) => {
     try {
       const userId = parseInt(req.params.id);
@@ -132,7 +135,7 @@ router.post('/:id/delete',
       return successRedirect(req, res, 'User deleted successfully', '/admin/users');
     } catch (error) {
       logger.error('Error deleting user', { error: error.message, stack: error.stack });
-      next(error);
+      return errorRedirect(req, res, error.message, '/admin/users');
     }
   }
 );
@@ -141,6 +144,7 @@ router.post('/:id/delete',
 router.post('/:id/password',
   requireAuth,
   requireSuperAdmin,
+  adminMutationLimiter,
   validatePasswordReset,
   validateRequest,
   async (req, res, next) => {
@@ -153,7 +157,7 @@ router.post('/:id/password',
       return successRedirect(req, res, 'Password reset successfully', '/admin/users');
     } catch (error) {
       logger.error('Error resetting password', { error: error.message, stack: error.stack });
-      next(error);
+      return errorRedirect(req, res, error.message, 'back');
     }
   }
 );
@@ -162,6 +166,7 @@ router.post('/:id/password',
 router.post('/:id/toggle-status',
   requireAuth,
   requireSuperAdmin,
+  adminMutationLimiter,
   async (req, res, next) => {
     try {
       const userId = parseInt(req.params.id);
@@ -172,7 +177,7 @@ router.post('/:id/toggle-status',
       return successRedirect(req, res, 'User status updated', '/admin/users');
     } catch (error) {
       logger.error('Error toggling status', { error: error.message, stack: error.stack });
-      next(error);
+      return errorRedirect(req, res, error.message, '/admin/users');
     }
   }
 );
