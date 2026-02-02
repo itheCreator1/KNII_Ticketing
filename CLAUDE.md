@@ -50,7 +50,7 @@ This file provides a quick reference for AI assistants. For comprehensive docume
 **945 Total Test Cases - 797 Passing (84.3%)** - Professional-grade testing infrastructure with comprehensive test isolation, FK-aware cleanup, and automated CI/CD
 
 ### Test Statistics
-- **Total Test Files**: 22 (Unit: 17, Integration: 10, E2E: 3)
+- **Total Test Files**: 38 (Unit: 23, Integration: 12, E2E: 3)
 - **Total Test Suites**: 38
 - **Test Cases Passing**: 797/945 (84.3% pass rate)
   - Unit Tests: 416/416 (100%) ✅
@@ -74,17 +74,19 @@ This file provides a quick reference for AI assistants. For comprehensive docume
 
 ### Test Categories
 
-**Unit Tests** (17 files) - Isolated component testing:
-- Models: User.test.js, Ticket.test.js, Comment.test.js, AuditLog.test.js
-- Services: authService.test.js, userService.test.js, ticketService.test.js
-- Validators: authValidators.test.js, userValidators.test.js, ticketValidators.test.js, commentValidators.test.js
+**Unit Tests** (23 files) - Isolated component testing:
+- Models: User.test.js, Ticket.test.js, Comment.test.js, AuditLog.test.js, Department.test.js, Floor.test.js
+- Services: authService.test.js, userService.test.js, ticketService.test.js, floorService.test.js
+- Validators: authValidators.test.js, userValidators.test.js, ticketValidators.test.js, commentValidators.test.js, floorValidators.test.js
 - Middleware: auth.test.js, validation.test.js, errorHandler.test.js, rateLimiter.test.js
-- Utils: passwordValidator.test.js, responseHelpers.test.js
+- Utils: passwordValidator.test.js, responseHelpers.test.js, sanitizeSearch.test.js
+- Other: seedValidator.test.js
 
-**Integration Tests** (10 files) - Component interaction testing:
-- Routes: auth.test.js, public.test.js, admin.test.js, users.test.js
+**Integration Tests** (12 files) - Component interaction testing:
+- Routes: auth.test.js, public.test.js, admin.test.js, users.test.js, floors.test.js
 - Middleware: auth.test.js (with real DB), validation.test.js (CSRF protection)
-- **Database Migrations**: schemaIntegrity.test.js, foreignKeyBehavior.test.js, dataMigration.test.js, migrationRunner.test.js
+- Database Migrations: schemaIntegrity.test.js, foreignKeyBehavior.test.js, dataMigration.test.js, migrationRunner.test.js
+- Other: seeder.test.js
 
 **E2E Tests** (3 files) - Complete workflow validation:
 - authentication.test.js - Account locking, session management, multi-user scenarios
@@ -94,8 +96,8 @@ This file provides a quick reference for AI assistants. For comprehensive docume
 ### Test Helpers & Infrastructure
 ```
 tests/
-├── unit/              # 17 files - Isolated component tests
-├── integration/       # 10 files - Component interaction & migration tests
+├── unit/              # 23 files - Isolated component tests
+├── integration/       # 12 files - Component interaction & migration tests
 │   └── database/     # 4 files - Schema, FK, data migration, and runner tests
 ├── e2e/              # 3 files - Complete workflow tests
 ├── helpers/          # Test utilities (5 files)
@@ -147,12 +149,12 @@ npm run test:watch
 
 **Location**: `tests/integration/database/`
 
-**Purpose**: Verify all 20 database migrations execute correctly, schema is correct, and data integrity constraints work properly.
+**Purpose**: Verify all 25 database migrations execute correctly, schema is correct, and data integrity constraints work properly.
 
 **Test Files**:
 
 1. **schemaIntegrity.test.js** (20 tests) - Schema structure validation
-   - Verify all 6 tables exist (users, tickets, comments, session, audit_logs, departments)
+   - Verify all 7 tables exist (users, tickets, comments, session, audit_logs, departments, floors)
    - Verify all expected columns with correct types and constraints
    - Verify all primary key constraints
    - Verify CHECK constraints (role, status, priority, floor, visibility_type)
@@ -175,7 +177,7 @@ npm run test:watch
    - **Data Consistency**: Multi-table relationships maintain integrity across inserts/updates
 
 4. **migrationRunner.test.js** (20 tests) - Complete migration execution
-   - Verify each of 20 migrations executed successfully (001-020)
+   - Verify each of 25 migrations executed successfully (001-025)
    - Verify migration 020 is included (regression test for critical bug fix)
    - Verify complete schema state matches expectations
    - Verify minimal valid records can be inserted to all tables
@@ -196,7 +198,7 @@ npm test -- tests/integration/database/schemaIntegrity.test.js
 ```
 
 **Key Validation Points**:
-- All 20 migrations must run in sequence without errors
+- All 25 migrations must run in sequence without errors
 - Migration 020 MUST be included (regression test for critical bug)
 - Final schema must match all expected table structures
 - All constraints (PK, FK, CHECK, UNIQUE, NOT NULL) must be enforced
