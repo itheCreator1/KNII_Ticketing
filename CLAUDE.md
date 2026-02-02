@@ -19,17 +19,29 @@ KNII Ticketing System - A professional support ticket management application wit
 
 This file provides a quick reference for AI assistants. For comprehensive documentation:
 
-- **[Node.js Development Rules](docs/node_js.md)** - Comprehensive development standards (2,465 lines)
+- **[Node.js Development Rules](docs/node_js.md)** - Comprehensive development standards (2,900+ lines, v2.3.0)
   - Architecture patterns, security best practices, code organization
   - Error handling, validation, database practices
+  - Rate limiting patterns (loginLimiter, adminMutationLimiter) - NEW v2.3.0
+  - Search input sanitization (defense-in-depth) - NEW v2.3.0
   - Troubleshooting guide and code review checklist
 - **[Debugging & Troubleshooting Rules](docs/debug_rules.md)** - Comprehensive debugging guide (4,087 lines)
   - Winston/Morgan logging infrastructure, error handling flow
   - Development and production debugging workflows
   - Security debugging, performance optimization, common issues
   - Command reference for Docker, PostgreSQL, PM2
-- **[Git Workflow Rules](docs/git_rules.md)** - Branch strategy and commit standards
-- **[Testing Guidelines](docs/testing_rules.md)** - Testing patterns and practices
+- **[Testing Guidelines](docs/testing_rules.md)** - Testing patterns and practices (850+ lines, v2.3.0)
+  - Test statistics: 797/945 passing (84.3% pass rate)
+  - Test infrastructure documentation (floor seeding, cleanup order) - NEW v2.3.0
+  - Transaction-based isolation, FK-aware cleanup
+  - Migration testing (all 25 migrations validated)
+- **[CI/CD Guide](docs/ci-cd.md)** - GitHub Actions workflows and automation (480+ lines) - NEW v2.3.0
+  - CI workflow (tests, coverage, security)
+  - Lint workflow (ESLint, Prettier)
+  - Local pre-commit testing, troubleshooting CI failures
+  - ESLint and Prettier configuration
+- **[Git Workflow Rules](docs/git_rules.md)** - Branch strategy and commit standards (v2.3.0)
+  - CI/CD integration (pre-push checklist, workflow monitoring) - NEW v2.3.0
 
 ---
 
