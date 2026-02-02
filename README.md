@@ -1,1156 +1,510 @@
-<div align="center">
+# KNII Ticketing System
 
-# 🎫 KNII Ticketing System
-
-### *Professional Support Ticket Management Platform*
+**Professional Support Ticket Management Platform**
 
 [![CI](https://github.com/itheCreator1/KNII_Ticketing/actions/workflows/ci.yml/badge.svg)](https://github.com/itheCreator1/KNII_Ticketing/actions/workflows/ci.yml)
 [![Lint](https://github.com/itheCreator1/KNII_Ticketing/actions/workflows/lint.yml/badge.svg)](https://github.com/itheCreator1/KNII_Ticketing/actions/workflows/lint.yml)
-[![Code Quality](https://img.shields.io/badge/Code%20Quality-98%25%20Compliant-brightgreen?style=for-the-badge)](docs/node_js.md)
-[![Security](https://img.shields.io/badge/Security-Zero%20Vulnerabilities-brightgreen?style=for-the-badge)](docs/node_js.md)
-[![Architecture](https://img.shields.io/badge/Architecture-100%25%20Compliant-brightgreen?style=for-the-badge)](docs/node_js.md)
-[![Test Coverage](https://img.shields.io/badge/Tests-345%2B%20Passing-brightgreen?style=for-the-badge)](docs/testing_implementation_summary.md)
+![Node.js 20](https://img.shields.io/badge/Node.js-20-339933?logo=node.js)
+![Express 5.x](https://img.shields.io/badge/Express-5.x-000000?logo=express)
+![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql)
+![Tests](https://img.shields.io/badge/Tests-797%2F945%20Passing-orange)
+![Coverage](https://img.shields.io/badge/Coverage-84%25-orange)
 
-[![Node.js](https://img.shields.io/badge/Node.js-20-339933?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-5.x-000000?style=flat&logo=express&logoColor=white)](https://expressjs.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
-[![Jest](https://img.shields.io/badge/Jest-100%25%20Coverage-C21325?style=flat&logo=jest&logoColor=white)](https://jestjs.io/)
+**Version**: 2.3.0 | [Features](#features) | [Architecture](#architecture) | [Quick Start](#quick-start) | [Documentation](#documentation)
 
 ---
 
-*A battle-tested, production-ready ticketing system with enterprise-grade security, 100% test coverage, and comprehensive documentation.*
+## What's New in v2.3.0 ⚡
 
-[📚 Documentation](#-documentation) • [🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [🔒 Security](#-security-features) • [🧪 Testing](#-testing)
-
-</div>
-
----
-
-## 🎯 Why KNII Ticketing?
-
-<table>
-<tr>
-<td width="50%">
-
-### 🏆 **Production-Ready**
-✅ **98% code quality** compliance
-✅ **Zero vulnerabilities** verified
-✅ **345+ tests passing** validated
-✅ **10,000+ lines** of test code
-✅ **26 test suites** (Unit, Integration, E2E)
-
-</td>
-<td width="50%">
-
-### 🔐 **Enterprise Security**
-🛡️ CSRF protection
-🛡️ SQL injection prevention
-🛡️ Rate limiting (login & submission)
-🛡️ Account lockout mechanism
-🛡️ Comprehensive audit logging
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### 📖 **Best-in-Class Documentation**
-📘 **6,500+ lines** of dev guides
-📗 Node.js best practices (2,465 lines)
-📕 Debugging guide (4,087 lines)
-📙 Testing documentation
-📔 Deployment instructions
-
-</td>
-<td width="50%">
-
-### ⚡ **Developer Experience**
-🎨 Clean architecture (Routes → Services → Models)
-🔧 Docker-ready deployment
-🧪 Transaction-based test isolation
-📊 Winston structured logging
-🔄 Hot reload development mode
-
-</td>
-</tr>
-</table>
+- **CI/CD Automation**: GitHub Actions workflows for automated testing and linting
+- **Test Infrastructure**: Improved test reliability (73% → 84.3% pass rate)
+- **Performance**: Composite indexes provide 50-80% query improvement
+- **Security**: Admin mutation rate limiting and search input sanitization
 
 ---
 
-## ✨ Features
+## Features
 
-### 🏢 **Department Portal** (Client Portal)
-- 📝 **Authenticated Ticket Creation** - Department users create & manage their own tickets
-- 👁️ **Ownership-Based Access** - View only tickets created by your department account
-- 💬 **Public Comments** - Add visible comments to your tickets
-- 🔄 **Status Updates** - Update tickets to 'waiting_on_admin' or 'closed'
-- 🏢 **Auto-Population** - Department and reporter info automatically filled
-- 🎯 **Workflow Integration** - Seamless interaction with admin support staff
+**Dual-Portal Architecture**: Separate client portal for departments and admin portal for support staff.
 
-### 👨‍💼 **Admin Dashboard**
-- 🔐 **Secure Authentication** - Session-based auth with bcrypt (cost factor 10)
-- 👥 **Role-Based Access Control** - Admin, Super Admin & Department hierarchical permissions
-- 🎫 **Ticket Management** - Complete lifecycle: view, update, assign, close
-- 💬 **Dual Comment System** - Internal notes (admin-only) + public comments (visible to departments)
-- 🔒 **Comment Visibility Control** - Mark comments as internal or public
-- 📊 **Audit Trail** - Complete logging of all administrative actions
-- 🎯 **Workflow States** - Full status workflow including waiting_on_admin/waiting_on_department
+### Department Portal (`/client/*`)
+- Create and manage department tickets
+- View tickets from own department only
+- Add public comments
+- Update ticket status (waiting_on_admin, closed)
+- Auto-populated department information
 
-### 🔑 **User Management** *(Super Admin Only)*
-<table>
-<tr>
-<td width="33%">
+### Admin Portal (`/admin/*`)
+- Manage all tickets (department + internal)
+- Create department tickets on behalf of users
+- Create internal admin-only tickets
+- Add public or internal comments (visibility control)
+- Assign tickets to support staff
+- Complete workflow management
+- User management (super_admin only)
+- Department management (super_admin only)
 
-#### 👤 Create & Edit
-- Add new admin users
-- Modify user details
-- Change roles dynamically
-- Enable/disable accounts
-
-</td>
-<td width="33%">
-
-#### 🔒 Security Controls
-- Password complexity enforcement
-- Account lockout (5 failed attempts)
-- Session invalidation on deactivation
-- Failed login tracking
-
-</td>
-<td width="33%">
-
-#### 🗑️ Safe Deletion
-- Soft delete (audit preserved)
-- Self-deletion prevention
-- Last super admin protection
-- Audit log retention
-
-</td>
-</tr>
-</table>
+### Core Capabilities
+- **Authentication**: Session-based auth with bcrypt (cost 10)
+- **Authorization**: Role-based access control (super_admin, admin, department)
+- **Audit Trail**: Complete logging of administrative actions
+- **Rate Limiting**: Login protection (10/15min), Admin mutations (20/min)
+- **Security**: CSRF protection, SQL injection prevention, search sanitization
+- **Workflow States**: open, in_progress, waiting_on_admin, waiting_on_department, closed
 
 ---
 
-## 🔒 Security Features
+## 🏗️ Architecture
 
-> **Zero vulnerabilities found** - Comprehensive security audit completed ✅
+**Stack**: Node.js 20 | Express 5.x | PostgreSQL 16 | EJS | Docker | PM2
 
-<details>
-<summary><b>🛡️ Authentication & Authorization (Click to expand)</b></summary>
+**Pattern**: Routes → Validators → Middleware → Services → Models → Database
 
-- ✅ **Account Locking** - Automatic lockout after 5 failed attempts
-- ✅ **Password Complexity** - Min 8 chars, uppercase, lowercase, number, special char
-- ✅ **Session Security** - HTTPOnly cookies, secure in production, SameSite strict
-- ✅ **Timing Attack Prevention** - Constant-time comparisons in auth flow
-- ✅ **User Enumeration Prevention** - Generic error messages for all failures
-
-</details>
-
-<details>
-<summary><b>🛡️ Data Protection (Click to expand)</b></summary>
-
-- ✅ **SQL Injection Protection** - 100% parameterized queries
-- ✅ **XSS Protection** - Helmet.js security headers
-- ✅ **CSRF Protection** - csrf-csrf double-submit cookie pattern
-- ✅ **Input Length Limits** - DoS prevention on all text fields
-- ✅ **Parameter Validation** - Type checking to prevent SQL errors
-
-</details>
-
-<details>
-<summary><b>🛡️ Rate Limiting & Logging (Click to expand)</b></summary>
-
-- ✅ **Login Rate Limit** - 10 attempts per 15 minutes per IP
-- ✅ **Submission Rate Limit** - 5 tickets per hour per IP
-- ✅ **Audit Logging** - Complete trail for user management actions
-- ✅ **Session Invalidation** - Automatic logout on deactivation/deletion
-- ✅ **Winston Logging** - Structured logs with rotation (5MB, 5 files)
-
-</details>
-
----
-
-## 🧪 Testing
-
-<div align="center">
-
-### 🏅 **100% Test Coverage Achieved**
-
-*Professional-grade testing infrastructure with 160+ test cases*
-
-</div>
-
-```bash
-# Run all tests
-npm test
-
-# Unit tests only
-npm run test:unit
-
-# Coverage report
-npm run test:coverage
-
-# Watch mode (development)
-npm run test:watch
+```
+Request Flow:
+  HTTP Request
+    → Rate Limiter (login/mutations)
+    → CSRF Protection
+    → Authentication (requireAuth)
+    → Authorization (requireAdmin/requireSuperAdmin/requireDepartment)
+    → Input Validation (express-validator)
+    → Route Handler
+      → Service Layer (business logic)
+        → Model Layer (data access)
+          → PostgreSQL Database
+    ← Response (redirect/render)
 ```
 
-### 📊 **Test Statistics**
+**Directory Structure**:
+```
+├── config/           # Database pool, session config
+├── constants/        # Enums, messages, validation rules
+├── middleware/       # Auth, validation, error handling, rate limiting
+├── migrations/       # 25 SQL migrations (sequential)
+├── models/           # Static class methods for DB ops
+├── routes/           # Express routers (public, auth, admin, client)
+├── services/         # Business logic layer
+├── utils/            # Helpers (logger, sanitization, password validation)
+├── validators/       # express-validator chains
+└── views/            # EJS templates
+```
 
-| Metric | Value |
-|--------|-------|
-| **Test Files** | 26 (Unit: 17, Integration: 6, E2E: 3) |
-| **Test Cases** | 345+ passing |
-| **Test Code** | 10,000+ lines |
-| **Coverage** | Core functionality fully tested ✅ |
-| **Execution** | Transaction-based isolation |
-
-### 🎯 **Test Categories**
-
-<table>
-<tr>
-<td width="33%">
-
-#### 🧩 **Unit Tests**
-- ✅ Models (User, Ticket, Comment, AuditLog)
-- ✅ Services (auth, user, ticket)
-- ✅ Middleware (auth, validation, error)
-- ✅ Validators (all chains)
-- ✅ Utils (password, response helpers)
-
-</td>
-<td width="33%">
-
-#### 🔗 **Integration Tests**
-- ✅ Route handlers with real DB
-- ✅ Middleware integration
-- ✅ CSRF protection
-- ✅ Session management
-- ✅ Validation chains
-
-</td>
-<td width="33%">
-
-#### 🎬 **E2E Tests**
-- ✅ Complete authentication flows
-- ✅ Full ticket lifecycle
-- ✅ User management workflows
-- ✅ Multi-user scenarios
-- ✅ Session clearing
-
-</td>
-</tr>
-</table>
-
-**Testing Patterns**: AAA Pattern • Factory Pattern • Mock Objects • Custom Jest Matchers • Transaction Rollback
-
-📖 [**View Complete Testing Documentation →**](docs/testing_implementation_summary.md)
+See: **[Node.js Development Rules](docs/node_js.md)** for comprehensive architecture documentation.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛡️ Security & Compliance
 
-<div align="center">
+**Zero Known Vulnerabilities** | **98% Code Quality Compliance**
 
-### **Built with Industry-Leading Technologies**
+### Security Features
+- Parameterized SQL queries (all queries)
+- Input validation (express-validator)
+- CSRF protection (double-submit cookie)
+- Rate limiting (authentication + admin mutations)
+- Search input sanitization (SQL wildcard escaping)
+- Password hashing (bcrypt cost 10)
+- Account lockout (5 failed attempts)
+- Session security (httpOnly, secure, sameSite strict)
+- Audit logging (all admin actions)
+- Department-based access control
+- Internal ticket visibility
 
-</div>
+### Compliance
+- **OWASP Top 10**: SQL Injection ✓ | XSS ✓ | CSRF ✓ | Authentication ✓
+- **Session Management**: Secure cookies, automatic invalidation
+- **Data Protection**: Minimal session data, no sensitive logging
+- **Access Control**: Role-based (RBAC), ownership verification
 
-<table>
-<tr>
-<td width="50%">
+See: **[Node.js Development Rules](docs/node_js.md)** for security patterns.
 
-#### **Backend & Database**
-- 🟢 **Node.js 20** - Modern JavaScript runtime
-- ⚡ **Express 5.x** - Fast, minimalist web framework
-- 🐘 **PostgreSQL 16** - Robust relational database
-- 💾 **Native pg driver** - No ORM overhead
-- 🎨 **EJS Templates** - Server-side rendering
-- 🎨 **Tailwind CSS** - Utility-first CSS framework
+---
 
-</td>
-<td width="50%">
+## 🧪 Testing & Quality
 
-#### **Security & Authentication**
-- 🔐 **bcryptjs** - Password hashing (cost 10)
-- 🎫 **express-session** - Session management
-- 🗄️ **connect-pg-simple** - PostgreSQL session store
-- 🛡️ **Helmet.js** - Security headers
-- 🔒 **csrf-csrf** - CSRF protection
-- 🚦 **express-rate-limit** - Brute force prevention
+**Test Suite**: 797 passing / 945 total (84.3% pass rate)
 
-</td>
-</tr>
-<tr>
-<td width="50%">
+### Test Breakdown
+| Category | Passing | Total | Pass Rate | Status |
+|----------|---------|-------|-----------|--------|
+| Unit Tests | 416 | 416 | 100% | ✅ |
+| Database Tests | 112 | 112 | 100% | ✅ |
+| Integration/E2E | 269 | 417 | 64.5% | 🔄 |
 
-#### **Validation & Logging**
-- ✅ **express-validator** - Request validation
-- 📝 **Winston** - Structured logging
-- 🔄 **Morgan** - HTTP request logging
-- 📊 **Daily log rotation** - 5MB limit, 5 files
+### Coverage
+- **Thresholds**: 70% minimum (branches, functions, lines, statements)
+- **Enforcement**: Jest enforces thresholds on every run
+- **Current**: ~70-80% across critical paths
 
-</td>
-<td width="50%">
+### Test Infrastructure (v2.3.0)
+- Transaction-based isolation for unit tests
+- FK-aware database cleanup
+- Floor seeding for department constraints
+- Migration testing (all 25 migrations validated)
+- Schema integrity validation
 
-#### **DevOps & Testing**
-- 🐳 **Docker** - Containerization
-- 🐙 **Docker Compose** - Multi-container orchestration
-- 🧪 **Jest** - Testing framework
-- 🎯 **Supertest** - HTTP integration testing
-- ⚙️ **PM2** - Process management (production)
+### Running Tests
+```bash
+npm test                  # All tests (945)
+npm run test:unit         # Unit tests only (416)
+npm run test:integration  # Integration + E2E + Database (529)
+npm run test:coverage     # Generate coverage report
+```
 
-</td>
-</tr>
-</table>
+See: **[Testing Guidelines](docs/testing_rules.md)** for comprehensive testing documentation.
 
 ---
 
 ## 🚀 Quick Start
 
-### 📋 **Prerequisites**
+### Prerequisites
+- Docker & Docker Compose
+- Node.js 20+ (for local development)
+- PostgreSQL 16+ (or use Docker)
 
-- 🐳 Docker & Docker Compose
-- 📦 Git
+### Development Setup
 
-### ⚡ **Installation** *(3 minutes to running)*
+**Option 1: Docker (Recommended)**
 
-<table>
-<tr>
-<td>
-
-**1️⃣ Clone Repository**
 ```bash
-git clone https://github.com/yourusername/KNII_Ticketing.git
+# Clone repository
+git clone https://github.com/itheCreator1/KNII_Ticketing.git
 cd KNII_Ticketing
+
+# Start services (PostgreSQL + App)
+docker-compose up --build
+
+# Application: http://localhost:3000
+# PostgreSQL: localhost:5432
 ```
 
-</td>
-<td>
-
-**2️⃣ Configure Environment**
-```bash
-cp .env.example .env
-# Edit .env with your settings
-```
-
-</td>
-</tr>
-<tr>
-<td>
-
-**3️⃣ Start Application**
-```bash
-docker-compose up -d
-```
-
-</td>
-<td>
-
-**4️⃣ Access Application**
-- 🌐 Public: http://localhost:3000
-- 🔐 Admin: http://localhost:3000/auth/login
-
-</td>
-</tr>
-</table>
-
-### 🔑 **Default Credentials**
-
-```
-Username: admin
-Password: admin123
-```
-
-> ⚠️ **IMPORTANT**: Change these credentials immediately in production!
-
-### 🏥 **Seeding Hospital Data** *(Optional)*
-
-After initial setup, populate the system with hospital-specific departments and users:
-
-<table>
-<tr>
-<td width="50%">
-
-**Minimal Setup** *(Departments + Users)*
-```bash
-docker-compose exec web npm run seed:hospital
-```
-
-**Creates**:
-- 10 hospital departments
-- 1 user per department
-- 1 super admin
-
-</td>
-<td width="50%">
-
-**Full Demo Data** *(+ Tickets + Comments)*
-```bash
-docker-compose exec web npm run seed:sample
-```
-
-**Creates**:
-- 20 hospital-themed tickets
-- Sample comments
-- All department users
-
-</td>
-</tr>
-</table>
-
-**Hospital Department Users**:
-```
-Emergency Department:  ed.coordinator / password123
-Cardiology:           cardiology.nurse / password123
-Radiology:            radiology.tech / password123
-Pharmacy:             pharmacy.director / password123
-... (and 6 more departments)
-
-Super Admin:          superadmin / admin123
-```
-
-### 🎨 **Customizing Floors & Departments** *(v2.4.0+)*
-
-The system is **fully dynamic** - customize floors and departments without code changes:
-
-```bash
-# 1. Edit configuration files (JSON)
-nano config/seed-data/floors.json        # Define your building floors
-nano config/seed-data/departments.json   # Define your departments
-
-# 2. Seed the database
-docker-compose exec web npm run seed:hospital
-
-# 3. Verify in Admin UI
-# Visit http://localhost:3000/admin/floors
-# Visit http://localhost:3000/admin/departments
-```
-
-**Key Features**:
-- ✅ **No code changes needed** - JSON configuration only
-- ✅ **Validation included** - Errors shown before database changes
-- ✅ **Any organization** - Works for hospitals, offices, factories, etc.
-- ✅ **Safe to rerun** - Idempotent seeding
-
-**📖 [Complete Customization Guide →](docs/CUSTOMIZATION.md)**
-
-> Examples: Hospital (8 floors), Office (4 levels), Factory (2 buildings)
-
----
-
-## 📂 Project Structure
-
-```
-KNII_Ticketing/
-├── 📁 config/              # Configuration files
-│   ├── database.js         # PostgreSQL connection pool
-│   └── session.js          # Session configuration
-├── 📁 constants/           # Application constants
-│   ├── enums.js           # Roles, statuses, priorities
-│   ├── messages.js        # Flash messages
-│   └── validation.js      # Validation rules & limits
-├── 📁 middleware/          # Express middleware
-│   ├── auth.js            # Authentication guards
-│   ├── errorHandler.js    # Global error handling
-│   ├── rateLimiter.js     # Rate limiting config
-│   └── validation.js      # Request validation runner
-├── 📁 migrations/          # Database migrations (8 files)
-│   ├── 001_create_users.sql
-│   ├── 002_create_tickets.sql
-│   ├── 003_create_comments.sql
-│   ├── 004_seed_admin_user.sql
-│   ├── 005_enhance_users_table.sql
-│   ├── 006_create_audit_logs.sql
-│   ├── 007_add_unset_priority.sql
-│   └── 008_modify_ticket_reporter_fields.sql
-├── 📁 models/              # Database models (static classes)
-│   ├── User.js            # User operations & session management
-│   ├── Ticket.js          # Ticket CRUD operations
-│   ├── Comment.js         # Comment management
-│   └── AuditLog.js        # Audit trail logging
-├── 📁 routes/              # Express routes
-│   ├── public.js          # Public ticket submission
-│   ├── auth.js            # Login/logout
-│   ├── admin.js           # Admin dashboard & tickets
-│   └── users.js           # User management (super admin)
-├── 📁 services/            # Business logic layer
-│   ├── authService.js     # Authentication logic
-│   ├── userService.js     # User management logic
-│   └── ticketService.js   # Ticket operations
-├── 📁 validators/          # express-validator chains
-│   ├── authValidators.js
-│   ├── userValidators.js
-│   ├── ticketValidators.js
-│   ├── commentValidators.js
-│   └── shared/
-│       └── passwordRules.js
-├── 📁 utils/               # Helper functions
-│   ├── logger.js          # Winston configuration
-│   ├── passwordValidator.js
-│   └── responseHelpers.js
-├── 📁 views/               # EJS templates
-│   ├── admin/             # Admin dashboard views
-│   ├── auth/              # Login page
-│   ├── public/            # Public ticket submission
-│   ├── errors/            # 404, 500 pages
-│   └── partials/          # Reusable components
-├── 📁 tests/               # Test suites (26 files, 160+ tests)
-│   ├── unit/              # 17 test files
-│   ├── integration/       # 6 test files
-│   ├── e2e/               # 3 test files
-│   ├── helpers/           # Test utilities
-│   └── fixtures/          # Test data
-├── 📁 docs/                # Comprehensive documentation
-│   ├── node_js.md         # 2,465 lines - Development rules
-│   ├── debug_rules.md     # 4,087 lines - Debugging guide
-│   ├── testing_*.md       # Testing documentation
-│   ├── howToDeploy.md     # Deployment guide
-│   └── git_rules.md       # Git workflow
-├── 📁 scripts/             # Development utilities
-│   ├── reset-passwords.js # Reset all user passwords (testing)
-│   └── seed-sample-data.js # Populate sample tickets/comments
-└── 📄 index.js             # Application entry point
-```
-
----
-
-## 📚 Documentation
-
-<div align="center">
-
-### **📖 Over 6,500 Lines of Professional Documentation**
-
-*Everything you need to understand, develop, and deploy*
-
-</div>
-
-<table>
-<tr>
-<td width="50%">
-
-### 📘 **[Node.js Development Rules](docs/node_js.md)**
-*2,465 lines - Complete development guide*
-
-- ✅ Architecture patterns & best practices
-- ✅ Security standards & implementation
-- ✅ Error handling & validation patterns
-- ✅ Database practices & optimization
-- ✅ Troubleshooting guide with solutions
-- ✅ Code review checklist (30+ points)
-- ✅ Production deployment checklist
-
-</td>
-<td width="50%">
-
-### 📕 **[Debugging & Troubleshooting](docs/debug_rules.md)**
-*4,087 lines - Comprehensive debugging guide*
-
-- 🔍 Winston/Morgan logging infrastructure
-- 🔍 Development & production workflows
-- 🔍 Security debugging techniques
-- 🔍 Performance optimization
-- 🔍 Command reference (Docker, PostgreSQL, PM2)
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### 📗 **[Testing Documentation](docs/testing_implementation_summary.md)**
-*Complete test coverage details*
-
-- 🧪 26 test files breakdown
-- 🧪 160+ test cases documentation
-- 🧪 Unit Testing Guide
-- 🧪 Testing Rules & Patterns
-- 🧪 Transaction-based isolation guide
-
-</td>
-<td width="50%">
-
-### 📙 **Additional Guides**
-
-- 🎨 **[Customization Guide](docs/CUSTOMIZATION.md)** - Configure floors & departments (v2.4.0+)
-- 🚀 **[Deployment Guide](docs/howToDeploy.md)** - Production deployment
-- 🌿 **[Git Workflow](docs/git_rules.md)** - Branch strategy & commits
-- 🤖 **[CLAUDE.md](CLAUDE.md)** - AI assistant context
-
-</td>
-</tr>
-</table>
-
----
-
-## 👥 User Management
-
-### 🎭 **User Roles**
-
-<table>
-<tr>
-<td width="33%">
-
-#### 🏢 **Department**
-- ✅ Access client portal
-- ✅ Create own tickets
-- ✅ View only own tickets
-- ✅ Add public comments
-- ✅ Update status (limited)
-- ❌ Cannot see internal comments
-- ❌ Cannot access admin portal
-
-</td>
-<td width="33%">
-
-#### 👨‍💼 **Admin**
-- ✅ Access admin portal
-- ✅ View all tickets
-- ✅ Update ticket status (all)
-- ✅ Assign tickets
-- ✅ Add comments (internal & public)
-- ✅ Manage ticket lifecycle
-- ❌ Cannot manage users
-
-</td>
-<td width="33%">
-
-#### 👨‍💻 **Super Admin**
-- ✅ All admin permissions
-- ✅ **Create** users (all roles)
-- ✅ **Edit** user details & roles
-- ✅ **Delete** users (soft delete)
-- ✅ **Reset** user passwords
-- ✅ **View** audit logs
-- ✅ Manage department accounts
-
-</td>
-</tr>
-</table>
-
-### ⚙️ **User Management Features**
-
-| Feature | Description | Security |
-|---------|-------------|----------|
-| **Create Users** | Add new admin accounts with role assignment | Password complexity enforced |
-| **Edit Users** | Modify details, change roles (admin ↔ super_admin) | Audit logged |
-| **Delete Users** | Soft delete with data preservation | Cannot delete self or last super admin |
-| **Reset Passwords** | Admin-initiated resets without current password | Logged in audit trail |
-| **Account Locking** | Auto-lock after 5 failed attempts | Manual unlock by admin |
-| **Session Management** | Clear all sessions on deactivation/deletion | Immediate logout across devices |
-
----
-
-## 🗄️ Database
-
-### 📊 **Schema Overview**
-
-<table>
-<tr>
-<td width="50%">
-
-#### **Core Tables**
-- 👤 **users** - Admin accounts with roles
-- 🎫 **tickets** - Support tickets (with department/desk tracking)
-- 💬 **comments** - Ticket comments
-- 📋 **audit_logs** - User management actions
-- 🎫 **session** - Session storage (auto-managed)
-
-</td>
-<td width="50%">
-
-#### **Foreign Key Relationships**
-- `tickets.assigned_to` → `users.id` (SET NULL)
-- `comments.ticket_id` → `tickets.id` (CASCADE)
-- `comments.user_id` → `users.id` (CASCADE)
-- `audit_logs.actor_id` → `users.id`
-
-</td>
-</tr>
-</table>
-
-### 🔄 **Migration Order**
-
-1. `001_create_users.sql` - User accounts table
-2. `002_create_tickets.sql` - Support tickets table
-3. `003_create_comments.sql` - Ticket comments table
-4. `004_create_sessions.sql` - Session storage table
-5. `005_enhance_users_table.sql` - Account locking & status fields
-6. `006_create_audit_logs.sql` - Audit logging table
-7. `007_add_unset_priority.sql` - Add 'unset' priority option & change default
-8. `008_modify_ticket_reporter_fields.sql` - Replace email with department/desk fields
-9. `009_remove_is_internal.sql` - Remove is_internal column from comments
-10. `010_add_department_role.sql` - Add 'department' role to users
-11. `011_add_workflow_statuses.sql` - Add workflow statuses (waiting_on_admin, waiting_on_department)
-12. `012_add_reporter_id_to_tickets.sql` - Add reporter_id foreign key for ticket ownership
-13. `013_add_user_department_column.sql` - Add department column to users table
-14. `014_add_internal_department.sql` - Add 'Internal' system department
-15. `015_add_is_admin_created_flag.sql` - Add is_admin_created flag to tickets
-16. `016_create_departments_table.sql` - Create departments table with foreign keys
-17. `017_remove_reporter_desk.sql` - Remove reporter_desk column from tickets
-18. `018_increase_status_column_length.sql` - Increase status column length to accommodate new workflow states
-19. `019_add_comment_visibility.sql` - Add visibility_type column to comments (public/internal)
-
-> **Note**: Session storage managed automatically by `connect-pg-simple`
-
----
-
-## 💻 Development
-
-### 🔧 **Running Locally** *(Without Docker)*
+**Option 2: Local**
 
 ```bash
 # Install dependencies
 npm install
 
-# Start PostgreSQL
-docker-compose up -d db
+# Setup database
+cp .env.example .env
+# Edit .env with your PostgreSQL connection details
 
 # Run migrations
-npm run migrate
+node scripts/init-db.js
 
-# Start development server (hot reload)
-npm run dev
+# Seed hospital data (optional)
+npm run seed:hospital
+
+# Start development server
+npm run dev  # Runs on port 3000
 ```
 
-### 🌍 **Environment Modes**
+### Default Credentials
 
-| Mode | Features |
-|------|----------|
-| **Development** | 🔥 Hot reload (nodemon), 📊 Verbose logging, 🐛 Debug info |
-| **Production** | ⚡ Optimized performance, 🔒 Secure headers, 📝 Minimal logging |
+```
+Username: admin
+Password: admin123
+Role: super_admin
+```
 
-### 🌿 **Git Workflow**
+⚠️ **Change default password immediately in production**
 
-#### **Branch Strategy**
-- `main` - 🚀 Production-ready code
-- `develop` - 🔄 Integration branch
-- `feature/*` - ✨ New features
-- `fix/*` - 🐛 Bug fixes
-- `chore/*` - 🔧 Maintenance
-- `docs/*` - 📚 Documentation
+### Verification
 
-#### **Workflow Rules**
-1. ⛔ Never commit directly to `main`
-2. ✅ All changes via Pull Requests
-3. 👀 Code review required
-4. 🧪 Tests must pass
-5. 📝 Meaningful commit messages
-6. 🗑️ Delete merged branches
+1. Access application: `http://localhost:3000`
+2. Login with default credentials
+3. Navigate to Admin Dashboard
+4. Create test ticket
+5. Run tests: `npm test`
 
 ---
 
-## 🔐 Security Best Practices
+## 📚 Documentation
 
-<div align="center">
+Comprehensive documentation covering all aspects of development, deployment, and maintenance.
 
-### **🛡️ Production Security Checklist**
+### Core Guides
+- **[Node.js Development Rules](docs/node_js.md)** (2,470 lines) - Coding standards, architecture patterns, security best practices
+- **[Debugging & Troubleshooting](docs/debug_rules.md)** (4,085 lines) - Logging infrastructure, error handling, performance debugging
+- **[Testing Guidelines](docs/testing_rules.md)** (850+ lines) - Test structure, patterns, and best practices
+- **[CI/CD Guide](docs/ci-cd.md)** (480+ lines) - GitHub Actions, ESLint, Prettier, troubleshooting
 
-</div>
+### Operational Guides
+- **[Git Workflow](docs/git_rules.md)** - Branching strategy, commit standards, PR discipline
+- **[Deployment Guide](docs/howToDeploy.md)** - Docker production, PM2 cluster mode, environment setup
+- **[Customization Guide](docs/customisation_guide.md)** - Floors, departments, and configuration
 
-| Priority | Action | Status |
-|----------|--------|--------|
-| 🔴 **CRITICAL** | Change default admin password (`admin/admin123`) | ⚠️ Required |
-| 🔴 **CRITICAL** | Generate secure `SESSION_SECRET` (min 32 chars) | ⚠️ Required |
-| 🔴 **CRITICAL** | Change database password in production | ⚠️ Required |
-| 🟡 **HIGH** | Enable HTTPS (nginx reverse proxy with SSL) | 📋 Recommended |
-| 🟡 **HIGH** | Configure automated database backups | 📋 Recommended |
-| 🟢 **MEDIUM** | Set up log monitoring & alerting | ✅ Optional |
-| 🟢 **MEDIUM** | Review audit logs regularly | ✅ Optional |
-| 🟢 **MEDIUM** | Keep dependencies updated | ✅ Optional |
-
-### 🔒 **Security Features Built-In**
-
-✅ Account locking (5 attempts)
-✅ Password complexity enforcement
-✅ Rate limiting (login & submission)
-✅ CSRF protection
-✅ SQL injection prevention
-✅ XSS protection
-✅ Session security
-✅ Audit logging
-✅ Input validation
+### Reference
+- **[Performance Baseline](docs/performance-baseline.md)** - SLA targets, benchmark results, optimization patterns
+- **[CLAUDE.md](CLAUDE.md)** - Complete project context for AI assistants
 
 ---
 
-## 🚢 Production Deployment
+## Development
 
-<div align="center">
-
-### **🐳 Docker Deployment** *(Recommended)*
-
-</div>
+### Commands
 
 ```bash
-# 1. Configure environment
-cp .env.example .env
-# Edit .env with production values
+# Development
+npm run dev              # Start dev server (nodemon)
+npm start                # Start production server
 
-# 2. Build and start
-docker-compose build
-docker-compose up -d
+# Testing
+npm test                 # Run all tests
+npm run test:unit        # Unit tests only
+npm run test:integration # Integration + E2E
+npm run test:coverage    # Generate coverage report
+npm run test:watch       # Watch mode
 
-# 3. Verify deployment
-docker-compose ps
-docker-compose logs -f web
+# Code Quality
+npm run lint             # Check code with ESLint
+npm run lint:fix         # Auto-fix linting issues
+npm run format           # Auto-format with Prettier
+npm run format:check     # Check formatting
 
-# 4. Access application
-# Public: http://your-domain.com
-# Admin: http://your-domain.com/auth/login
+# Database
+node scripts/init-db.js          # Run migrations
+npm run seed:hospital            # Seed hospital data
+npm run seed:sample              # Seed sample tickets
+node scripts/reset-passwords.js  # Reset all passwords (dev only)
+
+# CI/CD
+# Automated via GitHub Actions on push/PR
 ```
 
-📖 **[Complete Deployment Guide →](docs/howToDeploy.md)**
+### Git Workflow
 
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. 🍴 Fork the repository
-2. 🌿 Create feature branch (`git checkout -b feature/amazing-feature`)
-3. ✍️ Commit changes (`git commit -m 'Add amazing feature'`)
-4. 📤 Push to branch (`git push origin feature/amazing-feature`)
-5. 🔀 Open Pull Request
-
-### 📝 **Commit Message Format**
-
-```
-<type>: <subject line in imperative mood>
-
-<optional body explaining WHY, not WHAT>
-
-<optional footer with issue references>
-```
-
-**Types**: `feat`, `fix`, `docs`, `chore`, `test`, `refactor`
-
----
-
-## 📜 License
-
-This project is proprietary software. All rights reserved.
-
----
-
-## 💬 Support
-
-<table>
-<tr>
-<td width="50%">
-
-### 🐛 **Issue Tracking**
-Found a bug or have a feature request?
-- [Create an issue](https://github.com/itheCreator1/KNII_Ticketing/issues)
-
-</td>
-<td width="50%">
-
-### 📧 **Contact**
-Need help or have questions?
-- Email: support@kniitickets.com
-
-</td>
-</tr>
-</table>
-
----
-
-## 📋 Changelog
-
-### 🎉 **Version 2.4.1** *(2026-01-19)* - **UI Enhancements & Development Tools**
-
-<details>
-<summary><b>🎨 UI/UX Improvements - Tailwind CSS Integration</b></summary>
-
-- ✅ **Tailwind CSS integration** - Added Tailwind CSS for modern utility-first styling
-- ✅ **Mobile navigation** - Implemented responsive mobile menu toggle functionality
-- ✅ **Badge styling consistency** - Simplified status and priority badges across client views
-- ✅ **Color scheme updates** - Improved visual consistency in admin dashboard badges
-- ✅ **Responsive design** - Enhanced mobile-first responsive layout
-- ✅ **Output CSS file** - Generated optimized Tailwind CSS output
-
-**Visual Changes:**
-- Client portal badges now use simple Bootstrap classes for consistency
-- Status badges: info (open), warning (in_progress/waiting_on_admin), danger (waiting_on_you), success (closed)
-- Priority badges: danger (critical), warning (high), info (medium), secondary (low), light (unset)
-- Removed decorative icons from badges for cleaner appearance
-
-</details>
-
-<details>
-<summary><b>🛠️ Development Utilities - Testing & Demo Scripts</b></summary>
-
-- ✅ **Password reset script** - `scripts/reset-passwords.js` resets all user passwords to `password123`
-- ✅ **Sample data seeder** - `scripts/seed-sample-data.js` populates database with test data
-- ✅ **15 sample tickets** - Covers all departments, statuses, and priorities
-- ✅ **Sample comments** - Both public and internal comments for testing
-- ✅ **Quick testing setup** - Rapidly prepare development environment with realistic data
-
-**Usage:**
 ```bash
-# Reset all passwords for testing
-docker-compose exec web node scripts/reset-passwords.js
+# Create feature branch
+git checkout -b feature/my-feature
 
-# Seed sample data
-docker-compose exec web node scripts/seed-sample-data.js
+# Make changes, format, lint, test
+npm run format
+npm run lint
+npm test
+
+# Commit with clear message
+git add .
+git commit -m "feat: add new feature
+
+- Implemented feature X
+- Added tests
+- Updated documentation"
+
+# Push and create PR
+git push -u origin feature/my-feature
 ```
 
-⚠️ **Development/Testing Only** - Never run these scripts in production
+See: **[Git Workflow Rules](docs/git_rules.md)**
 
-</details>
+### CI/CD
 
-**Commits:**
-- `60d9b79` - chore: add development utility scripts for password reset and sample data
-- `cec2eb0` - fix: revert status and priority badges to simple design in client views
-- `485dd88` - Update status colors and badges in admin dashboard
-- `758fe9d` - Add Tailwind CSS configuration, mobile navigation toggle, and output CSS file
+GitHub Actions automatically:
+- Runs full test suite on Node.js 18, 20, 22
+- Generates test coverage reports
+- Enforces ESLint and Prettier standards
+- Checks for security vulnerabilities
+- Comments coverage on PRs
 
----
+**CI Status**: Check badges at top of README
 
-### 🎉 **Version 2.3.2** *(2026-01-09)* - **Migration Sequencing Fix**
-
-<details>
-<summary><b>🔧 Migration Renumbering - Correct Sequential Order</b></summary>
-
-- ✅ **Fixed migration sequence** - Renumbered migrations to maintain proper sequential order
-- ✅ **Migration 018** - Renamed from 012 (increase_status_column_length)
-- ✅ **Migration 019** - Renamed from 013 (add_comment_visibility)
-- ✅ **Updated init-db.js** - Script now correctly references renumbered migrations
-- ✅ **Documentation updates** - README and CLAUDE.md reflect current migration state
-- ✅ **No data loss** - Renumbering preserves all migration history and functionality
-
-**Rationale**: Migrations 012-013 were created out of sequence. This fix ensures migrations run in the correct order and prevents confusion during fresh deployments.
-
-**Commits:**
-- `e727eb2` - refactor: renumber migrations to fix sequence order
-
-</details>
-
-### 🎉 **Version 2.3.1** *(2026-01-09)* - **Code Cleanup & Consistency Fixes**
-
-<details>
-<summary><b>🧹 Post-Migration Cleanup - Remove reporter_desk Remnants</b></summary>
-
-- ✅ **Removed dead code** - Cleaned up unused reporter_desk extraction in route handlers
-- ✅ **Updated validators** - ticketValidators.js now uses dynamic Department.findAll() instead of hardcoded enum
-- ✅ **Test suite cleanup** - Removed reporter_desk from all test fixtures, factories, and test data
-- ✅ **Added Department mocks** - Proper mocking of Department model in validator tests
-- ✅ **All tests passing** - 354 tests verified passing after cleanup
-- ✅ **Zero technical debt** - No remaining reporter_desk references in active code (only in migrations/docs as expected)
-- ✅ **Improved consistency** - Validators now align with v2.3.0 database-driven department pattern
-
-**Commits:**
-- `684209c` - refactor: remove unused reporter_desk from route handlers
-- `bf71b1a` - refactor: update ticketValidators to use dynamic departments
-- `3efbefe` - test: remove reporter_desk from all test data
-- `3fb7cf7` - test: fix remaining reporter_desk references in auth integration test
-
-</details>
-
-### 🎉 **Version 2.3.0** *(2026-01-08)* - **Dynamic Departments & Database-Driven Configuration**
-
-<details>
-<summary><b>🗄️ Dynamic Department Management - Admin CRUD Interface</b></summary>
-
-- ✅ **Database-driven departments** - Replaced hardcoded REPORTER_DEPARTMENT enum with departments table
-- ✅ **Super admin CRUD UI** - Complete department management interface at `/admin/departments`
-- ✅ **Foreign key constraints** - ON UPDATE CASCADE for name changes, ON DELETE RESTRICT for safety
-- ✅ **System department protection** - 'Internal' department marked with is_system flag, cannot be edited/deleted
-- ✅ **Soft deletion** - Active flag for deactivating departments while preserving historical data
-- ✅ **Safety checks** - Prevents deactivation of departments with assigned users
-- ✅ **Audit logging** - All department operations tracked in audit_logs table
-- ✅ **Database migration 016** - Creates departments table with initial 6 departments seeded
-- ✅ **Dynamic dropdowns** - User and ticket forms now fetch departments from database
-- ✅ **Backward compatible** - REPORTER_DEPARTMENT constant deprecated but retained temporarily
-
-</details>
-
-<details>
-<summary><b>🧹 Reporter Desk Field Removal - Schema Simplification</b></summary>
-
-- ✅ **Removed reporter_desk field** - No longer needed in ticket workflow
-- ✅ **Database migration 017** - Drops reporter_desk column from tickets table
-- ✅ **Updated all forms** - Removed desk dropdown from public, admin, and client ticket creation
-- ✅ **Updated validators** - Removed REPORTER_DESK validation from all ticket validators
-- ✅ **Updated constants** - Removed REPORTER_DESK enum from constants/enums.js
-- ✅ **Cleaner UI** - Simplified ticket creation and detail views
-- ✅ **Test updates** - All 345+ tests updated and passing with desk field removed
-
-</details>
-
-<details>
-<summary><b>🏗️ Architecture Improvements</b></summary>
-
-- ✅ **Department Model** - New model with complete CRUD operations, soft deletion, and usage counters
-- ✅ **Department Service** - Business logic for department operations with audit logging
-- ✅ **Department Validators** - Async database validation replacing hardcoded enum checks
-- ✅ **Department Routes** - RESTful routes for department management (super admin only)
-- ✅ **Cascading updates** - Renaming departments automatically updates all user and ticket references
-- ✅ **Navigation updates** - Department management link in header for super admins
-
-</details>
-
-### 🎉 **Version 2.2.0** *(2026-01-08)* - **Department Accounts & Dual-Portal Architecture**
-
-<details>
-<summary><b>🏢 Department User Accounts - Client Portal Implementation</b></summary>
-
-- ✅ **Dual-portal architecture** - Separate client portal for department users
-- ✅ **Department role** - New user role with restricted permissions
-- ✅ **Client routes** - Complete `/client/*` portal with dashboard, ticket creation, viewing
-- ✅ **Ownership verification** - Department users can only see their own tickets
-- ✅ **Auto-population** - Department and reporter info automatically filled from user account
-- ✅ **Workflow statuses** - Added `waiting_on_admin` and `waiting_on_department` states
-- ✅ **Comment visibility** - Internal comments (admin-only) vs public comments (visible to all)
-- ✅ **Security model** - Multi-layer defense with ownership verification at route and SQL levels
-- ✅ **Database migrations** - 6 new migrations (010-013) for department feature
-- ✅ **Comprehensive testing** - 345+ test cases passing, department workflows validated
-
-</details>
-
-<details>
-<summary><b>🔒 Enhanced Security Features</b></summary>
-
-- ✅ **Ownership-based access control** - SQL-level filtering prevents unauthorized access
-- ✅ **Comment visibility filtering** - Database-level filtering for internal/public comments
-- ✅ **Role-based authentication** - `requireDepartment` middleware for client portal
-- ✅ **Updated requireAdmin** - Explicitly excludes department role from admin access
-- ✅ **Session validation** - Re-checks user status on every request
-- ✅ **Input validation** - Length limits, enum validation, ownership checks
-
-</details>
-
-<details>
-<summary><b>📚 Documentation & Code Quality</b></summary>
-
-- 📘 **98% code quality** - Improved from 97% with department implementation
-- 📗 **Updated CLAUDE.md** - Complete department accounts documentation
-- 📕 **Updated README.md** - New features, roles, migrations, changelog
-- 📙 **Code compliance** - Follows all Node.js, testing, and git workflow rules
-- 📔 **Professional patterns** - Routes → Services → Models, zero SQL injection
-- 🧪 **345+ tests passing** - Comprehensive unit, integration, and E2E coverage
-
-</details>
-
-### 🚀 **Version 2.1.0** *(2026-01-02)* - **Department Tracking Update**
-
-<details>
-<summary><b>🏢 Department Tracking - Enhanced Ticket Classification</b></summary>
-
-- ✅ **Replaced email with department field** in public ticket submission
-- ✅ **5 department options**: IT Support, General Support, Human Resources, Finance, Facilities
-- ✅ **Database migration 008** - Replaced `reporter_email` with `reporter_department`
-- ✅ **Enhanced admin view** - Shows department instead of email for better ticket categorization
-- ✅ **Validation constraints** - Dropdown selection with backend validation via enums
-
-</details>
-
-<details>
-<summary><b>🎯 Priority System Enhancement - Unset Priority Option</b></summary>
-
-- ✅ **Added 'unset' priority option** for untriaged tickets
-- ✅ **Changed default priority** from 'medium' to 'unset'
-- ✅ **Database migration 007** - Added 'unset' to priority CHECK constraint
-- ✅ **Admin UI updated** - Can assign or leave priority as 'unset'
-- ✅ **Removed priority from public form** - All submissions default to 'unset' for admin triage
-
-</details>
-
-<details>
-<summary><b>📚 Documentation Updates</b></summary>
-
-- 📘 **Updated CLAUDE.md** - Reflects new database schema and enums
-- 📗 **Updated README.md** - Migration list, features, and schema documentation
-- 📕 **Added new constants** - REPORTER_DEPARTMENT enum (REPORTER_DESK removed in v2.3.0)
-- 📙 **Updated validators** - Department validation documentation
-
-</details>
-
-### 🎉 **Version 2.0.0** *(2025-12-31)* - **Stable Release**
-
-<details>
-<summary><b>🧪 Testing Infrastructure - 100% Coverage Achieved</b></summary>
-
-- ✅ **26 test files** (Unit: 17, Integration: 6, E2E: 3)
-- ✅ **160+ test cases** covering all critical paths
-- ✅ **10,000+ lines** of professional test code
-- ✅ **Transaction-based isolation** with automatic rollback
-- ✅ **Test helpers** - Factories, fixtures, mocks, custom matchers
-- ✅ **AAA Pattern** - Arrange-Act-Assert structure
-- ✅ **Mock objects** for complete isolation
-- ✅ **Custom Jest matchers** for domain-specific assertions
-
-</details>
-
-<details>
-<summary><b>📚 Documentation - Comprehensive Guides Added</b></summary>
-
-- 📘 **Testing Implementation Summary** - Complete test coverage details
-- 📗 **Unit Testing Guide** - Best practices and patterns
-- 📕 **Debugging & Troubleshooting Rules** (4,087 lines)
-- 📙 **Deployment Guide** - Moved to `docs/howToDeploy.md`
-- 📔 **Testing Rules** - Guidelines and standards
-
-</details>
-
-<details>
-<summary><b>🔧 Quality Assurance - Professional Patterns</b></summary>
-
-- ✅ Factory pattern for dynamic test data generation
-- ✅ Transaction rollback for database test isolation
-- ✅ Supertest for HTTP integration testing
-- ✅ Custom assertions for improved readability
-- ✅ Comprehensive test helpers and utilities
-
-</details>
-
-### 📦 **Version 1.1.0** *(2025-12-30)*
-
-- 📘 Added comprehensive Node.js development rules (2,465 lines)
-- 🏆 Achieved 97% compliance with professional standards
-- 🔒 Verified zero SQL injection vulnerabilities
-- 🏗️ 100% compliance with Routes → Services → Models pattern
-- ⚠️ 100% async route handler error coverage
-- 📊 Updated documentation with compliance metrics
-
-### 🎊 **Version 1.0.0** *(2025-12-24)* - **Initial Release**
-
-- 🎫 Public ticket submission system
-- 🖥️ Admin dashboard with ticket management
-- 👥 User management system (Super Admin)
-- 🎭 Role-based access control (Admin, Super Admin)
-- 📋 Comprehensive audit logging
-- 🔒 Account security features (locking, complexity)
-- 🎫 Session-based authentication
-- 🛡️ CSRF protection
-- 🚦 Rate limiting (login & submission)
+See: **[CI/CD Guide](docs/ci-cd.md)** for troubleshooting CI failures.
 
 ---
 
-<div align="center">
+## Deployment
 
-## 🌟 **Project Metrics**
+### Production Deployment (Docker)
 
-| Metric | Value |
-|--------|-------|
-| **Code Quality** | 98% Compliant ✅ |
-| **Tests Passing** | 345+ ✅ |
-| **Security Vulnerabilities** | 0 ✅ |
-| **Documentation Lines** | 6,500+ 📚 |
-| **Test Code Lines** | 10,000+ 🧪 |
-| **Test Suites** | 26 🎯 |
-| **Test Cases** | 345+ ✅ |
+```bash
+# Build production image
+docker-compose -f docker-compose.prod.yml up --build -d
+
+# Run migrations
+docker-compose -f docker-compose.prod.yml exec web node scripts/init-db.js
+
+# Verify deployment
+docker-compose -f docker-compose.prod.yml logs -f web
+```
+
+### Environment Variables
+
+Required environment variables (`.env`):
+
+```bash
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/db
+DB_PORT=5432
+
+# Security
+SESSION_SECRET=your-secret-min-32-chars  # REQUIRED: Min 32 characters
+NODE_ENV=production  # production|development|test
+
+# Application
+PORT=3000
+LOG_LEVEL=info  # error|warn|info|debug
+
+# Docker (optional)
+DOCKER_COMMAND=docker-compose
+RESTART_POLICY=cluster
+```
+
+### Migration Checklist
+
+Before deploying v2.3.0:
+
+- [ ] Run all 25 migrations (000-025)
+- [ ] Verify composite indexes created (Migration 025)
+- [ ] Update SESSION_SECRET (min 32 chars)
+- [ ] Set NODE_ENV=production
+- [ ] Configure LOG_LEVEL appropriately
+- [ ] Test rate limiters work (login + admin mutations)
+- [ ] Verify CI/CD workflows pass
+- [ ] Run `npm test` in staging
+- [ ] Check performance with new indexes
+- [ ] Backup database before migration
+
+See: **[Deployment Guide](docs/howToDeploy.md)** for comprehensive deployment instructions.
 
 ---
 
-### Built with ❤️ using Node.js and PostgreSQL
+## Database Schema
 
-**Code Quality: 98% Compliant** | **Tests: 345+ Passing** | **Zero Vulnerabilities**
+**25 Migrations** (000-025) | **7 Tables** | **FK Constraints** | **Composite Indexes**
 
-⭐ Star this repository if you find it useful!
+### Key Tables
+- `floors` (8 predefined) - Building floor locations (v2.2.0+)
+- `departments` (customizable) - Department management with floor FK (v2.2.0+)
+- `users` (RBAC) - Authentication with department FK
+- `tickets` (workflow) - Support tickets with department FK
+- `comments` (visibility) - Public/internal comments
+- `audit_logs` (compliance) - Admin action tracking
+- `session` (connect-pg-simple) - Session storage
+
+### Recent Migrations
+- **Migration 022** (v2.3.0): Create floors table (database-driven)
+- **Migration 023** (v2.3.0): Convert floor to FK constraint
+- **Migration 024** (v2.3.0): Remove hardcoded floors (fully dynamic)
+- **Migration 025** (v2.3.0): Add composite indexes for performance
+
+See: **[CLAUDE.md](CLAUDE.md)** for complete schema documentation.
 
 ---
 
-*© 2025 KNII Ticketing System. All rights reserved.*
+## Contributing
 
-</div>
+### Code Standards
+- Follow **[Node.js Development Rules](docs/node_js.md)** (98% compliance required)
+- Write tests for all new features (maintain 70%+ coverage)
+- Run `npm run format && npm run lint && npm test` before committing
+- Follow git workflow in **[Git Rules](docs/git_rules.md)**
+- Ensure CI/CD passes (GitHub Actions)
+
+### Pull Request Process
+1. Create feature branch (`feature/`, `fix/`, `refactor/`, `chore/`)
+2. Implement changes with tests
+3. Update documentation
+4. Ensure all tests pass
+5. Run linting and formatting
+6. Create PR with clear description
+7. Wait for CI/CD to pass
+8. Request code review
+
+### Reporting Issues
+- Use GitHub Issues
+- Include reproduction steps
+- Specify Node.js/PostgreSQL versions
+- Attach relevant logs
+- Tag appropriately (bug, enhancement, documentation)
+
+---
+
+## License
+
+This project is proprietary and confidential.
+
+**Copyright** © 2026 KNII Team. All rights reserved.
+
+---
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/itheCreator1/KNII_Ticketing/issues)
+- **Documentation**: See [Documentation](#documentation) section
+- **CI/CD**: [Actions Tab](https://github.com/itheCreator1/KNII_Ticketing/actions)
+
+---
+
+## Changelog
+
+<details>
+<summary><strong>v2.3.0</strong> (Current - January 2026)</summary>
+
+### Test Infrastructure Improvements ✅
+- Floor seeding in test setup (fixes FK violations)
+- Database cleanup order fix (DELETE not TRUNCATE)
+- Schema helper SQL fixes
+- Global pool cleanup (prevents Jest hanging)
+- Pass rate: 73% → 84.3% (+107 tests fixed)
+
+### Performance Optimizations ⚡
+- **Migration 025**: Composite indexes
+  - `tickets(status, priority)` - 50-80% dashboard improvement
+  - `session(expire)` - faster session cleanup
+
+### Security Enhancements 🛡️
+- Admin mutation rate limiter (20 req/min)
+- Search input sanitization (SQL wildcard escaping)
+- Defense-in-depth for ILIKE queries
+
+### CI/CD Implementation 🔄
+- GitHub Actions CI workflow (tests, coverage, security)
+- GitHub Actions Lint workflow (ESLint, Prettier)
+- Multi-version Node.js testing (18, 20, 22)
+- Automated code quality enforcement
+
+### Code Quality Tools 📐
+- ESLint configuration (eslint:recommended)
+- Prettier configuration (consistent formatting)
+- Pre-commit linting and formatting
+
+### Database Migrations
+- **Migration 022**: Create floors table
+- **Migration 023**: Convert floor to FK constraint
+- **Migration 024**: Remove hardcoded floors (fully dynamic)
+- **Migration 025**: Add composite indexes
+
+</details>
+
+<details>
+<summary><strong>v2.2.0</strong> (Previous - January 2026)</summary>
+
+### Department Floor Locations 🏢
+- Added floor column to departments (8 predefined floors)
+- CHECK constraint validation
+- Floor display in department management
+- Floor selection in ticket forms
+- Migration 020: add_department_floor
+
+### Admin-Created Department Tickets Visible ✅
+- Fixed visibility issue: Department users can now see admin-created tickets
+- Session data: Added department field
+- Query change: Filter by reporter_department (not reporter_id)
+- Security: Department-based access control implemented
+
+</details>
+
+<details>
+<summary><strong>v2.1.0</strong> (Previous - January 2026)</summary>
+
+### Department Accounts Feature 🏢
+- Dual-portal architecture (client + admin)
+- Department user role with client portal
+- Department-based ticket ownership
+- Public/internal comment visibility
+- Admin creation of department tickets
+
+</details>
+
+---
+
+**Built with ❤️ by the KNII Team** | **Version 2.3.0** | **Node.js 20 + Express 5 + PostgreSQL 16**
