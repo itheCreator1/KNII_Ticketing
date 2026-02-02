@@ -1,6 +1,6 @@
 # Git Workflow Rules - KNII Ticketing System
 
-**Version:** 2.2.1
+**Version:** 2.3.0
 **Last Updated:** January 2026
 **Target Project:** KNII Ticketing System (Node.js 20 + Express 5 + PostgreSQL 16)
 
@@ -70,6 +70,47 @@ AUTOMATION & TOOLING AWARENESS
   - formatters
   - CI workflows
 - If missing, propose improvements via commits or PRs.
+
+CI/CD INTEGRATION (v2.3.0)
+The project uses GitHub Actions for continuous integration:
+- **CI Workflow**: Runs tests, generates coverage, checks security
+- **Lint Workflow**: Enforces ESLint and Prettier standards
+
+Before Pushing:
+1. Run `npm run format` to auto-format code
+2. Run `npm run lint` to check linting (or `npm run lint:fix` to auto-fix)
+3. Run `npm test` to ensure tests pass locally
+4. Commit formatted and linted code
+
+When CI Fails:
+- View workflow logs in GitHub Actions tab
+- Fix linting errors: `npm run lint:fix`
+- Fix formatting: `npm run format`
+- Fix test failures: `npm test` locally first
+- **Never commit with --no-verify** to bypass checks
+
+Example Workflow:
+```bash
+# Before committing
+npm run format        # Auto-format
+npm run lint          # Check linting
+npm test              # Run tests
+
+# Commit and push
+git add .
+git commit -m "feat: add new feature"
+git push
+
+# Watch CI results in GitHub Actions
+# Fix any CI failures and push again
+```
+
+CI Status Badges:
+- Check README for CI/Lint workflow status
+- Green badge = all checks passing
+- Red badge = investigate and fix
+
+See: [CI/CD Guide](ci-cd.md) for detailed troubleshooting
 
 GITHUB MCP UTILIZATION
 You are expected to actively use GitHub MCP capabilities, including but not limited to:
