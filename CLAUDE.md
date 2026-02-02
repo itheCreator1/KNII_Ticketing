@@ -846,11 +846,6 @@ Rate limiting is implemented using express-rate-limit middleware in `middleware/
 - Prevents: Brute force password attacks
 - On limit exceeded: Redirects to login with flash message
 
-**ticketSubmissionLimiter**:
-- Limits: 5 submissions per hour per IP
-- Applied to: `/submit-ticket` public endpoint
-- Prevents: Spam and abuse of public submission form
-
 **adminMutationLimiter** (new in v2.3.0):
 - Limits: 20 requests per minute per IP
 - Applied to: Admin mutation endpoints (POST/PUT/DELETE operations)
@@ -1523,13 +1518,10 @@ views/
 ├── errors/
 │   ├── 404.ejs
 │   └── 500.ejs
-├── partials/
-│   ├── header.ejs         # Nav bar with conditional user management link
-│   ├── footer.ejs
-│   └── flash.ejs          # Flash message display
-└── public/
-    ├── submit-ticket.ejs  # Public ticket form
-    └── success.ejs        # Submission confirmation
+└── partials/
+    ├── header.ejs         # Nav bar with conditional user management link
+    ├── footer.ejs
+    └── flash.ejs          # Flash message display
 ```
 
 **Template variables available globally** (set in index.js middleware):
