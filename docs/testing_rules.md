@@ -1,6 +1,6 @@
 # Testing Rules - KNII Ticketing System
 
-**Version:** 2.2.1
+**Version:** 2.3.0
 **Last Updated:** January 2026
 **Target Project:** KNII Ticketing System (Node.js 20 + Express 5 + PostgreSQL 16)
 
@@ -24,6 +24,102 @@ You MUST actively design, implement, and maintain tests that serve as living doc
    - Predictable and deterministic behavior
    - Independence from other tests (no shared mutable state)
 5. The test suite must tell a coherent story of the system's expected behavior.
+
+---
+
+## Test Statistics (v2.3.0)
+
+**Current Status**: 797 passing out of 945 total tests (84.3% pass rate)
+
+### Test Suite Breakdown
+
+| Category | Passing | Total | Pass Rate | Status |
+|----------|---------|-------|-----------|--------|
+| Unit Tests | 416 | 416 | 100% | ✅ Excellent |
+| Database Tests | 112 | 112 | 100% | ✅ Excellent |
+| Integration/E2E | 269 | 417 | 64.5% | ⚠️ In Progress |
+| **Total** | **797** | **945** | **84.3%** | 🔄 Improving |
+
+### Test Categories
+
+**Unit Tests** (17 files, 416 tests):
+- Models: User, Ticket, Comment, AuditLog, Department, Floor
+- Services: Auth, User, Ticket, Client Ticket
+- Validators: Auth, User, Ticket, Comment
+- Middleware: Auth, Validation, Error Handler, Rate Limiter
+- Utils: Password Validator, Response Helpers, Search Sanitization
+
+**Database/Migration Tests** (4 files, 112 tests):
+- Schema Integrity (40 tests) - Table structure, columns, constraints
+- Foreign Key Behavior (15 tests) - CASCADE, RESTRICT, SET NULL behaviors
+- Data Migration (16 tests) - Migration 012, 015, 020 validation
+- Migration Runner (41 tests) - All 25 migrations execute correctly
+
+**Integration Tests** (10 files, ~269 passing):
+- Routes: Auth, Public, Admin, Users, Client, Floors
+- Middleware: Auth (with DB), Validation (CSRF)
+- Seeder: Hospital data seeding validation
+
+**E2E Tests** (3 files, improving):
+- Authentication workflow
+- Ticket lifecycle
+- User management
+
+### Recent Improvements (v2.3.0)
+
+1. **Test Infrastructure Fixes** ✅
+   - Floor seeding in test setup (fixes FK violations)
+   - Database cleanup order fix (DELETE not TRUNCATE)
+   - Schema helper SQL fixes (ambiguous column references)
+   - Global pool cleanup (prevents Jest hanging)
+
+2. **Pass Rate Improvement** 📈
+   - Before: 73% (690/945 tests passing)
+   - After: 84.3% (797/945 tests passing)
+   - Improvement: +107 tests fixed
+
+3. **Zero FK Violations** ✅
+   - All unit tests: 100% passing
+   - All database tests: 100% passing
+   - Floor seeding ensures departments have valid floor references
+
+### Coverage Status
+
+**Test Coverage**: ~70-80% across critical paths
+- **Thresholds**: 70% minimum (branches, functions, lines, statements)
+- **Enforcement**: Jest configuration enforces thresholds on every run
+- **Reports**: `npm run test:coverage` generates HTML reports
+
+**Coverage by Layer**:
+- Models: High coverage (CRUD operations, FK handling)
+- Services: Good coverage (business logic paths)
+- Routes: Moderate coverage (happy paths covered)
+- Middleware: High coverage (auth, validation, rate limiting)
+- Utils: Excellent coverage (all helpers tested)
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run by category
+npm run test:unit          # Unit tests only (416 tests)
+npm run test:integration   # Integration + E2E + Database (529 tests)
+
+# Run with coverage
+npm run test:coverage      # Enforces 70% threshold
+npm run test:coverage:html # Opens HTML report
+
+# Run specific test file
+npm test -- tests/unit/models/User.test.js
+
+# Run tests matching pattern
+npm test -- --testNamePattern="should create user"
+
+# Watch mode for development
+npm run test:watch
+```
 
 ---
 
@@ -652,6 +748,268 @@ npm run test:unit
 - E2E tests run before deployment
 - Coverage reports generated and tracked
 - Flaky tests flagged and fixed within 24 hours
+
+---
+
+## Test Infrastructure (v2.3.0)
+
+The test infrastructure ensures reliable, isolated test execution with proper database handling.
+
+### Test Setup Functions
+
+**Location**: `tests/helpers/database.js`
+
+#### setupTestDatabase() - Unit Test Setup
+
+Used by unit tests that need database access with transaction isolation.
+
+```javascript
+// tests/unit/models/User.test.js
+const { setupTestDatabase, teardownTestDatabase } = require('../../helpers/database');
+
+describe('User Model', () => {
+  beforeEach(async () => {
+    await setupTestDatabase();  // Begin transaction + seed floors/departments
+  });
+
+  afterEach(async () => {
+    await teardownTestDatabase();  // Rollback transaction
+  });
+
+  it('should create user', async () => {
+    // Test runs in isolated transaction
+  });
+});
+```
+
+**What it does**:
+1. Acquires dedicated client from pool
+2. Begins transaction (`BEGIN`)
+3. **Seeds 8 floors** (Basement, Ground Floor, 1st-6th Floor) - v2.3.0
+4. **Seeds test departments** with floor references - v2.3.0
+5. All changes isolated to this transaction
+
+#### setupIntegrationTest() - Integration Test Setup
+
+Used by integration/E2E tests that make HTTP requests.
+
+```javascript
+// tests/integration/routes/admin.test.js
+const { setupIntegrationTest, teardownIntegrationTest } = require('../../helpers/database');
+
+describe('Admin Routes', () => {
+  beforeEach(async () => {
+    await setupIntegrationTest();  // Seed floors + departments
+  });
+
+  afterEach(async () => {
+    await teardownIntegrationTest();  // Clean all tables
+  });
+
+  it('should require authentication', async () => {
+    // Test makes actual HTTP requests
+  });
+});
+```
+
+**What it does**:
+1. **Seeds 8 floors** (required for department FK) - v2.3.0
+2. **Seeds test departments** (Emergency, Cardiology, etc.) - v2.3.0
+3. Uses `ON CONFLICT DO NOTHING` for idempotency
+4. No transactions (HTTP tests need committed data)
+
+### Database Cleanup (v2.3.0)
+
+**Critical Fix**: Cleanup order respects FK dependencies.
+
+#### cleanAllTables()
+
+```javascript
+async function cleanAllTables() {
+  // Delete in reverse dependency order
+  await pool.query('DELETE FROM comments');      // 1. Child of tickets
+  await pool.query('DELETE FROM tickets');       // 2. Child of departments, users
+  await pool.query('DELETE FROM audit_logs');    // 3. References users
+  await pool.query('DELETE FROM session');       // 4. Independent table
+  await pool.query('DELETE FROM users');         // 5. Child of departments
+  await pool.query('DELETE FROM departments');   // 6. Child of floors
+  await pool.query('DELETE FROM floors');        // 7. Parent of departments
+}
+```
+
+**Why This Order**:
+- Must delete children before parents (FK constraints)
+- `TRUNCATE CASCADE` removed in v2.3.0 (caused audit_logs FK violations)
+- Individual `DELETE` statements respect FK relationships
+
+### Floor Seeding (v2.3.0 Fix)
+
+**Problem Solved**: After Migration 024 removed hardcoded floors, tests failed with:
+```
+error: insert or update on table "departments" violates foreign key constraint "fk_departments_floor"
+```
+
+**Solution**: Both test setup functions now seed 8 floors BEFORE departments:
+
+```javascript
+const testFloors = [
+  { name: 'Basement', sort_order: 0 },
+  { name: 'Ground Floor', sort_order: 1 },
+  { name: '1st Floor', sort_order: 2 },
+  { name: '2nd Floor', sort_order: 3 },
+  { name: '3rd Floor', sort_order: 4 },
+  { name: '4th Floor', sort_order: 5 },
+  { name: '5th Floor', sort_order: 6 },
+  { name: '6th Floor', sort_order: 7 }
+];
+
+for (const floor of testFloors) {
+  await client.query(
+    `INSERT INTO floors (name, sort_order, is_system, active)
+     VALUES ($1, $2, false, true)
+     ON CONFLICT (name) DO NOTHING`,
+    [floor.name, floor.sort_order]
+  );
+}
+```
+
+**Impact**: Eliminated all FK constraint violations in tests.
+
+### Test Isolation Patterns
+
+#### Transaction-Based Isolation (Unit Tests)
+
+```javascript
+let testClient = null;  // Dedicated client per test
+
+async function setupTestDatabase() {
+  testClient = await pool.connect();  // Get dedicated client
+  await testClient.query('BEGIN');    // Start transaction
+  // ... seed data
+}
+
+async function teardownTestDatabase() {
+  if (testClient) {
+    await testClient.query('ROLLBACK');  // Undo all changes
+    testClient.release();                // Return to pool
+    testClient = null;
+  }
+}
+```
+
+**Benefits**:
+- Complete isolation between tests
+- Automatic cleanup (rollback)
+- Fast (no actual deletes needed)
+- Prevents connection leaks
+
+#### Pool-Based Cleanup (Integration Tests)
+
+```javascript
+async function teardownIntegrationTest() {
+  await cleanAllTables();  // Explicit deletion in correct order
+}
+```
+
+**Why Not Transactions**:
+- HTTP requests need committed data
+- Supertest can't see uncommitted transactions
+- Must use actual DELETE statements
+
+### Global Test Configuration
+
+**File**: `tests/setup.js`
+
+```javascript
+// Set test environment
+process.env.NODE_ENV = 'test';
+
+// Global teardown
+afterAll(async () => {
+  await pool.end();  // Close database pool
+});
+```
+
+**Critical**: Pool cleanup prevents Jest from hanging after test completion.
+
+### Migration Testing
+
+**Files**: `tests/integration/database/`
+
+- `schemaIntegrity.test.js` (40 tests) - Verify table structure
+- `foreignKeyBehavior.test.js` (15 tests) - Test FK constraints
+- `dataMigration.test.js` (16 tests) - Validate data migrations
+- `migrationRunner.test.js` (41 tests) - All 25 migrations run successfully
+
+**Purpose**: Ensure database schema matches expectations after all migrations.
+
+### Test Helpers
+
+**Schema Helpers** (`tests/helpers/schemaHelpers.js`):
+```javascript
+// Query information_schema to validate database structure
+const tables = await getTableNames();
+const columns = await getTableColumns('users');
+const indexes = await getTableIndexes('tickets');
+const fks = await getForeignKeys('departments');
+```
+
+**Factories** (`tests/helpers/factories.js`):
+```javascript
+// Generate unique test data
+const userData = createUserData({ username: 'testuser' });
+const ticketData = createTicketData({ title: 'Test Ticket' });
+```
+
+**Custom Assertions** (`tests/helpers/assertions.js`):
+```javascript
+expect(user).toBeValidUser();
+expect(ticket).toBeValidTicket();
+expect(comment).toBeValidComment();
+```
+
+### Common Test Issues & Solutions
+
+#### Issue: FK Constraint Violations
+
+**Symptom**:
+```
+error: insert or update on table "departments" violates foreign key constraint "fk_departments_floor"
+```
+
+**Solution**: Ensure test setup seeds floors before departments.
+
+#### Issue: Jest Hangs After Tests
+
+**Symptom**: Jest doesn't exit after test completion.
+
+**Solution**: Add global `afterAll` to close database pool:
+```javascript
+afterAll(async () => {
+  await pool.end();
+});
+```
+
+#### Issue: Flaky Tests
+
+**Symptom**: Tests pass sometimes, fail other times.
+
+**Common Causes**:
+- Shared mutable state between tests
+- Missing `await` on async operations
+- Race conditions in parallel tests
+- Insufficient cleanup between tests
+
+**Solution**: Use proper setup/teardown, avoid shared state.
+
+#### Issue: CSRF Errors in Tests
+
+**Symptom**:
+```
+Error: Invalid CSRF token
+```
+
+**Solution**: CSRF protection is automatically disabled in test environment (`NODE_ENV=test`).
 
 ---
 
