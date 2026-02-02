@@ -2365,6 +2365,472 @@ If instructions are ambiguous:
 
 ---
 
+## Rate Limiting Patterns (v2.3.0)
+
+The system implements **two rate limiters** to protect against abuse:
+
+### Overview
+
+Rate limiting prevents brute force attacks and endpoint abuse by restricting the number of requests from a single IP address within a time window.
+
+**Implemented Limiters**:
+1. **loginLimiter** - Protects authentication endpoint (10 req/15min)
+2. **adminMutationLimiter** - Protects admin mutation endpoints (20 req/min) - NEW in v2.3.0
+
+**Library**: `express-rate-limit`
+**Location**: `middleware/rateLimiter.js`
+
+### 1. Login Rate Limiter
+
+**Purpose**: Prevent brute force password attacks
+
+**Configuration**:
+```javascript
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,  // 15 minutes
+  max: 10,                     // 10 attempts per window
+  message: 'Too many login attempts from this IP, please try again after 15 minutes',
+  skip: () => process.env.NODE_ENV === 'test'  // Skip in test environment
+});
+```
+
+**Usage**:
+```javascript
+// routes/auth.js
+router.post('/login',
+  loginLimiter,              // Rate limiter first
+  validateLogin,             // Then validation
+  validateRequest,           // Then error checking
+  async (req, res, next) => {
+    // Login logic
+  }
+);
+```
+
+**Behavior**:
+- Limits each IP to **10 login attempts per 15 minutes**
+- Tracks all requests (successful + failed)
+- On limit exceeded: Redirects to `/auth/login` with flash message
+- Returns rate limit info in `RateLimit-*` headers
+
+### 2. Admin Mutation Rate Limiter (v2.3.0)
+
+**Purpose**: Prevent abuse of admin state-changing operations
+
+**Configuration**:
+```javascript
+const adminMutationLimiter = rateLimit({
+  windowMs: 60 * 1000,  // 1 minute
+  max: 20,              // 20 requests per minute
+  message: 'Too many requests from this IP, please slow down',
+  skip: () => process.env.NODE_ENV === 'test'
+});
+```
+
+**Applied To**:
+- User management (create, update, delete users)
+- Ticket creation and updates
+- Department management
+- Comment creation
+- All admin POST/PUT/DELETE operations
+
+**Usage**:
+```javascript
+// routes/users.js
+router.post('/',
+  requireAuth,
+  requireSuperAdmin,
+  adminMutationLimiter,      // Rate limiter after auth
+  validateUserCreate,
+  validateRequest,
+  async (req, res, next) => {
+    // Create user logic
+  }
+);
+
+// routes/admin.js
+router.post('/tickets/:id/comments',
+  adminMutationLimiter,      // Applied to comment creation
+  validateTicketId,
+  validateCommentCreation,
+  validateRequest,
+  async (req, res, next) => {
+    // Comment creation logic
+  }
+);
+```
+
+**Behavior**:
+- Limits each IP to **20 mutation requests per minute**
+- Protects against automated abuse
+- On limit exceeded: Redirects back with flash message
+- Does NOT limit GET requests (read operations)
+
+### Middleware Order
+
+**CORRECT Order**:
+```javascript
+router.post('/endpoint',
+  requireAuth,               // 1. Authentication
+  requireAdmin,              // 2. Authorization
+  rateLimiter,               // 3. Rate limiting
+  validateInput,             // 4. Input validation
+  validateRequest,           // 5. Validation error handler
+  async (req, res, next) => {
+    // Business logic
+  }
+);
+```
+
+**Why This Order**:
+- Auth first prevents unauthenticated rate limit consumption
+- Rate limiter before validation prevents validation DoS
+- Validation last catches malformed input
+
+### Test Environment Handling
+
+**Critical**: Rate limiters are **automatically skipped** in test environment:
+
+```javascript
+skip: () => process.env.NODE_ENV === 'test'
+```
+
+**Why**:
+- Test suites run many requests rapidly
+- Would trigger rate limits and fail tests
+- Tests validate business logic, not rate limiting
+
+**Testing Rate Limiters**:
+```javascript
+// Test the limiter configuration itself (unit test)
+describe('loginLimiter configuration', () => {
+  it('should have correct window and max', () => {
+    expect(loginLimiter.windowMs).toBe(15 * 60 * 1000);
+    expect(loginLimiter.max).toBe(10);
+  });
+});
+
+// Integration tests run without rate limiting
+// Focus on business logic validation
+```
+
+### Custom Handler Pattern
+
+Both limiters use custom handlers for user-friendly error messages:
+
+```javascript
+handler: (req, res) => {
+  req.flash('error_msg', 'User-friendly error message');
+  res.redirect('back');  // Or specific URL
+}
+```
+
+**Benefits**:
+- Consistent error UX (flash messages)
+- Proper redirects (not 429 JSON responses)
+- Works with EJS templates
+
+### Production Tuning
+
+**Adjusting Thresholds**:
+```javascript
+// For stricter protection
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,  // Reduce to 5 attempts
+});
+
+// For higher traffic environments
+const adminMutationLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 50,  // Increase to 50 requests/min
+});
+```
+
+**Monitoring**:
+- Check logs for rate limit hits
+- Monitor `RateLimit-*` response headers
+- Track IP addresses hitting limits frequently
+
+### Common Patterns
+
+**DO** ✓:
+```javascript
+// Apply to authentication
+router.post('/login', loginLimiter, ...);
+
+// Apply to admin mutations
+router.post('/admin/users', adminMutationLimiter, ...);
+
+// Skip in tests automatically
+// (handled by middleware configuration)
+```
+
+**DON'T** ✗:
+```javascript
+// Don't rate limit GET requests (read operations)
+router.get('/tickets', rateLimiter, ...);  // ❌ Unnecessary
+
+// Don't apply to public read-only endpoints
+router.get('/health', rateLimiter, ...);  // ❌ Wrong
+
+// Don't manually check NODE_ENV in routes
+if (process.env.NODE_ENV !== 'test') {
+  router.post(..., rateLimiter, ...);  // ❌ Use skip in config
+}
+```
+
+---
+
+## Search Input Sanitization (v2.3.0)
+
+**Defense-in-depth security**: Sanitize user search input to prevent SQL injection and ReDoS attacks.
+
+### Overview
+
+**Purpose**: Remove SQL wildcards from user input before using in ILIKE/LIKE queries
+
+**Why Needed**:
+- PostgreSQL ILIKE uses `%` (any chars) and `_` (single char) as wildcards
+- User input like `"test%"` would match unintended records
+- Prevents ReDoS (Regular Expression Denial of Service) attacks
+- Complements parameterized queries (defense-in-depth)
+
+**Location**: `utils/sanitizeSearch.js`
+**Added**: v2.3.0
+
+### Implementation
+
+```javascript
+/**
+ * Sanitizes user input for SQL ILIKE/LIKE queries
+ *
+ * Escapes: % (any chars), _ (single char), \ (escape char)
+ *
+ * @param {string} input - User-provided search string
+ * @returns {string} Sanitized string safe for ILIKE
+ */
+function sanitizeSearchInput(input) {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+
+  // Escape special LIKE wildcards
+  return input.replace(/[%_\\]/g, '\\$&');
+}
+```
+
+**How It Works**:
+1. Checks input is a non-empty string
+2. Replaces `%`, `_`, `\` with escaped versions (`\%`, `\_`, `\\`)
+3. Returns sanitized string safe for ILIKE queries
+
+### Usage Pattern
+
+**CORRECT** ✓:
+```javascript
+// models/Ticket.js
+const { sanitizeSearchInput } = require('../utils/sanitizeSearch');
+
+static async findAll(filters = {}) {
+  let query = 'SELECT * FROM tickets WHERE 1=1';
+  const params = [];
+  let paramIndex = 1;
+
+  if (filters.search) {
+    // Sanitize user input
+    const sanitizedSearch = sanitizeSearchInput(filters.search);
+
+    // Use sanitized input in parameterized query
+    query += ` AND (title ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+    params.push(`%${sanitizedSearch}%`);  // Add wildcards AFTER sanitizing
+    paramIndex++;
+  }
+
+  const result = await pool.query(query, params);
+  return result.rows;
+}
+```
+
+**INCORRECT** ✗:
+```javascript
+// ❌ No sanitization - user can inject wildcards
+if (filters.search) {
+  query += ` AND title ILIKE $${paramIndex}`;
+  params.push(`%${filters.search}%`);  // Vulnerable!
+}
+
+// ❌ Sanitizing but not using parameterized query
+const sanitized = sanitizeSearchInput(filters.search);
+query += ` AND title ILIKE '%${sanitized}%'`;  // Still SQL injection risk!
+
+// ❌ Adding wildcards before sanitizing
+params.push(`%${sanitizeSearchInput('%' + filters.search + '%')}%`);  // Wrong order
+```
+
+### Applied In
+
+**Current Usage** (v2.3.0):
+1. `models/Ticket.js::findAll()` - Admin ticket search
+2. `models/Ticket.js::findByDepartment()` - Department ticket search
+
+**Pattern**:
+```javascript
+// Step 1: Import
+const { sanitizeSearchInput } = require('../utils/sanitizeSearch');
+
+// Step 2: Sanitize user input
+const sanitizedSearch = sanitizeSearchInput(filters.search);
+
+// Step 3: Use in parameterized query
+query += ` AND (title ILIKE $1 OR description ILIKE $1)`;
+params.push(`%${sanitizedSearch}%`);
+```
+
+### Examples
+
+**User Input Sanitization**:
+```javascript
+// Input: "test%"
+sanitizeSearchInput("test%")
+// Output: "test\\%" (escaped wildcard)
+// Query: WHERE title ILIKE '%test\\%%'
+// Matches: "test%" (literal), NOT "test", "testing", etc.
+
+// Input: "john_doe"
+sanitizeSearchInput("john_doe")
+// Output: "john\\_doe" (escaped single-char wildcard)
+// Query: WHERE name ILIKE '%john\\_doe%'
+// Matches: "john_doe" (literal), NOT "john1doe", "johnXdoe"
+
+// Input: "path\\to\\file"
+sanitizeSearchInput("path\\to\\file")
+// Output: "path\\\\to\\\\file" (escaped backslashes)
+// Safe from escape sequence attacks
+```
+
+### Edge Cases
+
+**Empty/Invalid Input**:
+```javascript
+sanitizeSearchInput("")        // Returns: ""
+sanitizeSearchInput(null)      // Returns: ""
+sanitizeSearchInput(undefined) // Returns: ""
+sanitizeSearchInput(123)       // Returns: "" (not a string)
+```
+
+**Special Characters**:
+```javascript
+// Only escapes LIKE wildcards, preserves other chars
+sanitizeSearchInput("test@example.com")  // "test@example.com" (unchanged)
+sanitizeSearchInput("100% complete")     // "100\\% complete" (% escaped)
+sanitizeSearchInput("user-name_2024")    // "user-name\\_2024" (_ escaped)
+```
+
+### Defense-in-Depth Strategy
+
+**Layer 1**: Parameterized Queries (Primary Defense)
+```javascript
+// Prevents: SQL injection via query structure
+pool.query('SELECT * FROM tickets WHERE id = $1', [userInput]);
+```
+
+**Layer 2**: Input Sanitization (Secondary Defense)
+```javascript
+// Prevents: SQL wildcard injection in LIKE queries
+const sanitized = sanitizeSearchInput(userInput);
+pool.query('SELECT * FROM tickets WHERE title ILIKE $1', [`%${sanitized}%`]);
+```
+
+**Layer 3**: Input Validation (Tertiary Defense)
+```javascript
+// Prevents: Malformed input, length attacks
+body('search')
+  .trim()
+  .isLength({ max: 100 })
+  .withMessage('Search too long');
+```
+
+**Why All Three**:
+- Parameterized queries prevent injection but not wildcard abuse
+- Sanitization prevents wildcard abuse but not all injection
+- Validation prevents DoS via oversized input
+- **Together**: Comprehensive protection
+
+### Testing
+
+**Unit Tests** (`tests/unit/utils/sanitizeSearch.test.js`):
+```javascript
+describe('sanitizeSearchInput', () => {
+  it('should escape % wildcard', () => {
+    expect(sanitizeSearchInput('test%')).toBe('test\\%');
+  });
+
+  it('should escape _ wildcard', () => {
+    expect(sanitizeSearchInput('test_')).toBe('test\\_');
+  });
+
+  it('should escape backslash', () => {
+    expect(sanitizeSearchInput('test\\')).toBe('test\\\\');
+  });
+
+  it('should handle empty input', () => {
+    expect(sanitizeSearchInput('')).toBe('');
+    expect(sanitizeSearchInput(null)).toBe('');
+  });
+
+  it('should preserve normal characters', () => {
+    expect(sanitizeSearchInput('test@example.com')).toBe('test@example.com');
+  });
+});
+```
+
+**Integration Tests**:
+```javascript
+// Verify sanitization prevents wildcard matching
+it('should not match unintended records with % wildcard', async () => {
+  await Ticket.create({ title: 'test' });
+  await Ticket.create({ title: 'testing' });
+  await Ticket.create({ title: 'test%' });  // Exact match
+
+  const results = await Ticket.findAll({ search: 'test%' });
+
+  expect(results).toHaveLength(1);  // Only literal "test%"
+  expect(results[0].title).toBe('test%');
+});
+```
+
+### When to Use
+
+**DO Use** ✓:
+```javascript
+// ILIKE/LIKE queries with user input
+WHERE title ILIKE $1  // ✓ Use sanitization
+
+// Search fields across multiple columns
+WHERE (title ILIKE $1 OR description ILIKE $1)  // ✓ Use sanitization
+
+// Pattern matching queries
+WHERE email ILIKE $1  // ✓ Use sanitization
+```
+
+**DON'T Use** ✗:
+```javascript
+// Exact equality (=)
+WHERE id = $1  // ✗ Not needed (no wildcards)
+
+// IN clauses
+WHERE status IN ($1, $2, $3)  // ✗ Not needed
+
+// Numeric comparisons
+WHERE price > $1  // ✗ Not needed
+
+// Already sanitized values
+WHERE floor = $1  // ✗ Not needed (enum validation)
+```
+
+---
+
 ## Code Review Checklist (KNII Standards)
 
 Before committing code, verify:
@@ -2384,7 +2850,9 @@ Before committing code, verify:
 - [ ] Authentication middleware (requireAuth) applied to protected routes
 - [ ] Authorization middleware (requireAdmin) applied where needed
 - [ ] CSRF protection on state-changing operations
-- [ ] Rate limiting on authentication endpoints
+- [ ] Rate limiting on authentication endpoints (loginLimiter)
+- [ ] Rate limiting on admin mutations (adminMutationLimiter)
+- [ ] Search input sanitized for ILIKE/LIKE queries (sanitizeSearchInput)
 - [ ] Session data is minimal (id, username, email, role only)
 
 **Architecture**:
@@ -2461,8 +2929,8 @@ Your success is measured by the **security**, **reliability**, **maintainability
 
 These rules exist to ensure professional-grade Node.js development. When in doubt, choose the path that maximizes security and follows existing patterns.
 
-**Document Version**: 2.0
-**Last Updated**: December 2025
+**Document Version**: 2.3.0
+**Last Updated**: January 2026
 **For**: KNII Ticketing System
 
 ---
