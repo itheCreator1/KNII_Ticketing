@@ -34,7 +34,7 @@ describe('Ticket Model', () => {
         status: 'open',
         assigned_to: null,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockTicket] });
 
@@ -52,8 +52,8 @@ describe('Ticket Model', () => {
           ticketData.description,
           ticketData.reporter_department,
           ticketData.reporter_phone,
-          ticketData.priority
-        ])
+          ticketData.priority,
+        ]),
       );
     });
 
@@ -65,7 +65,7 @@ describe('Ticket Model', () => {
         ...ticketData,
         priority: 'unset',
         status: 'open',
-        created_at: new Date()
+        created_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockTicket] });
 
@@ -76,7 +76,7 @@ describe('Ticket Model', () => {
       expect(result.priority).toBe('unset');
       expect(pool.query).toHaveBeenCalledWith(
         expect.any(String),
-        expect.arrayContaining(['unset'])
+        expect.arrayContaining(['unset']),
       );
     });
 
@@ -95,7 +95,7 @@ describe('Ticket Model', () => {
         status: 'open',
         assigned_to: null,
         created_at: now,
-        updated_at: now
+        updated_at: now,
       };
       pool.query.mockResolvedValue({ rows: [mockTicket] });
 
@@ -120,7 +120,7 @@ describe('Ticket Model', () => {
         reporter_name: 'John Doe',
         reporter_department: 'IT Support',
         reporter_phone: '555-1234',
-        priority: 'high'
+        priority: 'high',
       });
       const mockTicket = { id: 4, ...ticketData, status: 'open', created_at: new Date() };
       pool.query.mockResolvedValue({ rows: [mockTicket] });
@@ -131,7 +131,17 @@ describe('Ticket Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('$1, $2, $3, $4, $5, $6, $7, $8, $9'),
-        ['Test Ticket', 'Test Description', 'John Doe', 'IT Support', '555-1234', null, 'high', 'open', false]
+        [
+          'Test Ticket',
+          'Test Description',
+          'John Doe',
+          'IT Support',
+          '555-1234',
+          null,
+          'high',
+          'open',
+          false,
+        ],
       );
     });
 
@@ -161,7 +171,7 @@ describe('Ticket Model', () => {
         assigned_to: 5,
         assigned_to_username: 'admin',
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockTicket] });
 
@@ -171,10 +181,7 @@ describe('Ticket Model', () => {
       // Assert
       expect(result).toEqual(mockTicket);
       expect(result.assigned_to_username).toBe('admin');
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT'),
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('SELECT'), [1]);
     });
 
     it('should execute LEFT JOIN with users table', async () => {
@@ -183,7 +190,7 @@ describe('Ticket Model', () => {
         id: 2,
         title: 'Unassigned Ticket',
         assigned_to: null,
-        assigned_to_username: null
+        assigned_to_username: null,
       };
       pool.query.mockResolvedValue({ rows: [mockTicket] });
 
@@ -191,13 +198,10 @@ describe('Ticket Model', () => {
       await Ticket.findById(2);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('LEFT JOIN users'),
-        [2]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('LEFT JOIN users'), [2]);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('u.username as assigned_to_username'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -210,10 +214,7 @@ describe('Ticket Model', () => {
 
       // Assert
       expect(result).toBeUndefined();
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT'),
-        [999]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('SELECT'), [999]);
     });
 
     it('should throw error on database failure', async () => {
@@ -231,7 +232,7 @@ describe('Ticket Model', () => {
       // Arrange
       const mockTickets = [
         { id: 1, title: 'Ticket 1', status: 'open', priority: 'high' },
-        { id: 2, title: 'Ticket 2', status: 'closed', priority: 'low' }
+        { id: 2, title: 'Ticket 2', status: 'closed', priority: 'low' },
       ];
       pool.query.mockResolvedValue({ rows: mockTickets });
 
@@ -241,17 +242,12 @@ describe('Ticket Model', () => {
       // Assert
       expect(result).toEqual(mockTickets);
       expect(result).toHaveLength(2);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT'),
-        []
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('SELECT'), []);
     });
 
     it('should filter by status when status filter provided', async () => {
       // Arrange
-      const mockTickets = [
-        { id: 1, title: 'Open Ticket', status: 'open' }
-      ];
+      const mockTickets = [{ id: 1, title: 'Open Ticket', status: 'open' }];
       pool.query.mockResolvedValue({ rows: mockTickets });
 
       // Act
@@ -259,17 +255,12 @@ describe('Ticket Model', () => {
 
       // Assert
       expect(result).toEqual(mockTickets);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('t.status = $1'),
-        ['open']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('t.status = $1'), ['open']);
     });
 
     it('should filter by priority when priority filter provided', async () => {
       // Arrange
-      const mockTickets = [
-        { id: 1, title: 'High Priority', priority: 'high' }
-      ];
+      const mockTickets = [{ id: 1, title: 'High Priority', priority: 'high' }];
       pool.query.mockResolvedValue({ rows: mockTickets });
 
       // Act
@@ -277,17 +268,12 @@ describe('Ticket Model', () => {
 
       // Assert
       expect(result).toEqual(mockTickets);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('t.priority = $1'),
-        ['high']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('t.priority = $1'), ['high']);
     });
 
     it('should filter by search term (ILIKE on title and description)', async () => {
       // Arrange
-      const mockTickets = [
-        { id: 1, title: 'Bug in login', description: 'User cannot login' }
-      ];
+      const mockTickets = [{ id: 1, title: 'Bug in login', description: 'User cannot login' }];
       pool.query.mockResolvedValue({ rows: mockTickets });
 
       // Act
@@ -297,30 +283,29 @@ describe('Ticket Model', () => {
       expect(result).toEqual(mockTickets);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('t.title ILIKE $1 OR t.description ILIKE $1'),
-        ['%login%']
+        ['%login%'],
       );
     });
 
     it('should combine multiple filters (status + priority + search)', async () => {
       // Arrange
-      const mockTickets = [
-        { id: 1, title: 'Critical Bug', status: 'open', priority: 'critical' }
-      ];
+      const mockTickets = [{ id: 1, title: 'Critical Bug', status: 'open', priority: 'critical' }];
       pool.query.mockResolvedValue({ rows: mockTickets });
 
       // Act
       const result = await Ticket.findAll({
         status: 'open',
         priority: 'critical',
-        search: 'bug'
+        search: 'bug',
       });
 
       // Assert
       expect(result).toEqual(mockTickets);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('t.status = $1'),
-        ['open', 'critical', '%bug%']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('t.status = $1'), [
+        'open',
+        'critical',
+        '%bug%',
+      ]);
     });
 
     it('should return empty array when no tickets match', async () => {
@@ -339,7 +324,7 @@ describe('Ticket Model', () => {
       // Arrange
       const mockTickets = [
         { id: 2, title: 'Newer', created_at: new Date('2024-01-02') },
-        { id: 1, title: 'Older', created_at: new Date('2024-01-01') }
+        { id: 1, title: 'Older', created_at: new Date('2024-01-01') },
       ];
       pool.query.mockResolvedValue({ rows: mockTickets });
 
@@ -349,7 +334,7 @@ describe('Ticket Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY t.created_at DESC'),
-        []
+        [],
       );
     });
 
@@ -371,7 +356,7 @@ describe('Ticket Model', () => {
         title: 'Test Ticket',
         status: 'in_progress',
         priority: 'medium',
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockUpdatedTicket] });
 
@@ -381,10 +366,10 @@ describe('Ticket Model', () => {
       // Assert
       expect(result).toEqual(mockUpdatedTicket);
       expect(result.status).toBe('in_progress');
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('status = $1'),
-        ['in_progress', 1]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('status = $1'), [
+        'in_progress',
+        1,
+      ]);
     });
 
     it('should update priority only when only priority provided', async () => {
@@ -394,7 +379,7 @@ describe('Ticket Model', () => {
         title: 'Test Ticket',
         status: 'open',
         priority: 'critical',
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockUpdatedTicket] });
 
@@ -404,10 +389,10 @@ describe('Ticket Model', () => {
       // Assert
       expect(result).toEqual(mockUpdatedTicket);
       expect(result.priority).toBe('critical');
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('priority = $1'),
-        ['critical', 2]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('priority = $1'), [
+        'critical',
+        2,
+      ]);
     });
 
     it('should update assigned_to when provided', async () => {
@@ -416,7 +401,7 @@ describe('Ticket Model', () => {
         id: 3,
         title: 'Test Ticket',
         assigned_to: 5,
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockUpdatedTicket] });
 
@@ -426,10 +411,7 @@ describe('Ticket Model', () => {
       // Assert
       expect(result).toEqual(mockUpdatedTicket);
       expect(result.assigned_to).toBe(5);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('assigned_to = $1'),
-        [5, 3]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('assigned_to = $1'), [5, 3]);
     });
 
     it('should update assigned_to to null when null provided (unassign)', async () => {
@@ -438,7 +420,7 @@ describe('Ticket Model', () => {
         id: 4,
         title: 'Test Ticket',
         assigned_to: null,
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockUpdatedTicket] });
 
@@ -448,10 +430,10 @@ describe('Ticket Model', () => {
       // Assert
       expect(result).toEqual(mockUpdatedTicket);
       expect(result.assigned_to).toBeNull();
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('assigned_to = $1'),
-        [null, 4]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('assigned_to = $1'), [
+        null,
+        4,
+      ]);
     });
 
     it('should update multiple fields simultaneously', async () => {
@@ -461,7 +443,7 @@ describe('Ticket Model', () => {
         status: 'closed',
         priority: 'low',
         assigned_to: 3,
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockUpdatedTicket] });
 
@@ -469,17 +451,19 @@ describe('Ticket Model', () => {
       const result = await Ticket.update(5, {
         status: 'closed',
         priority: 'low',
-        assigned_to: 3
+        assigned_to: 3,
       });
 
       // Assert
       expect(result.status).toBe('closed');
       expect(result.priority).toBe('low');
       expect(result.assigned_to).toBe(3);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('status = $1'),
-        ['closed', 'low', 3, 5]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('status = $1'), [
+        'closed',
+        'low',
+        3,
+        5,
+      ]);
     });
 
     it('should always update updated_at timestamp', async () => {
@@ -487,7 +471,7 @@ describe('Ticket Model', () => {
       const mockUpdatedTicket = {
         id: 6,
         status: 'open',
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockUpdatedTicket] });
 
@@ -497,7 +481,7 @@ describe('Ticket Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('updated_at = CURRENT_TIMESTAMP'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 

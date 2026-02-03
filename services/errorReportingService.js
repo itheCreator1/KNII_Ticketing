@@ -13,7 +13,13 @@ class ErrorReportingService {
    * @param {string} userDescription - User's description of what happened
    * @param {Object} additionalData - Any additional debugging data
    */
-  async reportError(correlationId, category, userContext = {}, userDescription = '', additionalData = {}) {
+  async reportError(
+    correlationId,
+    category,
+    userContext = {},
+    userDescription = '',
+    additionalData = {},
+  ) {
     try {
       const report = {
         correlationId,
@@ -23,11 +29,11 @@ class ErrorReportingService {
           userId: userContext.userId || 'anonymous',
           userAgent: userContext.userAgent || 'unknown',
           url: userContext.url || 'unknown',
-          ip: userContext.ip || 'unknown'
+          ip: userContext.ip || 'unknown',
         },
         userDescription: userDescription.trim(),
         additionalData,
-        status: 'reported'
+        status: 'reported',
       };
 
       // Store the report (in production, save to database)
@@ -38,7 +44,7 @@ class ErrorReportingService {
         correlationId,
         category,
         userId: report.userContext.userId,
-        hasDescription: !!userDescription
+        hasDescription: !!userDescription,
       });
 
       // In production, you might want to:
@@ -50,19 +56,18 @@ class ErrorReportingService {
       return {
         success: true,
         reportId: correlationId,
-        message: 'Error report submitted successfully'
+        message: 'Error report submitted successfully',
       };
-
     } catch (error) {
       logger.error('Failed to process error report', {
         correlationId,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       return {
         success: false,
-        message: 'Failed to submit error report'
+        message: 'Failed to submit error report',
       };
     }
   }
@@ -91,10 +96,10 @@ class ErrorReportingService {
       total: reports.length,
       byCategory: {},
       byDate: {},
-      unresolved: 0
+      unresolved: 0,
     };
 
-    reports.forEach(report => {
+    reports.forEach((report) => {
       // Count by category
       stats.byCategory[report.category] = (stats.byCategory[report.category] || 0) + 1;
 
@@ -125,7 +130,7 @@ class ErrorReportingService {
 
       logger.info('Error report resolved', {
         correlationId,
-        resolution: resolution.substring(0, 100) // Truncate for logging
+        resolution: resolution.substring(0, 100), // Truncate for logging
       });
 
       return true;

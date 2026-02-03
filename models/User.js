@@ -9,7 +9,7 @@ class User {
       logger.debug('User.findById: Starting query', { userId: id });
       const result = await pool.query(
         'SELECT id, username, email, role, status, department, created_at FROM users WHERE id = $1',
-        [id]
+        [id],
       );
       const duration = Date.now() - startTime;
 
@@ -17,14 +17,18 @@ class User {
         logger.warn('User.findById: Slow query detected', { userId: id, duration });
       }
 
-      logger.debug('User.findById: Query completed', { userId: id, found: !!result.rows[0], duration });
+      logger.debug('User.findById: Query completed', {
+        userId: id,
+        found: !!result.rows[0],
+        duration,
+      });
       return result.rows[0];
     } catch (error) {
       logger.error('User.findById: Database error', {
         userId: id,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -36,7 +40,7 @@ class User {
       logger.debug('User.findByUsername: Starting query', { username });
       const result = await pool.query(
         'SELECT id, username, email, role, status, department, login_attempts, created_at, updated_at FROM users WHERE username = $1',
-        [username]
+        [username],
       );
       const duration = Date.now() - startTime;
 
@@ -44,14 +48,18 @@ class User {
         logger.warn('User.findByUsername: Slow query detected', { username, duration });
       }
 
-      logger.debug('User.findByUsername: Query completed', { username, found: !!result.rows[0], duration });
+      logger.debug('User.findByUsername: Query completed', {
+        username,
+        found: !!result.rows[0],
+        duration,
+      });
       return result.rows[0];
     } catch (error) {
       logger.error('User.findByUsername: Database error', {
         username,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -63,24 +71,25 @@ class User {
     const startTime = Date.now();
     try {
       logger.debug('User.findByUsernameWithPassword: Starting query', { username });
-      const result = await pool.query(
-        'SELECT * FROM users WHERE username = $1',
-        [username]
-      );
+      const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
       const duration = Date.now() - startTime;
 
       if (duration > 500) {
         logger.warn('User.findByUsernameWithPassword: Slow query detected', { username, duration });
       }
 
-      logger.debug('User.findByUsernameWithPassword: Query completed', { username, found: !!result.rows[0], duration });
+      logger.debug('User.findByUsernameWithPassword: Query completed', {
+        username,
+        found: !!result.rows[0],
+        duration,
+      });
       return result.rows[0];
     } catch (error) {
       logger.error('User.findByUsernameWithPassword: Database error', {
         username,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -92,7 +101,7 @@ class User {
       logger.debug('User.findByEmail: Starting query', { email });
       const result = await pool.query(
         'SELECT id, username, email, role, department FROM users WHERE email = $1',
-        [email]
+        [email],
       );
       const duration = Date.now() - startTime;
 
@@ -100,20 +109,27 @@ class User {
         logger.warn('User.findByEmail: Slow query detected', { email, duration });
       }
 
-      logger.debug('User.findByEmail: Query completed', { email, found: !!result.rows[0], duration });
+      logger.debug('User.findByEmail: Query completed', {
+        email,
+        found: !!result.rows[0],
+        duration,
+      });
       return result.rows[0];
     } catch (error) {
       logger.error('User.findByEmail: Database error', {
         email,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
   }
 
-  static async create({ username, email, password, role = 'admin', department = null }, client = null) {
+  static async create(
+    { username, email, password, role = 'admin', department = null },
+    client = null,
+  ) {
     const db = client || pool;
     const startTime = Date.now();
     try {
@@ -121,7 +137,7 @@ class User {
       const password_hash = await bcrypt.hash(password, 10);
       const result = await db.query(
         'INSERT INTO users (username, email, password_hash, role, department) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role, department',
-        [username, email, password_hash, role, department]
+        [username, email, password_hash, role, department],
       );
       const duration = Date.now() - startTime;
 
@@ -129,7 +145,13 @@ class User {
         logger.warn('User.create: Slow query detected', { username, email, role, duration });
       }
 
-      logger.debug('User.create: User created successfully', { userId: result.rows[0].id, username, email, role, duration });
+      logger.debug('User.create: User created successfully', {
+        userId: result.rows[0].id,
+        username,
+        email,
+        role,
+        duration,
+      });
       return result.rows[0];
     } catch (error) {
       logger.error('User.create: Database error', {
@@ -138,7 +160,7 @@ class User {
         role,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -149,12 +171,15 @@ class User {
     try {
       logger.debug('User.findAll: Starting query');
       const result = await pool.query(
-        'SELECT id, username, email, role, status, department, created_at FROM users ORDER BY created_at DESC'
+        'SELECT id, username, email, role, status, department, created_at FROM users ORDER BY created_at DESC',
       );
       const duration = Date.now() - startTime;
 
       if (duration > 500) {
-        logger.warn('User.findAll: Slow query detected', { duration, rowCount: result.rows.length });
+        logger.warn('User.findAll: Slow query detected', {
+          duration,
+          rowCount: result.rows.length,
+        });
       }
 
       logger.debug('User.findAll: Query completed', { rowCount: result.rows.length, duration });
@@ -163,7 +188,7 @@ class User {
       logger.error('User.findAll: Database error', {
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -178,7 +203,7 @@ class User {
     let paramCount = 1;
 
     const updates = { username, email, role, status, department };
-    const changedFields = Object.keys(updates).filter(key => updates[key] !== undefined);
+    const changedFields = Object.keys(updates).filter((key) => updates[key] !== undefined);
 
     try {
       logger.debug('User.update: Starting user update', { userId: id, changedFields });
@@ -199,7 +224,7 @@ class User {
         fields.push(`status = $${paramCount++}`);
         values.push(status);
         if (status === 'deleted') {
-          fields.push(`deleted_at = CURRENT_TIMESTAMP`);
+          fields.push('deleted_at = CURRENT_TIMESTAMP');
         }
       }
       if (department !== undefined) {
@@ -207,7 +232,7 @@ class User {
         values.push(department);
       }
 
-      fields.push(`updated_at = CURRENT_TIMESTAMP`);
+      fields.push('updated_at = CURRENT_TIMESTAMP');
       values.push(id);
 
       const query = `
@@ -224,7 +249,11 @@ class User {
         logger.warn('User.update: Slow query detected', { userId: id, duration, changedFields });
       }
 
-      logger.debug('User.update: User updated successfully', { userId: id, changedFields, duration });
+      logger.debug('User.update: User updated successfully', {
+        userId: id,
+        changedFields,
+        duration,
+      });
       return result.rows[0];
     } catch (error) {
       logger.error('User.update: Database error', {
@@ -232,7 +261,7 @@ class User {
         changedFields,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -247,7 +276,7 @@ class User {
       const password_hash = await bcrypt.hash(newPassword, 10);
       const result = await db.query(
         'UPDATE users SET password_hash = $1, password_changed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id',
-        [password_hash, id]
+        [password_hash, id],
       );
       const duration = Date.now() - startTime;
 
@@ -262,7 +291,7 @@ class User {
         userId: id,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -276,7 +305,7 @@ class User {
       logger.debug('User.softDelete: Starting soft delete', { userId: id });
       const result = await db.query(
         "UPDATE users SET status = 'deleted', deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING id",
-        [id]
+        [id],
       );
       const duration = Date.now() - startTime;
 
@@ -291,7 +320,7 @@ class User {
         userId: id,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -304,7 +333,7 @@ class User {
       logger.debug('User.updateLastLogin: Updating last login', { userId: id });
       await pool.query(
         'UPDATE users SET last_login_at = CURRENT_TIMESTAMP, login_attempts = 0 WHERE id = $1',
-        [id]
+        [id],
       );
       const duration = Date.now() - startTime;
 
@@ -312,13 +341,16 @@ class User {
         logger.warn('User.updateLastLogin: Slow query detected', { userId: id, duration });
       }
 
-      logger.debug('User.updateLastLogin: Last login updated successfully', { userId: id, duration });
+      logger.debug('User.updateLastLogin: Last login updated successfully', {
+        userId: id,
+        duration,
+      });
     } catch (error) {
       logger.error('User.updateLastLogin: Database error', {
         userId: id,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -329,23 +361,25 @@ class User {
     const startTime = Date.now();
     try {
       logger.debug('User.incrementLoginAttempts: Incrementing login attempts', { username });
-      await pool.query(
-        'UPDATE users SET login_attempts = login_attempts + 1 WHERE username = $1',
-        [username]
-      );
+      await pool.query('UPDATE users SET login_attempts = login_attempts + 1 WHERE username = $1', [
+        username,
+      ]);
       const duration = Date.now() - startTime;
 
       if (duration > 500) {
         logger.warn('User.incrementLoginAttempts: Slow query detected', { username, duration });
       }
 
-      logger.debug('User.incrementLoginAttempts: Login attempts incremented', { username, duration });
+      logger.debug('User.incrementLoginAttempts: Login attempts incremented', {
+        username,
+        duration,
+      });
     } catch (error) {
       logger.error('User.incrementLoginAttempts: Database error', {
         username,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -357,7 +391,7 @@ class User {
     try {
       logger.debug('User.countActiveSuperAdmins: Starting count query');
       const result = await pool.query(
-        "SELECT COUNT(*) FROM users WHERE role = 'super_admin' AND status = 'active'"
+        "SELECT COUNT(*) FROM users WHERE role = 'super_admin' AND status = 'active'",
       );
       const duration = Date.now() - startTime;
       const count = parseInt(result.rows[0].count);
@@ -372,7 +406,7 @@ class User {
       logger.error('User.countActiveSuperAdmins: Database error', {
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -384,21 +418,27 @@ class User {
     try {
       logger.debug('User.findAllActive: Starting query');
       const result = await pool.query(
-        "SELECT id, username, email, role, status, department, created_at, last_login_at FROM users WHERE status != 'deleted' ORDER BY created_at DESC"
+        "SELECT id, username, email, role, status, department, created_at, last_login_at FROM users WHERE status != 'deleted' ORDER BY created_at DESC",
       );
       const duration = Date.now() - startTime;
 
       if (duration > 500) {
-        logger.warn('User.findAllActive: Slow query detected', { duration, rowCount: result.rows.length });
+        logger.warn('User.findAllActive: Slow query detected', {
+          duration,
+          rowCount: result.rows.length,
+        });
       }
 
-      logger.debug('User.findAllActive: Query completed', { rowCount: result.rows.length, duration });
+      logger.debug('User.findAllActive: Query completed', {
+        rowCount: result.rows.length,
+        duration,
+      });
       return result.rows;
     } catch (error) {
       logger.error('User.findAllActive: Database error', {
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -421,17 +461,25 @@ class User {
       const sessionsCleared = result.rowCount;
 
       if (duration > 500) {
-        logger.warn('User.clearUserSessions: Slow query detected', { userId, duration, sessionsCleared });
+        logger.warn('User.clearUserSessions: Slow query detected', {
+          userId,
+          duration,
+          sessionsCleared,
+        });
       }
 
-      logger.info('User.clearUserSessions: Sessions cleared successfully', { userId, sessionsCleared, duration });
+      logger.info('User.clearUserSessions: Sessions cleared successfully', {
+        userId,
+        sessionsCleared,
+        duration,
+      });
       return sessionsCleared;
     } catch (error) {
       logger.error('User.clearUserSessions: Database error', {
         userId,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -449,7 +497,7 @@ class User {
        SET department = $1, updated_at = NOW()
        WHERE id = $2 AND role = 'department'
        RETURNING id, username, email, role, status, department`,
-      [department, userId]
+      [department, userId],
     );
     return result.rows[0];
   }
@@ -464,7 +512,7 @@ class User {
       `SELECT COUNT(*) as count
        FROM tickets
        WHERE reporter_id = $1 AND status != 'closed'`,
-      [userId]
+      [userId],
     );
     return parseInt(result.rows[0].count);
   }

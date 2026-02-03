@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./views/**/*.ejs",
-    "./public/**/*.js"
-  ],
+  content: ['./views/**/*.ejs', './public/**/*.js'],
   theme: {
     extend: {
       colors: {
@@ -32,7 +29,7 @@ module.exports = {
         'bs-dark': '#212529',
 
         // Neutral palette for UI components
-        'neutral': {
+        neutral: {
           50: '#f9fafb',
           100: '#f3f4f6',
           200: '#e5e7eb',
@@ -40,23 +37,23 @@ module.exports = {
           500: '#6b7280',
           700: '#374151',
           900: '#111827',
-        }
+        },
       },
       keyframes: {
         'gentle-pulse': {
           '0%, 100%': { transform: 'scale(1)', opacity: '1' },
-          '50%': { transform: 'scale(1.05)', opacity: '0.9' }
+          '50%': { transform: 'scale(1.05)', opacity: '0.9' },
         },
         'pulse-subtle': {
           '0%, 100%': { boxShadow: '0 0 0 0 rgba(220, 53, 69, 0.4)' },
-          '50%': { boxShadow: '0 0 0 6px rgba(220, 53, 69, 0)' }
-        }
+          '50%': { boxShadow: '0 0 0 6px rgba(220, 53, 69, 0)' },
+        },
       },
       animation: {
         'gentle-pulse': 'gentle-pulse 3s ease-in-out infinite',
-        'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite'
-      }
-    }
+        'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
+      },
+    },
   },
-  plugins: []
-}
+  plugins: [],
+};

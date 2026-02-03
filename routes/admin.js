@@ -8,8 +8,16 @@ const { TICKET_MESSAGES, COMMENT_MESSAGES } = require('../constants/messages');
 const ticketService = require('../services/ticketService');
 const adminTicketService = require('../services/adminTicketService');
 const departmentService = require('../services/departmentService');
-const { validateTicketUpdate, validateTicketId, validateTicketStatusUpdate, validateTicketPriorityUpdate } = require('../validators/ticketValidators');
-const { validateAdminTicketCreation, validateDepartmentTicketCreation } = require('../validators/adminTicketValidators');
+const {
+  validateTicketUpdate,
+  validateTicketId,
+  validateTicketStatusUpdate,
+  validateTicketPriorityUpdate,
+} = require('../validators/ticketValidators');
+const {
+  validateAdminTicketCreation,
+  validateDepartmentTicketCreation,
+} = require('../validators/adminTicketValidators');
 const { validateCommentCreation } = require('../validators/commentValidators');
 const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
 const logger = require('../utils/logger');
@@ -22,7 +30,7 @@ router.get('/dashboard', async (req, res, next) => {
     res.render('admin/dashboard', {
       title: 'Admin Dashboard',
       tickets,
-      filters: req.query
+      filters: req.query,
     });
   } catch (error) {
     next(error);
@@ -36,7 +44,7 @@ router.get('/tickets/new', requireAdmin, async (req, res, next) => {
     const departments = await departmentService.getActiveDepartments(true);
     res.render('admin/new-ticket', {
       title: 'Create Admin Ticket',
-      departments
+      departments,
     });
   } catch (error) {
     logger.error('Error loading ticket creation form', { error: error.message });
@@ -52,7 +60,7 @@ router.get('/tickets/department/new', requireAdmin, async (req, res, next) => {
     const departments = await departmentService.getActiveDepartments(false);
     res.render('admin/new-department-ticket', {
       title: 'Create Department Ticket',
-      departments
+      departments,
     });
   } catch (error) {
     logger.error('Error loading department ticket creation form', { error: error.message });
@@ -72,155 +80,209 @@ router.get('/tickets/:id', validateTicketId, validateRequest, async (req, res, n
     res.render('admin/ticket-detail', {
       title: `Ticket #${ticket.id}`,
       ticket,
-      comments
+      comments,
     });
   } catch (error) {
     next(error);
   }
 });
 
-router.post('/tickets/:id/update', requireAdmin, adminMutationLimiter, validateTicketId, validateTicketUpdate, validateRequest, async (req, res, next) => {
-  try {
-    await ticketService.updateTicket(req.params.id, req.body);
-    successRedirect(req, res, TICKET_MESSAGES.UPDATED, `/admin/tickets/${req.params.id}`);
-  } catch (error) {
-    next(error);
-  }
-});
+router.post(
+  '/tickets/:id/update',
+  requireAdmin,
+  adminMutationLimiter,
+  validateTicketId,
+  validateTicketUpdate,
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      await ticketService.updateTicket(req.params.id, req.body);
+      successRedirect(req, res, TICKET_MESSAGES.UPDATED, `/admin/tickets/${req.params.id}`);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 // Separate status update route (for button-based status updates)
-router.post('/tickets/:id/status', requireAdmin, adminMutationLimiter, validateTicketId, validateTicketStatusUpdate, validateRequest, async (req, res, next) => {
-  try {
-    await ticketService.updateTicket(req.params.id, { status: req.body.status });
-    successRedirect(req, res, 'Status updated successfully', `/admin/tickets/${req.params.id}`);
-  } catch (error) {
-    logger.error('Status update error', { ticketId: req.params.id, error: error.message });
-    next(error);
-  }
-});
+router.post(
+  '/tickets/:id/status',
+  requireAdmin,
+  adminMutationLimiter,
+  validateTicketId,
+  validateTicketStatusUpdate,
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      await ticketService.updateTicket(req.params.id, { status: req.body.status });
+      successRedirect(req, res, 'Status updated successfully', `/admin/tickets/${req.params.id}`);
+    } catch (error) {
+      logger.error('Status update error', { ticketId: req.params.id, error: error.message });
+      next(error);
+    }
+  },
+);
 
 // Separate priority update route (for button-based priority updates)
-router.post('/tickets/:id/priority', requireAdmin, adminMutationLimiter, validateTicketId, validateTicketPriorityUpdate, validateRequest, async (req, res, next) => {
-  try {
-    await ticketService.updateTicket(req.params.id, { priority: req.body.priority });
-    successRedirect(req, res, 'Priority updated successfully', `/admin/tickets/${req.params.id}`);
-  } catch (error) {
-    logger.error('Priority update error', { ticketId: req.params.id, error: error.message });
-    next(error);
-  }
-});
-
-router.post('/tickets/:id/comments', adminMutationLimiter, validateTicketId, validateCommentCreation, validateRequest, async (req, res, next) => {
-  try {
-    const ticketId = req.params.id;
-    const visibility_type = req.body.is_internal === 'on' ? 'internal' : 'public';
-
-    // Get current ticket to check status
-    const ticket = await ticketService.getTicketById(ticketId);
-    if (!ticket) {
-      return errorRedirect(req, res, TICKET_MESSAGES.NOT_FOUND, '/admin/dashboard');
+router.post(
+  '/tickets/:id/priority',
+  requireAdmin,
+  adminMutationLimiter,
+  validateTicketId,
+  validateTicketPriorityUpdate,
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      await ticketService.updateTicket(req.params.id, { priority: req.body.priority });
+      successRedirect(req, res, 'Priority updated successfully', `/admin/tickets/${req.params.id}`);
+    } catch (error) {
+      logger.error('Priority update error', { ticketId: req.params.id, error: error.message });
+      next(error);
     }
+  },
+);
 
-    // Create comment
-    await Comment.create({
-      ticket_id: ticketId,
-      user_id: req.session.user.id,
-      content: req.body.content,
-      visibility_type
-    });
+router.post(
+  '/tickets/:id/comments',
+  adminMutationLimiter,
+  validateTicketId,
+  validateCommentCreation,
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      const ticketId = req.params.id;
+      const visibility_type = req.body.is_internal === 'on' ? 'internal' : 'public';
 
-    // AUTO-STATUS UPDATE: Admin adding PUBLIC comment → "waiting_on_department"
-    // ONLY if: public comment AND ticket not closed AND has reporter_id (dept ticket)
-    if (visibility_type === 'public' && ticket.status !== 'closed' && ticket.reporter_id !== null) {
-      await ticketService.updateTicket(ticketId, { status: 'waiting_on_department' });
-      logger.info('Admin comment triggered status update', {
-        ticketId,
-        oldStatus: ticket.status,
-        newStatus: 'waiting_on_department',
-        adminId: req.session.user.id
+      // Get current ticket to check status
+      const ticket = await ticketService.getTicketById(ticketId);
+      if (!ticket) {
+        return errorRedirect(req, res, TICKET_MESSAGES.NOT_FOUND, '/admin/dashboard');
+      }
+
+      // Create comment
+      await Comment.create({
+        ticket_id: ticketId,
+        user_id: req.session.user.id,
+        content: req.body.content,
+        visibility_type,
       });
-    }
 
-    successRedirect(req, res, COMMENT_MESSAGES.ADDED, `/admin/tickets/${ticketId}`);
-  } catch (error) {
-    logger.error('Admin comment creation error', {
-      ticketId: req.params.id,
-      error: error.message,
-      stack: error.stack
-    });
-    next(error);
-  }
-});
+      // AUTO-STATUS UPDATE: Admin adding PUBLIC comment → "waiting_on_department"
+      // ONLY if: public comment AND ticket not closed AND has reporter_id (dept ticket)
+      if (
+        visibility_type === 'public' &&
+        ticket.status !== 'closed' &&
+        ticket.reporter_id !== null
+      ) {
+        await ticketService.updateTicket(ticketId, { status: 'waiting_on_department' });
+        logger.info('Admin comment triggered status update', {
+          ticketId,
+          oldStatus: ticket.status,
+          newStatus: 'waiting_on_department',
+          adminId: req.session.user.id,
+        });
+      }
+
+      successRedirect(req, res, COMMENT_MESSAGES.ADDED, `/admin/tickets/${ticketId}`);
+    } catch (error) {
+      logger.error('Admin comment creation error', {
+        ticketId: req.params.id,
+        error: error.message,
+        stack: error.stack,
+      });
+      next(error);
+    }
+  },
+);
 
 // POST /admin/tickets - Create admin ticket
-router.post('/tickets', requireAdmin, adminMutationLimiter, validateAdminTicketCreation, validateRequest, async (req, res, next) => {
-  try {
-    const ticketData = {
-      title: req.body.title,
-      description: req.body.description,
-      reporter_department: req.body.reporter_department,
-      reporter_phone: req.body.reporter_phone,
-      priority: req.body.priority,
-      status: req.body.status
-    };
+router.post(
+  '/tickets',
+  requireAdmin,
+  adminMutationLimiter,
+  validateAdminTicketCreation,
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      const ticketData = {
+        title: req.body.title,
+        description: req.body.description,
+        reporter_department: req.body.reporter_department,
+        reporter_phone: req.body.reporter_phone,
+        priority: req.body.priority,
+        status: req.body.status,
+      };
 
-    const ticket = await adminTicketService.createAdminTicket(
-      req.session.user.id,
-      ticketData,
-      req.ip
-    );
+      const ticket = await adminTicketService.createAdminTicket(
+        req.session.user.id,
+        ticketData,
+        req.ip,
+      );
 
-    logger.info('Admin created admin ticket', {
-      ticketId: ticket.id,
-      adminId: req.session.user.id,
-      adminUsername: req.session.user.username
-    });
+      logger.info('Admin created admin ticket', {
+        ticketId: ticket.id,
+        adminId: req.session.user.id,
+        adminUsername: req.session.user.username,
+      });
 
-    successRedirect(req, res, TICKET_MESSAGES.ADMIN_CREATED, `/admin/tickets/${ticket.id}`);
-  } catch (error) {
-    logger.error('Admin internal ticket creation error', {
-      adminId: req.session.user.id,
-      error: error.message,
-      stack: error.stack
-    });
-    next(error);
-  }
-});
+      successRedirect(req, res, TICKET_MESSAGES.ADMIN_CREATED, `/admin/tickets/${ticket.id}`);
+    } catch (error) {
+      logger.error('Admin internal ticket creation error', {
+        adminId: req.session.user.id,
+        error: error.message,
+        stack: error.stack,
+      });
+      next(error);
+    }
+  },
+);
 
 // POST /admin/tickets/department - Create department ticket (on behalf of department)
-router.post('/tickets/department', requireAdmin, adminMutationLimiter, validateDepartmentTicketCreation, validateRequest, async (req, res, next) => {
-  try {
-    const ticketData = {
-      title: req.body.title,
-      description: req.body.description,
-      reporter_name: req.body.reporter_name,
-      reporter_department: req.body.reporter_department,
-      reporter_phone: req.body.reporter_phone,
-      priority: req.body.priority
-    };
+router.post(
+  '/tickets/department',
+  requireAdmin,
+  adminMutationLimiter,
+  validateDepartmentTicketCreation,
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      const ticketData = {
+        title: req.body.title,
+        description: req.body.description,
+        reporter_name: req.body.reporter_name,
+        reporter_department: req.body.reporter_department,
+        reporter_phone: req.body.reporter_phone,
+        priority: req.body.priority,
+      };
 
-    const ticket = await adminTicketService.createDepartmentTicket(
-      req.session.user.id,
-      ticketData,
-      req.ip
-    );
+      const ticket = await adminTicketService.createDepartmentTicket(
+        req.session.user.id,
+        ticketData,
+        req.ip,
+      );
 
-    logger.info('Admin created department ticket', {
-      ticketId: ticket.id,
-      adminId: req.session.user.id,
-      adminUsername: req.session.user.username,
-      department: ticket.reporter_department
-    });
+      logger.info('Admin created department ticket', {
+        ticketId: ticket.id,
+        adminId: req.session.user.id,
+        adminUsername: req.session.user.username,
+        department: ticket.reporter_department,
+      });
 
-    successRedirect(req, res, 'Department ticket created successfully', `/admin/tickets/${ticket.id}`);
-  } catch (error) {
-    logger.error('Admin department ticket creation error', {
-      adminId: req.session.user.id,
-      error: error.message,
-      stack: error.stack
-    });
-    next(error);
-  }
-});
+      successRedirect(
+        req,
+        res,
+        'Department ticket created successfully',
+        `/admin/tickets/${ticket.id}`,
+      );
+    } catch (error) {
+      logger.error('Admin department ticket creation error', {
+        adminId: req.session.user.id,
+        error: error.message,
+        stack: error.stack,
+      });
+      next(error);
+    }
+  },
+);
 
 module.exports = router;

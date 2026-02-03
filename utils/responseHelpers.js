@@ -15,9 +15,7 @@ function flashAndRedirect(req, res, flashType, messageOrKey, redirectPath, inter
   const isTranslationKey = messageOrKey && messageOrKey.includes(':');
 
   // Translate if i18n is available and this is a translation key
-  const message = (req.t && isTranslationKey)
-    ? req.t(messageOrKey, interpolation)
-    : messageOrKey;
+  const message = req.t && isTranslationKey ? req.t(messageOrKey, interpolation) : messageOrKey;
 
   req.flash(flashType, message);
   res.redirect(redirectPath);
@@ -50,5 +48,5 @@ function errorRedirect(req, res, messageOrKey, redirectPath, interpolation = {})
 module.exports = {
   flashAndRedirect,
   successRedirect,
-  errorRedirect
+  errorRedirect,
 };

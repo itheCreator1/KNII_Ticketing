@@ -5,7 +5,7 @@ describe('Seed Validator', () => {
     it('should accept valid floor configuration', () => {
       const floors = [
         { name: 'Basement', sort_order: 0, active: true },
-        { name: 'Ground Floor', sort_order: 1, active: true }
+        { name: 'Ground Floor', sort_order: 1, active: true },
       ];
       const errors = seedValidator.validateFloors(floors);
       expect(errors).toHaveLength(0);
@@ -26,68 +26,68 @@ describe('Seed Validator', () => {
     it('should reject missing floor name', () => {
       const floors = [{ sort_order: 0, active: true }];
       const errors = seedValidator.validateFloors(floors);
-      expect(errors.some(e => e.includes('Missing required field "name"'))).toBe(true);
+      expect(errors.some((e) => e.includes('Missing required field "name"'))).toBe(true);
     });
 
     it('should reject floor name that is too short', () => {
       const floors = [{ name: 'A', sort_order: 0, active: true }];
       const errors = seedValidator.validateFloors(floors);
-      expect(errors.some(e => e.includes('Length must be between 2 and 50'))).toBe(true);
+      expect(errors.some((e) => e.includes('Length must be between 2 and 50'))).toBe(true);
     });
 
     it('should reject floor name that is too long', () => {
       const floors = [{ name: 'A'.repeat(51), sort_order: 0, active: true }];
       const errors = seedValidator.validateFloors(floors);
-      expect(errors.some(e => e.includes('Length must be between 2 and 50'))).toBe(true);
+      expect(errors.some((e) => e.includes('Length must be between 2 and 50'))).toBe(true);
     });
 
     it('should reject duplicate floor names', () => {
       const floors = [
         { name: 'Basement', sort_order: 0, active: true },
-        { name: 'Basement', sort_order: 1, active: true }
+        { name: 'Basement', sort_order: 1, active: true },
       ];
       const errors = seedValidator.validateFloors(floors);
-      expect(errors.some(e => e.includes('Duplicate floor name'))).toBe(true);
+      expect(errors.some((e) => e.includes('Duplicate floor name'))).toBe(true);
     });
 
     it('should reject missing sort_order', () => {
       const floors = [{ name: 'Basement', active: true }];
       const errors = seedValidator.validateFloors(floors);
-      expect(errors.some(e => e.includes('Missing required field "sort_order"'))).toBe(true);
+      expect(errors.some((e) => e.includes('Missing required field "sort_order"'))).toBe(true);
     });
 
     it('should reject non-integer sort_order', () => {
       const floors = [{ name: 'Basement', sort_order: 'not a number', active: true }];
       const errors = seedValidator.validateFloors(floors);
-      expect(errors.some(e => e.includes('Must be an integer'))).toBe(true);
+      expect(errors.some((e) => e.includes('Must be an integer'))).toBe(true);
     });
 
     it('should reject negative sort_order', () => {
       const floors = [{ name: 'Basement', sort_order: -1, active: true }];
       const errors = seedValidator.validateFloors(floors);
-      expect(errors.some(e => e.includes('Must be >= 0'))).toBe(true);
+      expect(errors.some((e) => e.includes('Must be >= 0'))).toBe(true);
     });
 
     it('should reject duplicate sort_order values', () => {
       const floors = [
         { name: 'Basement', sort_order: 0, active: true },
-        { name: 'Ground Floor', sort_order: 0, active: true }
+        { name: 'Ground Floor', sort_order: 0, active: true },
       ];
       const errors = seedValidator.validateFloors(floors);
-      expect(errors.some(e => e.includes('Duplicate sort_order value'))).toBe(true);
+      expect(errors.some((e) => e.includes('Duplicate sort_order value'))).toBe(true);
     });
 
     it('should reject non-boolean active field', () => {
       const floors = [{ name: 'Basement', sort_order: 0, active: 'yes' }];
       const errors = seedValidator.validateFloors(floors);
-      expect(errors.some(e => e.includes('Must be a boolean'))).toBe(true);
+      expect(errors.some((e) => e.includes('Must be a boolean'))).toBe(true);
     });
   });
 
   describe('validateDepartments', () => {
     const validFloors = [
       { name: 'Basement', sort_order: 0, active: true },
-      { name: 'Ground Floor', sort_order: 1, active: true }
+      { name: 'Ground Floor', sort_order: 1, active: true },
     ];
 
     it('should accept valid department configuration', () => {
@@ -100,15 +100,15 @@ describe('Seed Validator', () => {
             username: 'ed.coordinator',
             email: 'ed@hospital.local',
             password: 'password123',
-            full_name: 'Dr. Sarah'
-          }
+            full_name: 'Dr. Sarah',
+          },
         },
         {
           name: 'Internal',
           description: 'Admin only',
           floor: 'Ground Floor',
-          user: null
-        }
+          user: null,
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
       expect(errors).toHaveLength(0);
@@ -122,7 +122,7 @@ describe('Seed Validator', () => {
 
     it('should reject empty department array', () => {
       const errors = seedValidator.validateDepartments([], validFloors);
-      expect(errors.some(e => e.includes('At least one department is required'))).toBe(true);
+      expect(errors.some((e) => e.includes('At least one department is required'))).toBe(true);
     });
 
     it('should reject missing Internal department', () => {
@@ -130,26 +130,26 @@ describe('Seed Validator', () => {
         {
           name: 'Emergency',
           floor: 'Ground Floor',
-          user: { username: 'ed', email: 'ed@h.local', password: 'pass123', full_name: 'Ed' }
-        }
+          user: { username: 'ed', email: 'ed@h.local', password: 'pass123', full_name: 'Ed' },
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('"Internal" department is required'))).toBe(true);
+      expect(errors.some((e) => e.includes('"Internal" department is required'))).toBe(true);
     });
 
     it('should reject duplicate Internal departments', () => {
       const departments = [
         { name: 'Internal', floor: 'Ground Floor', user: null },
-        { name: 'Internal', floor: 'Ground Floor', user: null }
+        { name: 'Internal', floor: 'Ground Floor', user: null },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('can only be defined once'))).toBe(true);
+      expect(errors.some((e) => e.includes('can only be defined once'))).toBe(true);
     });
 
     it('should reject missing department name', () => {
       const departments = [{ floor: 'Ground Floor', user: null }];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('Missing required field "name"'))).toBe(true);
+      expect(errors.some((e) => e.includes('Missing required field "name"'))).toBe(true);
     });
 
     it('should reject duplicate department names', () => {
@@ -157,16 +157,16 @@ describe('Seed Validator', () => {
         {
           name: 'Emergency',
           floor: 'Ground Floor',
-          user: { username: 'ed1', email: 'ed1@h.local', password: 'pass123', full_name: 'Ed1' }
+          user: { username: 'ed1', email: 'ed1@h.local', password: 'pass123', full_name: 'Ed1' },
         },
         {
           name: 'Emergency',
           floor: 'Ground Floor',
-          user: { username: 'ed2', email: 'ed2@h.local', password: 'pass123', full_name: 'Ed2' }
-        }
+          user: { username: 'ed2', email: 'ed2@h.local', password: 'pass123', full_name: 'Ed2' },
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('Duplicate department name'))).toBe(true);
+      expect(errors.some((e) => e.includes('Duplicate department name'))).toBe(true);
     });
 
     it('should reject department floor that does not exist', () => {
@@ -174,11 +174,11 @@ describe('Seed Validator', () => {
         {
           name: 'Emergency',
           floor: 'Non-existent Floor',
-          user: { username: 'ed', email: 'ed@h.local', password: 'pass123', full_name: 'Ed' }
-        }
+          user: { username: 'ed', email: 'ed@h.local', password: 'pass123', full_name: 'Ed' },
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('does not exist in floors configuration'))).toBe(true);
+      expect(errors.some((e) => e.includes('does not exist in floors configuration'))).toBe(true);
     });
 
     it('should reject non-department with null user', () => {
@@ -186,11 +186,13 @@ describe('Seed Validator', () => {
         {
           name: 'Emergency',
           floor: 'Ground Floor',
-          user: null
-        }
+          user: null,
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('User is required for non-Internal departments'))).toBe(true);
+      expect(errors.some((e) => e.includes('User is required for non-Internal departments'))).toBe(
+        true,
+      );
     });
 
     it('should reject missing user username', () => {
@@ -198,11 +200,11 @@ describe('Seed Validator', () => {
         {
           name: 'Emergency',
           floor: 'Ground Floor',
-          user: { email: 'ed@h.local', password: 'pass123', full_name: 'Ed' }
-        }
+          user: { email: 'ed@h.local', password: 'pass123', full_name: 'Ed' },
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('Missing required field "username"'))).toBe(true);
+      expect(errors.some((e) => e.includes('Missing required field "username"'))).toBe(true);
     });
 
     it('should reject duplicate usernames', () => {
@@ -210,16 +212,16 @@ describe('Seed Validator', () => {
         {
           name: 'Emergency',
           floor: 'Ground Floor',
-          user: { username: 'ed', email: 'ed1@h.local', password: 'pass123', full_name: 'Ed1' }
+          user: { username: 'ed', email: 'ed1@h.local', password: 'pass123', full_name: 'Ed1' },
         },
         {
           name: 'Cardiology',
           floor: 'Ground Floor',
-          user: { username: 'ed', email: 'ed2@h.local', password: 'pass123', full_name: 'Ed2' }
-        }
+          user: { username: 'ed', email: 'ed2@h.local', password: 'pass123', full_name: 'Ed2' },
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('Duplicate username'))).toBe(true);
+      expect(errors.some((e) => e.includes('Duplicate username'))).toBe(true);
     });
 
     it('should reject invalid email format', () => {
@@ -227,11 +229,11 @@ describe('Seed Validator', () => {
         {
           name: 'Emergency',
           floor: 'Ground Floor',
-          user: { username: 'ed', email: 'invalid-email', password: 'pass123', full_name: 'Ed' }
-        }
+          user: { username: 'ed', email: 'invalid-email', password: 'pass123', full_name: 'Ed' },
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('Invalid email format'))).toBe(true);
+      expect(errors.some((e) => e.includes('Invalid email format'))).toBe(true);
     });
 
     it('should reject duplicate emails', () => {
@@ -239,16 +241,16 @@ describe('Seed Validator', () => {
         {
           name: 'Emergency',
           floor: 'Ground Floor',
-          user: { username: 'ed1', email: 'ed@h.local', password: 'pass123', full_name: 'Ed1' }
+          user: { username: 'ed1', email: 'ed@h.local', password: 'pass123', full_name: 'Ed1' },
         },
         {
           name: 'Cardiology',
           floor: 'Ground Floor',
-          user: { username: 'ed2', email: 'ed@h.local', password: 'pass123', full_name: 'Ed2' }
-        }
+          user: { username: 'ed2', email: 'ed@h.local', password: 'pass123', full_name: 'Ed2' },
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('Duplicate email'))).toBe(true);
+      expect(errors.some((e) => e.includes('Duplicate email'))).toBe(true);
     });
 
     it('should reject short password', () => {
@@ -256,11 +258,11 @@ describe('Seed Validator', () => {
         {
           name: 'Emergency',
           floor: 'Ground Floor',
-          user: { username: 'ed', email: 'ed@h.local', password: 'short', full_name: 'Ed' }
-        }
+          user: { username: 'ed', email: 'ed@h.local', password: 'short', full_name: 'Ed' },
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('Must be at least 6 characters'))).toBe(true);
+      expect(errors.some((e) => e.includes('Must be at least 6 characters'))).toBe(true);
     });
 
     it('should reject missing full_name', () => {
@@ -268,11 +270,11 @@ describe('Seed Validator', () => {
         {
           name: 'Emergency',
           floor: 'Ground Floor',
-          user: { username: 'ed', email: 'ed@h.local', password: 'pass123' }
-        }
+          user: { username: 'ed', email: 'ed@h.local', password: 'pass123' },
+        },
       ];
       const errors = seedValidator.validateDepartments(departments, validFloors);
-      expect(errors.some(e => e.includes('Missing required field "full_name"'))).toBe(true);
+      expect(errors.some((e) => e.includes('Missing required field "full_name"'))).toBe(true);
     });
   });
 
@@ -282,7 +284,7 @@ describe('Seed Validator', () => {
         username: 'superadmin',
         email: 'admin@hospital.local',
         password: 'admin123',
-        full_name: 'Administrator'
+        full_name: 'Administrator',
       };
       const errors = seedValidator.validateSuperAdmin(superAdmin);
       expect(errors).toHaveLength(0);
@@ -290,27 +292,27 @@ describe('Seed Validator', () => {
 
     it('should reject missing super admin', () => {
       const errors = seedValidator.validateSuperAdmin(null);
-      expect(errors.some(e => e.includes('Super admin configuration is required'))).toBe(true);
+      expect(errors.some((e) => e.includes('Super admin configuration is required'))).toBe(true);
     });
 
     it('should reject missing username', () => {
       const superAdmin = {
         email: 'admin@hospital.local',
         password: 'admin123',
-        full_name: 'Administrator'
+        full_name: 'Administrator',
       };
       const errors = seedValidator.validateSuperAdmin(superAdmin);
-      expect(errors.some(e => e.includes('Missing required field "username"'))).toBe(true);
+      expect(errors.some((e) => e.includes('Missing required field "username"'))).toBe(true);
     });
 
     it('should reject missing email', () => {
       const superAdmin = {
         username: 'superadmin',
         password: 'admin123',
-        full_name: 'Administrator'
+        full_name: 'Administrator',
       };
       const errors = seedValidator.validateSuperAdmin(superAdmin);
-      expect(errors.some(e => e.includes('Missing required field "email"'))).toBe(true);
+      expect(errors.some((e) => e.includes('Missing required field "email"'))).toBe(true);
     });
 
     it('should reject invalid email', () => {
@@ -318,20 +320,20 @@ describe('Seed Validator', () => {
         username: 'superadmin',
         email: 'invalid-email',
         password: 'admin123',
-        full_name: 'Administrator'
+        full_name: 'Administrator',
       };
       const errors = seedValidator.validateSuperAdmin(superAdmin);
-      expect(errors.some(e => e.includes('Invalid email format'))).toBe(true);
+      expect(errors.some((e) => e.includes('Invalid email format'))).toBe(true);
     });
 
     it('should reject missing password', () => {
       const superAdmin = {
         username: 'superadmin',
         email: 'admin@hospital.local',
-        full_name: 'Administrator'
+        full_name: 'Administrator',
       };
       const errors = seedValidator.validateSuperAdmin(superAdmin);
-      expect(errors.some(e => e.includes('Missing required field "password"'))).toBe(true);
+      expect(errors.some((e) => e.includes('Missing required field "password"'))).toBe(true);
     });
 
     it('should reject short password', () => {
@@ -339,20 +341,20 @@ describe('Seed Validator', () => {
         username: 'superadmin',
         email: 'admin@hospital.local',
         password: 'short',
-        full_name: 'Administrator'
+        full_name: 'Administrator',
       };
       const errors = seedValidator.validateSuperAdmin(superAdmin);
-      expect(errors.some(e => e.includes('Must be at least 6 characters'))).toBe(true);
+      expect(errors.some((e) => e.includes('Must be at least 6 characters'))).toBe(true);
     });
 
     it('should reject missing full_name', () => {
       const superAdmin = {
         username: 'superadmin',
         email: 'admin@hospital.local',
-        password: 'admin123'
+        password: 'admin123',
       };
       const errors = seedValidator.validateSuperAdmin(superAdmin);
-      expect(errors.some(e => e.includes('Missing required field "full_name"'))).toBe(true);
+      expect(errors.some((e) => e.includes('Missing required field "full_name"'))).toBe(true);
     });
   });
 
@@ -362,8 +364,8 @@ describe('Seed Validator', () => {
         version: '1.0.0',
         floors: [
           { name: 'Basement', sort_order: 0, active: true },
-          { name: 'Ground Floor', sort_order: 1, active: true }
-        ]
+          { name: 'Ground Floor', sort_order: 1, active: true },
+        ],
       };
 
       const departmentsData = {
@@ -372,22 +374,27 @@ describe('Seed Validator', () => {
           username: 'superadmin',
           email: 'admin@hospital.local',
           password: 'admin123',
-          full_name: 'Admin'
+          full_name: 'Admin',
         },
         departments: [
           {
             name: 'Emergency',
             description: 'Emergency services',
             floor: 'Ground Floor',
-            user: { username: 'ed.coordinator', email: 'ed@h.local', password: 'pass123', full_name: 'Ed Coordinator' }
+            user: {
+              username: 'ed.coordinator',
+              email: 'ed@h.local',
+              password: 'pass123',
+              full_name: 'Ed Coordinator',
+            },
           },
           {
             name: 'Internal',
             description: 'Admin only',
             floor: 'Ground Floor',
-            user: null
-          }
-        ]
+            user: null,
+          },
+        ],
       };
 
       const result = seedValidator.validateConfig(floorsData, departmentsData);
@@ -400,12 +407,12 @@ describe('Seed Validator', () => {
 
     it('should collect all errors from all sections', () => {
       const floorsData = {
-        floors: [{ sort_order: 0 }] // Missing name
+        floors: [{ sort_order: 0 }], // Missing name
       };
 
       const departmentsData = {
         super_admin: { username: 'admin' }, // Missing required fields
-        departments: [{ name: 'Emergency' }] // Missing floor
+        departments: [{ name: 'Emergency' }], // Missing floor
       };
 
       const result = seedValidator.validateConfig(floorsData, departmentsData);
@@ -428,7 +435,7 @@ describe('Seed Validator', () => {
 
       const result = seedValidator.validateConfig(floorsData, departmentsData);
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.includes('Missing "departments" array'))).toBe(true);
+      expect(result.errors.some((e) => e.includes('Missing "departments" array'))).toBe(true);
     });
   });
 
@@ -436,7 +443,7 @@ describe('Seed Validator', () => {
     it('should format errors for display', () => {
       const errors = [
         'Floor[0]: Missing required field "name"',
-        'Department[1]: floor "10th Floor" does not exist'
+        'Department[1]: floor "10th Floor" does not exist',
       ];
 
       const formatted = seedValidator.formatErrors(errors);

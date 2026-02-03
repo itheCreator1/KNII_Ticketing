@@ -23,7 +23,7 @@ const loginLimiter = rateLimit({
   handler: (req, res) => {
     req.flash('error_msg', 'Too many login attempts. Please try again after 15 minutes.');
     res.redirect('/auth/login');
-  }
+  },
 });
 
 /**
@@ -52,10 +52,10 @@ const adminMutationLimiter = rateLimit({
   handler: (req, res) => {
     req.flash('error_msg', 'Too many requests. Please wait a moment before trying again.');
     res.redirect('back');
-  }
+  },
 });
 
 module.exports = {
   loginLimiter,
-  adminMutationLimiter
+  adminMutationLimiter,
 };

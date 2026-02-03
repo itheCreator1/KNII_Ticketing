@@ -19,9 +19,13 @@ const {
   getColumnDataType,
   isColumnNullable,
   getColumnMaxLength,
-  getForeignKeys
+  getForeignKeys,
 } = require('../../helpers/schemaHelpers');
-const { setupTestDatabase, teardownTestDatabase, getTestClient } = require('../../helpers/database');
+const {
+  setupTestDatabase,
+  teardownTestDatabase,
+  getTestClient,
+} = require('../../helpers/database');
 
 describe('Database Schema Integrity', () => {
   beforeEach(setupTestDatabase);
@@ -30,13 +34,21 @@ describe('Database Schema Integrity', () => {
   describe('Tables', () => {
     it('should have all expected tables', async () => {
       // Arrange
-      const expectedTables = ['users', 'tickets', 'comments', 'session', 'audit_logs', 'departments', 'floors'];
+      const expectedTables = [
+        'users',
+        'tickets',
+        'comments',
+        'session',
+        'audit_logs',
+        'departments',
+        'floors',
+      ];
 
       // Act
       const actualTables = await getTableNames();
 
       // Assert
-      expectedTables.forEach(table => {
+      expectedTables.forEach((table) => {
         expect(actualTables).toContain(table);
       });
     });
@@ -46,9 +58,19 @@ describe('Database Schema Integrity', () => {
     it('should have all expected columns', async () => {
       // Arrange
       const expectedColumns = [
-        'id', 'username', 'email', 'password_hash', 'role', 'department',
-        'status', 'login_attempts', 'last_login_at', 'password_changed_at',
-        'deleted_at', 'created_at', 'updated_at'
+        'id',
+        'username',
+        'email',
+        'password_hash',
+        'role',
+        'department',
+        'status',
+        'login_attempts',
+        'last_login_at',
+        'password_changed_at',
+        'deleted_at',
+        'created_at',
+        'updated_at',
       ];
 
       // Act
@@ -124,9 +146,19 @@ describe('Database Schema Integrity', () => {
     it('should have all expected columns', async () => {
       // Arrange
       const expectedColumns = [
-        'id', 'title', 'description', 'status', 'priority',
-        'reporter_name', 'reporter_department', 'reporter_phone', 'reporter_id',
-        'assigned_to', 'is_admin_created', 'created_at', 'updated_at'
+        'id',
+        'title',
+        'description',
+        'status',
+        'priority',
+        'reporter_name',
+        'reporter_department',
+        'reporter_phone',
+        'reporter_id',
+        'assigned_to',
+        'is_admin_created',
+        'created_at',
+        'updated_at',
       ];
 
       // Act
@@ -147,7 +179,13 @@ describe('Database Schema Integrity', () => {
 
     it('should have status CHECK constraint with all valid workflow statuses', async () => {
       // Arrange
-      const validStatuses = ['open', 'in_progress', 'closed', 'waiting_on_admin', 'waiting_on_department'];
+      const validStatuses = [
+        'open',
+        'in_progress',
+        'closed',
+        'waiting_on_admin',
+        'waiting_on_department',
+      ];
 
       // Act
       const isValid = await verifyCheckConstraint('tickets', 'status', validStatuses);
@@ -179,7 +217,14 @@ describe('Database Schema Integrity', () => {
   describe('Comments Table', () => {
     it('should have all expected columns', async () => {
       // Arrange
-      const expectedColumns = ['id', 'ticket_id', 'user_id', 'content', 'visibility_type', 'created_at'];
+      const expectedColumns = [
+        'id',
+        'ticket_id',
+        'user_id',
+        'content',
+        'visibility_type',
+        'created_at',
+      ];
 
       // Act
       const verification = await verifyTableColumns('comments', expectedColumns);
@@ -212,7 +257,16 @@ describe('Database Schema Integrity', () => {
   describe('Departments Table', () => {
     it('should have all expected columns', async () => {
       // Arrange
-      const expectedColumns = ['id', 'name', 'description', 'floor', 'is_system', 'active', 'created_at', 'updated_at'];
+      const expectedColumns = [
+        'id',
+        'name',
+        'description',
+        'floor',
+        'is_system',
+        'active',
+        'created_at',
+        'updated_at',
+      ];
 
       // Act
       const verification = await verifyTableColumns('departments', expectedColumns);
@@ -241,7 +295,7 @@ describe('Database Schema Integrity', () => {
     it('should have floor as foreign key reference to floors table', async () => {
       // Act
       const foreignKeys = await getForeignKeys('departments');
-      const floorFK = foreignKeys.find(fk => fk.column_name === 'floor');
+      const floorFK = foreignKeys.find((fk) => fk.column_name === 'floor');
 
       // Assert
       expect(floorFK).toBeDefined();
@@ -261,7 +315,15 @@ describe('Database Schema Integrity', () => {
   describe('Floors Table', () => {
     it('should have all expected columns', async () => {
       // Arrange
-      const expectedColumns = ['id', 'name', 'sort_order', 'is_system', 'active', 'created_at', 'updated_at'];
+      const expectedColumns = [
+        'id',
+        'name',
+        'sort_order',
+        'is_system',
+        'active',
+        'created_at',
+        'updated_at',
+      ];
 
       // Act
       const verification = await verifyTableColumns('floors', expectedColumns);
@@ -329,7 +391,7 @@ describe('Database Schema Integrity', () => {
         `INSERT INTO floors (name, sort_order, is_system, active)
          VALUES ($1, $2, $3, $4)
          RETURNING *`,
-        ['Test Floor', 5, false, true]
+        ['Test Floor', 5, false, true],
       );
 
       // Assert
@@ -352,7 +414,16 @@ describe('Database Schema Integrity', () => {
   describe('Audit Logs Table', () => {
     it('should have all expected columns', async () => {
       // Arrange
-      const expectedColumns = ['id', 'actor_id', 'action', 'target_type', 'target_id', 'details', 'ip_address', 'created_at'];
+      const expectedColumns = [
+        'id',
+        'actor_id',
+        'action',
+        'target_type',
+        'target_id',
+        'details',
+        'ip_address',
+        'created_at',
+      ];
 
       // Act
       const verification = await verifyTableColumns('audit_logs', expectedColumns);
@@ -396,31 +467,31 @@ describe('Database Schema Integrity', () => {
     it('should have indexes on tickets table for filtering and sorting', async () => {
       // Act
       const indexes = await getTableIndexes('tickets');
-      const indexNames = indexes.map(i => i.indexname);
+      const indexNames = indexes.map((i) => i.indexname);
 
       // Assert
       expect(indexNames).toContain('tickets_pkey');
-      expect(indexNames.some(name => name.includes('status'))).toBe(true);
+      expect(indexNames.some((name) => name.includes('status'))).toBe(true);
     });
 
     it('should have indexes on comments for efficient ticket queries', async () => {
       // Act
       const indexes = await getTableIndexes('comments');
-      const indexNames = indexes.map(i => i.indexname);
+      const indexNames = indexes.map((i) => i.indexname);
 
       // Assert
       expect(indexNames).toContain('comments_pkey');
-      expect(indexNames.some(name => name.includes('ticket'))).toBe(true);
+      expect(indexNames.some((name) => name.includes('ticket'))).toBe(true);
     });
 
     it('should have indexes on users for efficient lookups', async () => {
       // Act
       const indexes = await getTableIndexes('users');
-      const indexNames = indexes.map(i => i.indexname);
+      const indexNames = indexes.map((i) => i.indexname);
 
       // Assert
       expect(indexNames).toContain('users_pkey');
-      expect(indexNames.some(name => name.includes('username'))).toBe(true);
+      expect(indexNames.some((name) => name.includes('username'))).toBe(true);
     });
   });
 

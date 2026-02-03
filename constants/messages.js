@@ -1,6 +1,6 @@
 const FLASH_KEYS = {
   SUCCESS: 'success_msg',
-  ERROR: 'error_msg'
+  ERROR: 'error_msg',
 };
 
 const AUTH_MESSAGES = {
@@ -9,7 +9,7 @@ const AUTH_MESSAGES = {
   LOGOUT_SUCCESS: 'You have been logged out',
   UNAUTHORIZED: 'Please log in to access this page',
   FORBIDDEN: 'You do not have permission to access this page',
-  SUPER_ADMIN_REQUIRED: 'Super admin access required'
+  SUPER_ADMIN_REQUIRED: 'Super admin access required',
 };
 
 const TICKET_MESSAGES = {
@@ -19,11 +19,11 @@ const TICKET_MESSAGES = {
   UNAUTHORIZED_ACCESS: 'You do not have permission to access this ticket',
   STATUS_CHANGED: 'Ticket status updated successfully',
   INTERNAL_CREATED: 'Internal ticket created successfully',
-  ADMIN_CREATED: 'Admin ticket created successfully'
+  ADMIN_CREATED: 'Admin ticket created successfully',
 };
 
 const COMMENT_MESSAGES = {
-  ADDED: 'Comment added successfully'
+  ADDED: 'Comment added successfully',
 };
 
 const USER_MESSAGES = {
@@ -38,7 +38,7 @@ const USER_MESSAGES = {
   UPDATE_FAILED: 'Failed to update user',
   DELETE_FAILED: 'Failed to delete user',
   PASSWORD_RESET_FAILED: 'Failed to reset password',
-  STATUS_UPDATE_FAILED: 'Failed to update status'
+  STATUS_UPDATE_FAILED: 'Failed to update status',
 };
 
 module.exports = {
@@ -46,5 +46,5 @@ module.exports = {
   AUTH_MESSAGES,
   TICKET_MESSAGES,
   COMMENT_MESSAGES,
-  USER_MESSAGES
+  USER_MESSAGES,
 };

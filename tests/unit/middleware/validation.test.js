@@ -7,11 +7,16 @@
  */
 
 const { validateRequest, parseUserId } = require('../../../middleware/validation');
-const { createMockRequest, createMockResponse, createMockNext, createMockValidationResult } = require('../../helpers/mocks');
+const {
+  createMockRequest,
+  createMockResponse,
+  createMockNext,
+  createMockValidationResult,
+} = require('../../helpers/mocks');
 
 // Mock express-validator
 jest.mock('express-validator', () => ({
-  validationResult: jest.fn()
+  validationResult: jest.fn(),
 }));
 
 const { validationResult } = require('express-validator');
@@ -45,14 +50,14 @@ describe('Validation Middleware', () => {
       // Arrange
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
-        get: jest.fn().mockReturnValue('/admin/users/new') // Mock Referer header
+        get: jest.fn().mockReturnValue('/admin/users/new'), // Mock Referer header
       });
       const res = createMockResponse();
       const next = createMockNext();
 
       const errors = [
         { msg: 'Username is required', param: 'username' },
-        { msg: 'Email is invalid', param: 'email' }
+        { msg: 'Email is invalid', param: 'email' },
       ];
       const mockResult = createMockValidationResult(errors);
       validationResult.mockReturnValue(mockResult);
@@ -74,14 +79,12 @@ describe('Validation Middleware', () => {
     it('should return 400 JSON when errors exist and accepts JSON', () => {
       // Arrange
       const req = createMockRequest({
-        accepts: jest.fn().mockReturnValue(false)
+        accepts: jest.fn().mockReturnValue(false),
       });
       const res = createMockResponse();
       const next = createMockNext();
 
-      const errors = [
-        { msg: 'Title is required', param: 'title' }
-      ];
+      const errors = [{ msg: 'Title is required', param: 'title' }];
       const mockResult = createMockValidationResult(errors);
       validationResult.mockReturnValue(mockResult);
 
@@ -101,7 +104,7 @@ describe('Validation Middleware', () => {
       // Arrange
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
-        get: jest.fn().mockReturnValue(undefined) // No Referer header - should default to '/'
+        get: jest.fn().mockReturnValue(undefined), // No Referer header - should default to '/'
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -109,7 +112,7 @@ describe('Validation Middleware', () => {
       const errors = [
         { msg: 'Field 1 error', param: 'field1' },
         { msg: 'Field 2 error', param: 'field2' },
-        { msg: 'Field 3 error', param: 'field3' }
+        { msg: 'Field 3 error', param: 'field3' },
       ];
       const mockResult = createMockValidationResult(errors);
       validationResult.mockReturnValue(mockResult);
@@ -119,7 +122,7 @@ describe('Validation Middleware', () => {
 
       // Assert
       expect(req.flash).toHaveBeenCalledTimes(3);
-      errors.forEach(error => {
+      errors.forEach((error) => {
         expect(req.flash).toHaveBeenCalledWith('error_msg', error.msg);
       });
       expect(req.get).toHaveBeenCalledWith('Referer');
@@ -129,14 +132,12 @@ describe('Validation Middleware', () => {
     it('should extract error messages from validation result array', () => {
       // Arrange
       const req = createMockRequest({
-        accepts: jest.fn().mockReturnValue(false)
+        accepts: jest.fn().mockReturnValue(false),
       });
       const res = createMockResponse();
       const next = createMockNext();
 
-      const errors = [
-        { msg: 'Invalid input', param: 'test', location: 'body' }
-      ];
+      const errors = [{ msg: 'Invalid input', param: 'test', location: 'body' }];
       const mockResult = createMockValidationResult(errors);
       validationResult.mockReturnValue(mockResult);
 
@@ -153,7 +154,7 @@ describe('Validation Middleware', () => {
     it('should parse valid integer ID and attach to req.userId', () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '42' }
+        params: { id: '42' },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -170,7 +171,7 @@ describe('Validation Middleware', () => {
     it('should call next(error) with 400 status for non-integer IDs', () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: 'abc' }
+        params: { id: 'abc' },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -190,7 +191,7 @@ describe('Validation Middleware', () => {
     it('should call next(error) with 400 status for negative IDs', () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '-5' }
+        params: { id: '-5' },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -210,7 +211,7 @@ describe('Validation Middleware', () => {
     it('should call next(error) with 400 status for zero ID', () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '0' }
+        params: { id: '0' },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -230,7 +231,7 @@ describe('Validation Middleware', () => {
     it('should handle string IDs that parse to valid integers', () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '123' }
+        params: { id: '123' },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -246,7 +247,7 @@ describe('Validation Middleware', () => {
     it('should call next(error) for decimal numbers', () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '12.5' }
+        params: { id: '12.5' },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -263,7 +264,7 @@ describe('Validation Middleware', () => {
     it('should call next(error) for empty string', () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '' }
+        params: { id: '' },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -282,7 +283,7 @@ describe('Validation Middleware', () => {
     it('should call next(error) for special characters', () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '@#$%' }
+        params: { id: '@#$%' },
       });
       const res = createMockResponse();
       const next = createMockNext();

@@ -6,20 +6,36 @@ class Comment {
     const db = client || pool;
     const startTime = Date.now();
     try {
-      logger.info('Comment.create: Creating new comment', { ticketId: ticket_id, userId: user_id, visibilityType: visibility_type, contentLength: content?.length });
+      logger.info('Comment.create: Creating new comment', {
+        ticketId: ticket_id,
+        userId: user_id,
+        visibilityType: visibility_type,
+        contentLength: content?.length,
+      });
       const result = await db.query(
         `INSERT INTO comments (ticket_id, user_id, content, visibility_type)
          VALUES ($1, $2, $3, $4)
          RETURNING *`,
-        [ticket_id, user_id, content, visibility_type]
+        [ticket_id, user_id, content, visibility_type],
       );
       const duration = Date.now() - startTime;
 
       if (duration > 500) {
-        logger.warn('Comment.create: Slow query detected', { ticketId: ticket_id, userId: user_id, visibilityType: visibility_type, duration });
+        logger.warn('Comment.create: Slow query detected', {
+          ticketId: ticket_id,
+          userId: user_id,
+          visibilityType: visibility_type,
+          duration,
+        });
       }
 
-      logger.info('Comment.create: Comment created successfully', { commentId: result.rows[0].id, ticketId: ticket_id, userId: user_id, visibilityType: visibility_type, duration });
+      logger.info('Comment.create: Comment created successfully', {
+        commentId: result.rows[0].id,
+        ticketId: ticket_id,
+        userId: user_id,
+        visibilityType: visibility_type,
+        duration,
+      });
       return result.rows[0];
     } catch (error) {
       logger.error('Comment.create: Database error', {
@@ -28,7 +44,7 @@ class Comment {
         visibilityType: visibility_type,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -44,22 +60,30 @@ class Comment {
          JOIN users u ON c.user_id = u.id
          WHERE c.ticket_id = $1
          ORDER BY c.created_at ASC`,
-        [ticketId]
+        [ticketId],
       );
       const duration = Date.now() - startTime;
 
       if (duration > 500) {
-        logger.warn('Comment.findByTicketId: Slow query detected', { ticketId, duration, rowCount: result.rows.length });
+        logger.warn('Comment.findByTicketId: Slow query detected', {
+          ticketId,
+          duration,
+          rowCount: result.rows.length,
+        });
       }
 
-      logger.debug('Comment.findByTicketId: Query completed', { ticketId, rowCount: result.rows.length, duration });
+      logger.debug('Comment.findByTicketId: Query completed', {
+        ticketId,
+        rowCount: result.rows.length,
+        duration,
+      });
       return result.rows;
     } catch (error) {
       logger.error('Comment.findByTicketId: Database error', {
         ticketId,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }
@@ -88,7 +112,7 @@ class Comment {
 
       // Department users only see public comments (security filter at SQL level)
       if (userRole === 'department') {
-        query += ` AND c.visibility_type = 'public'`;
+        query += " AND c.visibility_type = 'public'";
       }
       // Admin and super_admin see all comments (no additional filter)
 
@@ -98,10 +122,20 @@ class Comment {
       const duration = Date.now() - startTime;
 
       if (duration > 500) {
-        logger.warn('Comment.findVisibleByTicketId: Slow query detected', { ticketId, userRole, duration, rowCount: result.rows.length });
+        logger.warn('Comment.findVisibleByTicketId: Slow query detected', {
+          ticketId,
+          userRole,
+          duration,
+          rowCount: result.rows.length,
+        });
       }
 
-      logger.debug('Comment.findVisibleByTicketId: Query completed', { ticketId, userRole, rowCount: result.rows.length, duration });
+      logger.debug('Comment.findVisibleByTicketId: Query completed', {
+        ticketId,
+        userRole,
+        rowCount: result.rows.length,
+        duration,
+      });
       return result.rows;
     } catch (error) {
       logger.error('Comment.findVisibleByTicketId: Database error', {
@@ -109,7 +143,7 @@ class Comment {
         userRole,
         error: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       });
       throw error;
     }

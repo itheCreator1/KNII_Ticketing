@@ -24,7 +24,7 @@ expect.extend({
         pass
           ? `expected ${JSON.stringify(received)} not to be a valid ticket`
           : `expected ${JSON.stringify(received)} to be a valid ticket with id, title, description, valid status, and valid priority`,
-      pass
+      pass,
     };
   },
 
@@ -46,7 +46,7 @@ expect.extend({
         pass
           ? `expected ${JSON.stringify(received)} not to be a valid user`
           : `expected ${JSON.stringify(received)} to be a valid user with id, username, email, valid role, and valid status`,
-      pass
+      pass,
     };
   },
 
@@ -67,7 +67,7 @@ expect.extend({
         pass
           ? `expected ${JSON.stringify(received)} not to be a valid comment`
           : `expected ${JSON.stringify(received)} to be a valid comment with id, ticket_id, user_id, and content`,
-      pass
+      pass,
     };
   },
 
@@ -81,14 +81,14 @@ expect.extend({
       received.created_at instanceof Date &&
       !isNaN(received.created_at.getTime()) &&
       (received.updated_at === undefined ||
-       (received.updated_at instanceof Date && !isNaN(received.updated_at.getTime())));
+        (received.updated_at instanceof Date && !isNaN(received.updated_at.getTime())));
 
     return {
       message: () =>
         pass
           ? `expected ${JSON.stringify(received)} not to have valid timestamps`
           : `expected ${JSON.stringify(received)} to have valid created_at and optional updated_at timestamps`,
-      pass
+      pass,
     };
   },
 
@@ -96,17 +96,14 @@ expect.extend({
    * Check if a user is active
    */
   toBeActiveUser(received) {
-    const pass =
-      received !== null &&
-      received !== undefined &&
-      received.status === 'active';
+    const pass = received !== null && received !== undefined && received.status === 'active';
 
     return {
       message: () =>
         pass
           ? `expected user ${JSON.stringify(received)} not to be active`
           : `expected user ${JSON.stringify(received)} to have status='active'`,
-      pass
+      pass,
     };
   },
 
@@ -125,7 +122,7 @@ expect.extend({
         pass
           ? `expected account ${JSON.stringify(received)} not to be locked`
           : `expected account ${JSON.stringify(received)} to have login_attempts >= 5`,
-      pass
+      pass,
     };
   },
 
@@ -148,7 +145,7 @@ expect.extend({
         pass
           ? `expected ${JSON.stringify(received)} not to be a valid department`
           : `expected ${JSON.stringify(received)} to be a valid department with id, name, is_system, active, created_at, and updated_at`,
-      pass
+      pass,
     };
   },
 
@@ -172,7 +169,7 @@ expect.extend({
         pass
           ? `expected ${JSON.stringify(received)} not to be a valid floor`
           : `expected ${JSON.stringify(received)} to be a valid floor with id, name, sort_order, is_system, active, created_at, and updated_at`,
-      pass
+      pass,
     };
-  }
+  },
 });

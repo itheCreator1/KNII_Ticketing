@@ -11,7 +11,7 @@ module.exports = {
     email: 'admin@test.com',
     password: 'Admin123!',
     role: 'admin',
-    status: 'active'
+    status: 'active',
   },
 
   validSuperAdmin: {
@@ -19,7 +19,7 @@ module.exports = {
     email: 'superadmin@test.com',
     password: 'SuperAdmin123!',
     role: 'super_admin',
-    status: 'active'
+    status: 'active',
   },
 
   validDepartmentUser: {
@@ -28,7 +28,7 @@ module.exports = {
     password: 'DeptUser123!',
     role: 'department',
     status: 'active',
-    department: 'Emergency Department'
+    department: 'Emergency Department',
   },
 
   inactiveUser: {
@@ -36,7 +36,7 @@ module.exports = {
     email: 'inactive@test.com',
     password: 'Inactive123!',
     role: 'admin',
-    status: 'inactive'
+    status: 'inactive',
   },
 
   deletedUser: {
@@ -44,26 +44,20 @@ module.exports = {
     email: 'deleted@test.com',
     password: 'Deleted123!',
     role: 'admin',
-    status: 'deleted'
+    status: 'deleted',
   },
 
   // Invalid passwords for testing password validation
   invalidPasswords: [
-    'short',           // Too short (< 8 characters)
-    'nouppercase1!',   // No uppercase letter
-    'NOLOWERCASE1!',   // No lowercase letter
-    'NoNumber!',       // No number
-    'NoSpecial123',    // No special character
-    '',                // Empty
-    'a'.repeat(200)    // Too long (exceeds reasonable limits)
+    'short', // Too short (< 8 characters)
+    'nouppercase1!', // No uppercase letter
+    'NOLOWERCASE1!', // No lowercase letter
+    'NoNumber!', // No number
+    'NoSpecial123', // No special character
+    '', // Empty
+    'a'.repeat(200), // Too long (exceeds reasonable limits)
   ],
 
   // Valid passwords for testing password validation
-  validPasswords: [
-    'ValidPass123!',
-    'Test@Pass1',
-    'Secure#2024',
-    'MyP@ssw0rd',
-    'Strong!Pass9'
-  ]
+  validPasswords: ['ValidPass123!', 'Test@Pass1', 'Secure#2024', 'MyP@ssw0rd', 'Strong!Pass9'],
 };

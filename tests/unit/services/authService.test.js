@@ -33,7 +33,7 @@ describe('AuthService', () => {
           password_hash: 'hashed_password',
           role: 'admin',
           status: 'active',
-          login_attempts: 0
+          login_attempts: 0,
         };
         User.findByUsernameWithPassword.mockResolvedValue(mockUser);
         bcrypt.compare.mockResolvedValue(true);
@@ -56,7 +56,7 @@ describe('AuthService', () => {
           username: 'testuser',
           password_hash: 'hashed_password',
           status: 'active',
-          login_attempts: 3
+          login_attempts: 3,
         };
         User.findByUsernameWithPassword.mockResolvedValue(mockUser);
         bcrypt.compare.mockResolvedValue(true);
@@ -83,7 +83,7 @@ describe('AuthService', () => {
         expect(result).toBeNull();
         expect(bcrypt.compare).toHaveBeenCalledWith(
           'password123',
-          expect.stringContaining('$2a$10$invalidhash')
+          expect.stringContaining('$2a$10$invalidhash'),
         );
       });
 
@@ -94,7 +94,7 @@ describe('AuthService', () => {
           username: 'exists',
           password_hash: '$2a$10$validhash',
           status: 'active',
-          login_attempts: 0
+          login_attempts: 0,
         };
 
         // Test with existing user
@@ -128,7 +128,7 @@ describe('AuthService', () => {
           username: 'lockeduser',
           password_hash: 'hashed_password',
           status: 'active',
-          login_attempts: 5
+          login_attempts: 5,
         };
         User.findByUsernameWithPassword.mockResolvedValue(lockedUser);
         bcrypt.compare.mockResolvedValue(true); // Even with correct password
@@ -148,7 +148,7 @@ describe('AuthService', () => {
           username: 'lockeduser',
           password_hash: 'hashed',
           status: 'active',
-          login_attempts: 5
+          login_attempts: 5,
         };
         User.findByUsernameWithPassword.mockResolvedValue(lockedUser);
         bcrypt.compare.mockResolvedValue(true);
@@ -167,7 +167,7 @@ describe('AuthService', () => {
           username: 'user',
           password_hash: 'hashed',
           status: 'active',
-          login_attempts: 4
+          login_attempts: 4,
         };
         User.findByUsernameWithPassword.mockResolvedValue(user);
         bcrypt.compare.mockResolvedValue(true);
@@ -190,7 +190,7 @@ describe('AuthService', () => {
           username: 'inactive',
           password_hash: 'hashed_password',
           status: 'inactive',
-          login_attempts: 0
+          login_attempts: 0,
         };
         User.findByUsernameWithPassword.mockResolvedValue(inactiveUser);
         bcrypt.compare.mockResolvedValue(true);
@@ -210,7 +210,7 @@ describe('AuthService', () => {
           username: 'deleted',
           password_hash: 'hashed_password',
           status: 'deleted',
-          login_attempts: 0
+          login_attempts: 0,
         };
         User.findByUsernameWithPassword.mockResolvedValue(deletedUser);
         bcrypt.compare.mockResolvedValue(true);
@@ -230,7 +230,7 @@ describe('AuthService', () => {
           username: 'active',
           password_hash: 'hashed_password',
           status: 'active',
-          login_attempts: 0
+          login_attempts: 0,
         };
         User.findByUsernameWithPassword.mockResolvedValue(activeUser);
         bcrypt.compare.mockResolvedValue(true);
@@ -253,7 +253,7 @@ describe('AuthService', () => {
           username: 'testuser',
           password_hash: 'hashed_password',
           status: 'active',
-          login_attempts: 0
+          login_attempts: 0,
         };
         User.findByUsernameWithPassword.mockResolvedValue(user);
         bcrypt.compare.mockResolvedValue(false);
@@ -274,7 +274,7 @@ describe('AuthService', () => {
           username: 'testuser',
           password_hash: 'hashed_password',
           status: 'active',
-          login_attempts: 2
+          login_attempts: 2,
         };
         User.findByUsernameWithPassword.mockResolvedValue(user);
         bcrypt.compare.mockResolvedValue(false);
@@ -294,7 +294,7 @@ describe('AuthService', () => {
           username: 'testuser',
           password_hash: 'hashed_password',
           status: 'active',
-          login_attempts: 0
+          login_attempts: 0,
         };
         User.findByUsernameWithPassword.mockResolvedValue(user);
         bcrypt.compare.mockResolvedValue(true);
@@ -315,9 +315,9 @@ describe('AuthService', () => {
         User.findByUsernameWithPassword.mockRejectedValue(dbError);
 
         // Act & Assert
-        await expect(
-          authService.authenticate('testuser', 'password')
-        ).rejects.toThrow('Database connection failed');
+        await expect(authService.authenticate('testuser', 'password')).rejects.toThrow(
+          'Database connection failed',
+        );
       });
 
       it('should throw error when bcrypt fails', async () => {
@@ -327,9 +327,7 @@ describe('AuthService', () => {
         bcrypt.compare.mockRejectedValue(new Error('bcrypt error'));
 
         // Act & Assert
-        await expect(
-          authService.authenticate('test', 'password')
-        ).rejects.toThrow('bcrypt error');
+        await expect(authService.authenticate('test', 'password')).rejects.toThrow('bcrypt error');
       });
     });
   });
@@ -345,7 +343,7 @@ describe('AuthService', () => {
         password_hash: 'should_not_be_included',
         login_attempts: 0,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
 
       // Act
@@ -356,7 +354,7 @@ describe('AuthService', () => {
         id: 1,
         username: 'testuser',
         email: 'test@example.com',
-        role: 'admin'
+        role: 'admin',
       });
     });
 
@@ -367,7 +365,7 @@ describe('AuthService', () => {
         username: 'testuser',
         email: 'test@example.com',
         role: 'admin',
-        password_hash: 'sensitive_hash'
+        password_hash: 'sensitive_hash',
       };
 
       // Act
@@ -387,7 +385,7 @@ describe('AuthService', () => {
         created_at: new Date(),
         updated_at: new Date(),
         last_login_at: new Date(),
-        password_changed_at: new Date()
+        password_changed_at: new Date(),
       };
 
       // Act

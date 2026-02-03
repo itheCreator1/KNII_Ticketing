@@ -13,7 +13,7 @@ module.exports = {
     reporter_department: 'Emergency Department',
     reporter_phone: '+1234567890',
     priority: 'medium',
-    status: 'open'
+    status: 'open',
   },
 
   urgentTicket: {
@@ -23,7 +23,7 @@ module.exports = {
     reporter_department: 'Emergency Department',
     reporter_phone: '+1987654321',
     priority: 'critical',
-    status: 'open'
+    status: 'open',
   },
 
   closedTicket: {
@@ -32,7 +32,7 @@ module.exports = {
     reporter_name: 'Bob Johnson',
     reporter_department: 'Cardiology',
     priority: 'low',
-    status: 'closed'
+    status: 'closed',
   },
 
   // Valid status values
@@ -48,25 +48,36 @@ module.exports = {
   invalidPriorities: ['urgent', 'normal', '', null, undefined, 123],
 
   // Valid department values (hospital departments)
-  validDepartments: ['Emergency Department', 'Cardiology', 'Radiology', 'Pharmacy', 'Laboratory', 'Surgery', 'Intensive Care Unit', 'Patient Registration', 'Medical Records', 'Facilities Management'],
+  validDepartments: [
+    'Emergency Department',
+    'Cardiology',
+    'Radiology',
+    'Pharmacy',
+    'Laboratory',
+    'Surgery',
+    'Intensive Care Unit',
+    'Patient Registration',
+    'Medical Records',
+    'Facilities Management',
+  ],
 
   // Invalid department values
   invalidDepartments: ['Invalid Dept', 'Engineering', '', null, undefined, 123],
 
   // Invalid titles (for validation testing)
   invalidTitles: [
-    '',                           // Empty
-    'a',                          // Too short
-    'a'.repeat(201),              // Exceeds MAX_LENGTHS.TICKET_TITLE (200)
+    '', // Empty
+    'a', // Too short
+    'a'.repeat(201), // Exceeds MAX_LENGTHS.TICKET_TITLE (200)
     null,
-    undefined
+    undefined,
   ],
 
   // Invalid descriptions (for validation testing)
   invalidDescriptions: [
-    '',                           // Empty
-    'a'.repeat(5001),             // Exceeds MAX_LENGTHS.TICKET_DESCRIPTION (5000)
+    '', // Empty
+    'a'.repeat(5001), // Exceeds MAX_LENGTHS.TICKET_DESCRIPTION (5000)
     null,
-    undefined
-  ]
+    undefined,
+  ],
 };

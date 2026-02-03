@@ -10,7 +10,7 @@ const {
   validateTicketCreation,
   validateTicketUpdate,
   validateTicketId,
-  validateTicketAssignment
+  validateTicketAssignment,
 } = require('../../../validators/ticketValidators');
 const { createMockRequest } = require('../../helpers/mocks');
 
@@ -36,7 +36,7 @@ describe('Ticket Validators', () => {
       { id: 2, name: 'General Support' },
       { id: 3, name: 'Human Resources' },
       { id: 4, name: 'Finance' },
-      { id: 5, name: 'Facilities' }
+      { id: 5, name: 'Facilities' },
     ]);
   });
 
@@ -50,8 +50,8 @@ describe('Ticket Validators', () => {
           reporter_name: 'John Doe',
           reporter_department: 'IT Support',
           reporter_phone: '555-1234',
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       });
 
       // Act
@@ -68,8 +68,8 @@ describe('Ticket Validators', () => {
           title: 'Ticket',
           description: 'Description',
           reporter_department: 'IT Support',
-          priority: 'low'
-        }
+          priority: 'low',
+        },
       });
 
       // Act
@@ -85,8 +85,8 @@ describe('Ticket Validators', () => {
         body: {
           description: 'Description',
           reporter_department: 'IT Support',
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       });
 
       // Act
@@ -95,7 +95,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'title')).toBe(true);
+      expect(errors.some((e) => e.path === 'title')).toBe(true);
     });
 
     it('should fail when title is empty string', async () => {
@@ -106,8 +106,8 @@ describe('Ticket Validators', () => {
           description: 'Description',
           reporter_department: 'IT Support',
           reporter_name: 'Tester',
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       });
 
       // Act
@@ -116,7 +116,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'title')).toBe(true);
+      expect(errors.some((e) => e.path === 'title')).toBe(true);
     });
 
     it('should fail when title exceeds maximum length', async () => {
@@ -128,8 +128,8 @@ describe('Ticket Validators', () => {
           description: 'Description',
           reporter_department: 'IT Support',
           reporter_name: 'Tester',
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       });
 
       // Act
@@ -138,7 +138,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'title')).toBe(true);
+      expect(errors.some((e) => e.path === 'title')).toBe(true);
     });
 
     it('should fail when description is missing', async () => {
@@ -148,8 +148,8 @@ describe('Ticket Validators', () => {
           title: 'Title',
           reporter_department: 'IT Support',
           reporter_name: 'Tester',
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       });
 
       // Act
@@ -158,7 +158,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'description')).toBe(true);
+      expect(errors.some((e) => e.path === 'description')).toBe(true);
     });
 
     it('should fail when description exceeds maximum length', async () => {
@@ -170,8 +170,8 @@ describe('Ticket Validators', () => {
           description: longDescription,
           reporter_department: 'IT Support',
           reporter_name: 'Tester',
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       });
 
       // Act
@@ -180,7 +180,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'description')).toBe(true);
+      expect(errors.some((e) => e.path === 'description')).toBe(true);
     });
 
     it('should pass when reporter_name is missing (optional)', async () => {
@@ -190,8 +190,8 @@ describe('Ticket Validators', () => {
           title: 'Title',
           description: 'Description',
           reporter_department: 'IT Support',
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       });
 
       // Act
@@ -210,8 +210,8 @@ describe('Ticket Validators', () => {
           description: 'Description',
           reporter_department: 'IT Support',
           reporter_name: longName,
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       });
 
       // Act
@@ -220,7 +220,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'reporter_name')).toBe(true);
+      expect(errors.some((e) => e.path === 'reporter_name')).toBe(true);
     });
 
     it('should fail when reporter_phone exceeds maximum length', async () => {
@@ -233,8 +233,8 @@ describe('Ticket Validators', () => {
           reporter_department: 'IT Support',
           reporter_name: 'Tester',
           reporter_phone: longPhone,
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       });
 
       // Act
@@ -243,7 +243,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'reporter_phone')).toBe(true);
+      expect(errors.some((e) => e.path === 'reporter_phone')).toBe(true);
     });
 
     it('should fail when priority is invalid', async () => {
@@ -254,8 +254,8 @@ describe('Ticket Validators', () => {
           description: 'Description',
           reporter_department: 'IT Support',
           reporter_name: 'Tester',
-          priority: 'invalid_priority'
-        }
+          priority: 'invalid_priority',
+        },
       });
 
       // Act
@@ -264,7 +264,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'priority')).toBe(true);
+      expect(errors.some((e) => e.path === 'priority')).toBe(true);
     });
 
     it('should accept all valid priority values', async () => {
@@ -276,9 +276,9 @@ describe('Ticket Validators', () => {
             title: 'Title',
             description: 'Description',
             reporter_department: 'IT Support',
-              reporter_name: 'Tester',
-            priority
-          }
+            reporter_name: 'Tester',
+            priority,
+          },
         });
 
         const result = await runValidators(validateTicketCreation, req);
@@ -295,8 +295,8 @@ describe('Ticket Validators', () => {
           reporter_department: 'IT Support',
           reporter_name: '  John Doe  ',
           reporter_phone: '  555-1234  ',
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       });
 
       // Act
@@ -315,7 +315,7 @@ describe('Ticket Validators', () => {
     it('should pass validation for valid status update', async () => {
       // Arrange
       const req = createMockRequest({
-        body: { status: 'in_progress' }
+        body: { status: 'in_progress' },
       });
 
       // Act
@@ -328,7 +328,7 @@ describe('Ticket Validators', () => {
     it('should pass validation for valid priority update', async () => {
       // Arrange
       const req = createMockRequest({
-        body: { priority: 'critical' }
+        body: { priority: 'critical' },
       });
 
       // Act
@@ -343,8 +343,8 @@ describe('Ticket Validators', () => {
       const req = createMockRequest({
         body: {
           status: 'closed',
-          priority: 'low'
-        }
+          priority: 'low',
+        },
       });
 
       // Act
@@ -368,7 +368,7 @@ describe('Ticket Validators', () => {
     it('should fail when status is invalid', async () => {
       // Arrange
       const req = createMockRequest({
-        body: { status: 'invalid_status' }
+        body: { status: 'invalid_status' },
       });
 
       // Act
@@ -377,13 +377,13 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'status')).toBe(true);
+      expect(errors.some((e) => e.path === 'status')).toBe(true);
     });
 
     it('should fail when priority is invalid', async () => {
       // Arrange
       const req = createMockRequest({
-        body: { priority: 'invalid_priority' }
+        body: { priority: 'invalid_priority' },
       });
 
       // Act
@@ -392,7 +392,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'priority')).toBe(true);
+      expect(errors.some((e) => e.path === 'priority')).toBe(true);
     });
 
     it('should accept all valid status values', async () => {
@@ -451,7 +451,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'id')).toBe(true);
+      expect(errors.some((e) => e.path === 'id')).toBe(true);
     });
 
     it('should fail when ID is negative', async () => {
@@ -464,7 +464,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'id')).toBe(true);
+      expect(errors.some((e) => e.path === 'id')).toBe(true);
     });
 
     it('should fail when ID is not a number', async () => {
@@ -477,7 +477,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'id')).toBe(true);
+      expect(errors.some((e) => e.path === 'id')).toBe(true);
     });
 
     it('should fail when ID is a decimal', async () => {
@@ -490,7 +490,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'id')).toBe(true);
+      expect(errors.some((e) => e.path === 'id')).toBe(true);
     });
 
     it('should convert string ID to integer', async () => {
@@ -561,7 +561,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'assigned_to')).toBe(true);
+      expect(errors.some((e) => e.path === 'assigned_to')).toBe(true);
     });
 
     it('should fail when assigned_to is negative', async () => {
@@ -574,7 +574,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'assigned_to')).toBe(true);
+      expect(errors.some((e) => e.path === 'assigned_to')).toBe(true);
     });
 
     it('should fail when assigned_to is not a number', async () => {
@@ -587,7 +587,7 @@ describe('Ticket Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'assigned_to')).toBe(true);
+      expect(errors.some((e) => e.path === 'assigned_to')).toBe(true);
     });
 
     it('should accept decimal strings (parseInt behavior)', async () => {

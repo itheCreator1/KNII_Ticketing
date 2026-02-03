@@ -25,152 +25,178 @@ const ticketData = {
   'Emergency Department': [
     {
       title: 'ED Workstation computer freezing',
-      description: 'The main triage workstation in ED keeps freezing during patient check-in. This is causing delays in processing emergency patients and affecting patient care.',
+      description:
+        'The main triage workstation in ED keeps freezing during patient check-in. This is causing delays in processing emergency patients and affecting patient care.',
       priority: 'critical',
-      status: 'open'
+      status: 'open',
     },
     {
       title: 'Ambulance radio system not receiving',
-      description: 'Radio communication with incoming ambulances is intermittent. We are missing critical patient information before arrival, which impacts our emergency preparedness.',
+      description:
+        'Radio communication with incoming ambulances is intermittent. We are missing critical patient information before arrival, which impacts our emergency preparedness.',
       priority: 'high',
-      status: 'in_progress'
-    }
+      status: 'in_progress',
+    },
   ],
-  'Cardiology': [
+  Cardiology: [
     {
       title: 'ECG machine calibration needed',
-      description: 'The ECG machine in room 204 is showing erratic readings. This equipment needs immediate calibration or replacement to ensure accurate patient diagnostics.',
+      description:
+        'The ECG machine in room 204 is showing erratic readings. This equipment needs immediate calibration or replacement to ensure accurate patient diagnostics.',
       priority: 'high',
-      status: 'open'
+      status: 'open',
     },
     {
       title: 'Cardiac monitoring system upgrade',
-      description: 'Request to upgrade the cardiac monitoring software to the latest version for improved arrhythmia detection algorithms and better patient monitoring capabilities.',
+      description:
+        'Request to upgrade the cardiac monitoring software to the latest version for improved arrhythmia detection algorithms and better patient monitoring capabilities.',
       priority: 'medium',
-      status: 'waiting_on_admin'
-    }
+      status: 'waiting_on_admin',
+    },
   ],
-  'Radiology': [
+  Radiology: [
     {
       title: 'X-ray machine error code 503',
-      description: 'The X-ray machine in Imaging Room 2 is displaying error code 503 and refusing to operate. This is severely limiting our imaging capacity for the day.',
+      description:
+        'The X-ray machine in Imaging Room 2 is displaying error code 503 and refusing to operate. This is severely limiting our imaging capacity for the day.',
       priority: 'critical',
-      status: 'in_progress'
+      status: 'in_progress',
     },
     {
       title: 'PACS system slow performance',
-      description: 'The Picture Archiving and Communication System (PACS) has been extremely slow when accessing patient images. This is delaying radiologist reviews and reports.',
+      description:
+        'The Picture Archiving and Communication System (PACS) has been extremely slow when accessing patient images. This is delaying radiologist reviews and reports.',
       priority: 'high',
-      status: 'open'
-    }
+      status: 'open',
+    },
   ],
-  'Pharmacy': [
+  Pharmacy: [
     {
       title: 'Medication dispensing system offline',
-      description: 'The automated medication dispensing system is offline. We cannot access medications for patient orders without manual override, which is time-consuming and error-prone.',
+      description:
+        'The automated medication dispensing system is offline. We cannot access medications for patient orders without manual override, which is time-consuming and error-prone.',
       priority: 'critical',
-      status: 'waiting_on_admin'
+      status: 'waiting_on_admin',
     },
     {
       title: 'Prescription printer jam issue',
-      description: 'The prescription label printer keeps jamming. This is slowing down medication preparation and causing delays in patient discharges.',
+      description:
+        'The prescription label printer keeps jamming. This is slowing down medication preparation and causing delays in patient discharges.',
       priority: 'medium',
-      status: 'open'
-    }
+      status: 'open',
+    },
   ],
-  'Laboratory': [
+  Laboratory: [
     {
       title: 'Blood analyzer calibration overdue',
-      description: 'The main blood chemistry analyzer is showing a calibration overdue warning. We need this serviced immediately to maintain accurate test results.',
+      description:
+        'The main blood chemistry analyzer is showing a calibration overdue warning. We need this serviced immediately to maintain accurate test results.',
       priority: 'high',
-      status: 'open'
+      status: 'open',
     },
     {
       title: 'Lab information system integration error',
-      description: 'The lab information system is not properly syncing results with the main EHR. Lab results are not appearing in patient charts automatically.',
+      description:
+        'The lab information system is not properly syncing results with the main EHR. Lab results are not appearing in patient charts automatically.',
       priority: 'high',
-      status: 'in_progress'
-    }
+      status: 'in_progress',
+    },
   ],
-  'Surgery': [
+  Surgery: [
     {
       title: 'Operating room temperature control malfunction',
-      description: 'OR 3 temperature control system is not maintaining proper temperature. The room is too warm for surgical procedures and needs immediate attention.',
+      description:
+        'OR 3 temperature control system is not maintaining proper temperature. The room is too warm for surgical procedures and needs immediate attention.',
       priority: 'critical',
-      status: 'open'
+      status: 'open',
     },
     {
       title: 'Surgical scheduling system glitch',
-      description: 'The surgical scheduling system is showing double-bookings for OR 5 next week. Need to resolve this scheduling conflict before it affects patient surgeries.',
+      description:
+        'The surgical scheduling system is showing double-bookings for OR 5 next week. Need to resolve this scheduling conflict before it affects patient surgeries.',
       priority: 'medium',
-      status: 'waiting_on_admin'
-    }
+      status: 'waiting_on_admin',
+    },
   ],
   'Intensive Care Unit': [
     {
       title: 'Ventilator alarm system issue',
-      description: 'The central alarm system for ventilators in ICU bed 7 is not triggering properly. This is a critical patient safety concern that needs immediate resolution.',
+      description:
+        'The central alarm system for ventilators in ICU bed 7 is not triggering properly. This is a critical patient safety concern that needs immediate resolution.',
       priority: 'critical',
-      status: 'in_progress'
+      status: 'in_progress',
     },
     {
       title: 'ICU monitoring station display flickering',
-      description: 'The main monitoring station display in ICU is flickering intermittently. This makes it difficult for nurses to monitor critical patient vitals effectively.',
+      description:
+        'The main monitoring station display in ICU is flickering intermittently. This makes it difficult for nurses to monitor critical patient vitals effectively.',
       priority: 'high',
-      status: 'open'
-    }
+      status: 'open',
+    },
   ],
   'Patient Registration': [
     {
       title: 'Insurance verification system timeout',
-      description: 'The insurance verification system keeps timing out when trying to verify patient coverage. This is causing long wait times for patient check-in.',
+      description:
+        'The insurance verification system keeps timing out when trying to verify patient coverage. This is causing long wait times for patient check-in.',
       priority: 'high',
-      status: 'open'
+      status: 'open',
     },
     {
       title: 'Patient portal password reset not working',
-      description: 'Multiple patients reporting that the password reset function on the patient portal is not sending reset emails. This is preventing patient access to their records.',
+      description:
+        'Multiple patients reporting that the password reset function on the patient portal is not sending reset emails. This is preventing patient access to their records.',
       priority: 'medium',
-      status: 'waiting_on_admin'
-    }
+      status: 'waiting_on_admin',
+    },
   ],
   'Medical Records': [
     {
       title: 'EHR system slow document loading',
-      description: 'The electronic health record system is taking 2-3 minutes to load patient documents. This is significantly impacting clinical workflow and patient care efficiency.',
+      description:
+        'The electronic health record system is taking 2-3 minutes to load patient documents. This is significantly impacting clinical workflow and patient care efficiency.',
       priority: 'high',
-      status: 'in_progress'
+      status: 'in_progress',
     },
     {
       title: 'Medical records scanning backlog',
-      description: 'The document scanner for old paper records is malfunctioning. We have a backlog of 500+ documents that need to be digitized and imported into the EHR.',
+      description:
+        'The document scanner for old paper records is malfunctioning. We have a backlog of 500+ documents that need to be digitized and imported into the EHR.',
       priority: 'medium',
-      status: 'open'
-    }
+      status: 'open',
+    },
   ],
   'Facilities Management': [
     {
       title: 'Emergency generator testing failure',
-      description: 'The backup emergency generator failed its monthly test. This is a critical safety issue that must be resolved immediately to ensure patient safety during power outages.',
+      description:
+        'The backup emergency generator failed its monthly test. This is a critical safety issue that must be resolved immediately to ensure patient safety during power outages.',
       priority: 'critical',
-      status: 'open'
+      status: 'open',
     },
     {
       title: 'Medical gas alarm system fault',
-      description: 'The medical gas alarm panel is showing a fault code for the oxygen supply line on floor 3. Need immediate inspection to ensure patient safety.',
+      description:
+        'The medical gas alarm panel is showing a fault code for the oxygen supply line on floor 3. Need immediate inspection to ensure patient safety.',
       priority: 'high',
-      status: 'in_progress'
-    }
-  ]
+      status: 'in_progress',
+    },
+  ],
 };
 
 // Sample comments for tickets
 const commentTemplates = [
   { content: 'I have checked the issue and will work on it shortly.', visibility: 'public' },
-  { content: 'Can you provide more details about when this started happening?', visibility: 'public' },
+  {
+    content: 'Can you provide more details about when this started happening?',
+    visibility: 'public',
+  },
   { content: 'Internal note: This requires vendor coordination.', visibility: 'internal' },
   { content: 'This has been escalated to the appropriate team.', visibility: 'public' },
-  { content: 'Internal: Similar issue reported last month - check ticket #42.', visibility: 'internal' }
+  {
+    content: 'Internal: Similar issue reported last month - check ticket #42.',
+    visibility: 'internal',
+  },
 ];
 
 /**
@@ -223,7 +249,7 @@ async function createSuperAdmin() {
       email: 'superadmin@knii.local',
       password: 'admin123',
       role: 'super_admin',
-      department: null
+      department: null,
     });
 
     console.log('   ✓ Super admin created: superadmin');
@@ -248,7 +274,9 @@ async function createDepartmentUsers() {
       throw new Error('No departments found. Please run migrations first.');
     }
 
-    console.log(`   ✓ Found ${departments.length} departments: ${departments.map(d => d.name).join(', ')}`);
+    console.log(
+      `   ✓ Found ${departments.length} departments: ${departments.map((d) => d.name).join(', ')}`,
+    );
 
     console.log('\n[3/5] Creating department users...');
     const users = [];
@@ -271,7 +299,7 @@ async function createDepartmentUsers() {
         email: email,
         password: 'password123',
         role: 'department',
-        department: dept.name
+        department: dept.name,
       });
 
       users.push({ user, deptName: dept.name });
@@ -311,7 +339,7 @@ async function createTickets(users, superAdmin) {
           reporter_id: user.id,
           priority: ticketInfo.priority,
           status: ticketInfo.status,
-          is_admin_created: false
+          is_admin_created: false,
         });
 
         createdTickets.push({ ticket, user, superAdmin });
@@ -340,24 +368,24 @@ async function createComments(ticketData) {
       const numPublicComments = Math.floor(Math.random() * 2) + 1; // 1 or 2
 
       for (let i = 0; i < numPublicComments; i++) {
-        const template = commentTemplates.find(t => t.visibility === 'public');
+        const template = commentTemplates.find((t) => t.visibility === 'public');
         await Comment.create({
           ticket_id: ticket.id,
           user_id: user.id,
           content: template.content,
-          visibility_type: 'public'
+          visibility_type: 'public',
         });
         commentCount++;
       }
 
       // Add 0-1 internal comments from super admin (50% chance)
       if (Math.random() > 0.5) {
-        const template = commentTemplates.find(t => t.visibility === 'internal');
+        const template = commentTemplates.find((t) => t.visibility === 'internal');
         await Comment.create({
           ticket_id: ticket.id,
           user_id: superAdmin.id,
           content: template.content,
-          visibility_type: 'internal'
+          visibility_type: 'internal',
         });
         commentCount++;
       }
@@ -381,7 +409,7 @@ async function createAuditLog(superAdmin, stats) {
       targetType: 'system',
       targetId: null,
       details: stats,
-      ipAddress: '127.0.0.1'
+      ipAddress: '127.0.0.1',
     });
   } catch (error) {
     console.error('   ⚠ Warning: Could not create audit log:', error.message);
@@ -402,7 +430,7 @@ function displayCredentials(users) {
   for (const { user, deptName } of users) {
     console.log(`    ${deptName}:`);
     console.log(`      Username: ${user.username}`);
-    console.log(`      Password: password123`);
+    console.log('      Password: password123');
   }
 
   console.log('\n📝 Access the application at: http://localhost:3000/auth/login\n');
@@ -438,7 +466,7 @@ async function seedDatabase() {
     const stats = {
       users: users.length + 1, // +1 for super admin
       tickets: tickets.length,
-      departments: users.length
+      departments: users.length,
     };
     await createAuditLog(superAdmin, stats);
 

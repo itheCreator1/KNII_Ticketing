@@ -28,8 +28,7 @@ describe('Auth Routes Integration Tests', () => {
   describe('GET /auth/login', () => {
     it('should render login form when not authenticated', async () => {
       // Act
-      const response = await request(app)
-        .get('/auth/login');
+      const response = await request(app).get('/auth/login');
 
       // Assert
       expect(response.status).toBe(200);
@@ -43,20 +42,16 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password,
-          _csrf: 'test-token' // CSRF will be validated in production
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+        _csrf: 'test-token', // CSRF will be validated in production
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act - Try to access login page while authenticated
-      const response = await request(app)
-        .get('/auth/login')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/auth/login').set('Cookie', cookies);
 
       // Assert
       expect(response.status).toBe(302);
@@ -71,12 +66,10 @@ describe('Auth Routes Integration Tests', () => {
       const user = await User.create(userData);
 
       // Act
-      const response = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const response = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert
       expect(response.status).toBe(302);
@@ -90,17 +83,15 @@ describe('Auth Routes Integration Tests', () => {
       const user = await User.create(userData);
 
       // Act
-      const response = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const response = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert
       const cookies = response.headers['set-cookie'];
       expect(cookies).toBeDefined();
-      expect(cookies.some(cookie => cookie.includes('connect.sid'))).toBe(true);
+      expect(cookies.some((cookie) => cookie.includes('connect.sid'))).toBe(true);
     });
 
     it('should reset login_attempts to 0 on successful login', async () => {
@@ -117,12 +108,10 @@ describe('Auth Routes Integration Tests', () => {
       expect(userBefore.login_attempts).toBe(2);
 
       // Act - Successful login
-      await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert - login_attempts should be reset
       const userAfter = await User.findByUsernameWithPassword(userData.username);
@@ -136,12 +125,10 @@ describe('Auth Routes Integration Tests', () => {
       const user = await User.create(userData);
 
       // Act - Failed login with wrong password
-      await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: 'WrongPassword123!'
-        });
+      await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: 'WrongPassword123!',
+      });
 
       // Assert
       const userAfter = await User.findByUsernameWithPassword(userData.username);
@@ -155,12 +142,10 @@ describe('Auth Routes Integration Tests', () => {
 
       // Act - Attempt 5 failed logins
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/auth/login')
-          .send({
-            username: userData.username,
-            password: 'WrongPassword123!'
-          });
+        await request(app).post('/auth/login').send({
+          username: userData.username,
+          password: 'WrongPassword123!',
+        });
       }
 
       // Assert
@@ -179,12 +164,10 @@ describe('Auth Routes Integration Tests', () => {
       }
 
       // Act - Try to login with correct password
-      const response = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const response = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert
       expect(response.status).toBe(302);
@@ -198,12 +181,10 @@ describe('Auth Routes Integration Tests', () => {
       const user = await User.create(userData);
 
       // Act
-      const response = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const response = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert
       expect(response.status).toBe(302);
@@ -216,12 +197,10 @@ describe('Auth Routes Integration Tests', () => {
       const user = await User.create(userData);
 
       // Act
-      const response = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const response = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert
       expect(response.status).toBe(302);
@@ -234,18 +213,16 @@ describe('Auth Routes Integration Tests', () => {
       const user = await User.create(userData);
 
       // Act
-      await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert
       const auditLogs = await AuditLog.findByActor(user.id);
       expect(auditLogs.length).toBeGreaterThan(0);
 
-      const loginLog = auditLogs.find(log => log.action === 'USER_LOGIN');
+      const loginLog = auditLogs.find((log) => log.action === 'USER_LOGIN');
       expect(loginLog).toBeDefined();
       expect(loginLog.actor_id).toBe(user.id);
       expect(loginLog.target_type).toBe('user');
@@ -255,12 +232,10 @@ describe('Auth Routes Integration Tests', () => {
 
     it('should handle non-existent username gracefully', async () => {
       // Act
-      const response = await request(app)
-        .post('/auth/login')
-        .send({
-          username: 'nonexistentuser',
-          password: 'SomePassword123!'
-        });
+      const response = await request(app).post('/auth/login').send({
+        username: 'nonexistentuser',
+        password: 'SomePassword123!',
+      });
 
       // Assert
       expect(response.status).toBe(302);
@@ -269,12 +244,10 @@ describe('Auth Routes Integration Tests', () => {
 
     it('should validate required fields', async () => {
       // Act
-      const response = await request(app)
-        .post('/auth/login')
-        .send({
-          username: '',
-          password: ''
-        });
+      const response = await request(app).post('/auth/login').send({
+        username: '',
+        password: '',
+      });
 
       // Assert
       expect(response.status).toBe(302);
@@ -288,22 +261,18 @@ describe('Auth Routes Integration Tests', () => {
 
       // Act - Measure time for existing user
       const start1 = Date.now();
-      await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: 'WrongPassword123!'
-        });
+      await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: 'WrongPassword123!',
+      });
       const duration1 = Date.now() - start1;
 
       // Act - Measure time for non-existent user
       const start2 = Date.now();
-      await request(app)
-        .post('/auth/login')
-        .send({
-          username: 'nonexistentuser12345',
-          password: 'WrongPassword123!'
-        });
+      await request(app).post('/auth/login').send({
+        username: 'nonexistentuser12345',
+        password: 'WrongPassword123!',
+      });
       const duration2 = Date.now() - start2;
 
       // Assert - Times should be similar (within 200ms threshold)
@@ -319,19 +288,15 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act - Logout
-      const response = await request(app)
-        .post('/auth/logout')
-        .set('Cookie', cookies);
+      const response = await request(app).post('/auth/logout').set('Cookie', cookies);
 
       // Assert
       expect(response.status).toBe(302);
@@ -343,19 +308,15 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act
-      const response = await request(app)
-        .post('/auth/logout')
-        .set('Cookie', cookies);
+      const response = await request(app).post('/auth/logout').set('Cookie', cookies);
 
       // Assert
       expect(response.status).toBe(302);
@@ -367,25 +328,21 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act
-      const response = await request(app)
-        .post('/auth/logout')
-        .set('Cookie', cookies);
+      const response = await request(app).post('/auth/logout').set('Cookie', cookies);
 
       // Assert - Session cookie should be cleared
       const setCookieHeader = response.headers['set-cookie'];
       if (setCookieHeader) {
-        const hasClearedCookie = setCookieHeader.some(cookie =>
-          cookie.includes('connect.sid') && cookie.includes('Expires=')
+        const hasClearedCookie = setCookieHeader.some(
+          (cookie) => cookie.includes('connect.sid') && cookie.includes('Expires='),
         );
         expect(hasClearedCookie).toBe(true);
       }
@@ -393,8 +350,7 @@ describe('Auth Routes Integration Tests', () => {
 
     it('should handle logout when not logged in gracefully', async () => {
       // Act
-      const response = await request(app)
-        .post('/auth/logout');
+      const response = await request(app).post('/auth/logout');
 
       // Assert - Should still redirect (session.destroy handles null session)
       expect(response.status).toBe(302);

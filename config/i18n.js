@@ -19,7 +19,7 @@ i18next
 
     // Backend options for loading translation files
     backend: {
-      loadPath: path.join(__dirname, '../locales/{{lng}}/{{ns}}.json')
+      loadPath: path.join(__dirname, '../locales/{{lng}}/{{ns}}.json'),
     },
 
     // Language detection configuration
@@ -28,16 +28,16 @@ i18next
       order: ['session', 'cookie'],
       lookupSession: 'language',
       lookupCookie: 'i18next',
-      caches: ['session', 'cookie']
+      caches: ['session', 'cookie'],
     },
 
     // Interpolation settings
     interpolation: {
-      escapeValue: false // EJS handles escaping
+      escapeValue: false, // EJS handles escaping
     },
 
     // Disable debug in production
-    debug: false
+    debug: false,
   });
 
 module.exports = { i18next, middleware };

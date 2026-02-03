@@ -20,7 +20,7 @@ function runBenchmark(scriptName) {
   return new Promise((resolve, reject) => {
     const script = path.join(__dirname, `${scriptName}.bench.js`);
     const process = spawn('node', [script], {
-      stdio: 'inherit'
+      stdio: 'inherit',
     });
 
     process.on('close', (code) => {
@@ -46,11 +46,11 @@ async function runAllBenchmarks() {
   const benchmarks = [
     { name: 'authentication', label: '🔐 Authentication' },
     { name: 'ticketOperations', label: '🎫 Ticket Operations' },
-    { name: 'commentOperations', label: '💬 Comment Operations' }
+    { name: 'commentOperations', label: '💬 Comment Operations' },
   ];
 
   const results = [];
-  let failedBenchmarks = [];
+  const failedBenchmarks = [];
 
   for (const benchmark of benchmarks) {
     console.log(`\n▶️  Running ${benchmark.label} Benchmarks...\n`);
@@ -63,7 +63,7 @@ async function runAllBenchmarks() {
       results.push({
         name: benchmark.label,
         status: '✅ PASS',
-        duration: `${duration}s`
+        duration: `${duration}s`,
       });
     } catch (error) {
       console.error(`\n❌ ${benchmark.label} benchmark failed: ${error.message}\n`);
@@ -71,7 +71,7 @@ async function runAllBenchmarks() {
       results.push({
         name: benchmark.label,
         status: '❌ FAIL',
-        duration: 'N/A'
+        duration: 'N/A',
       });
     }
   }
@@ -81,7 +81,7 @@ async function runAllBenchmarks() {
   console.log('📊 Benchmark Summary');
   console.log('='.repeat(70) + '\n');
 
-  results.forEach(result => {
+  results.forEach((result) => {
     console.log(`${result.status} ${result.name.padEnd(25)} (${result.duration})`);
   });
 
@@ -91,7 +91,7 @@ async function runAllBenchmarks() {
     console.log('✅ All benchmarks completed successfully!');
   } else {
     console.log(`❌ ${failedBenchmarks.length} benchmark(s) failed:`);
-    failedBenchmarks.forEach(name => {
+    failedBenchmarks.forEach((name) => {
       console.log(`   - ${name}`);
     });
     process.exit(1);

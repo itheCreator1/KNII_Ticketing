@@ -35,16 +35,14 @@ describe('Ticket Lifecycle E2E Tests', () => {
         role: 'department',
         status: 'active',
         username: 'dept_it_support',
-        email: 'it.support@knii.local'
+        email: 'it.support@knii.local',
       });
       const departmentUser = await User.create(departmentData);
 
-      const deptLoginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: departmentData.username,
-          password: departmentData.password
-        });
+      const deptLoginResponse = await request(app).post('/auth/login').send({
+        username: departmentData.username,
+        password: departmentData.password,
+      });
 
       const deptCookies = deptLoginResponse.headers['set-cookie'];
 
@@ -52,13 +50,14 @@ describe('Ticket Lifecycle E2E Tests', () => {
       // Tickets are created directly in DB for this E2E test or via service
       const ticket = await Ticket.create({
         title: 'Cannot access database',
-        description: 'Getting connection timeout errors when trying to connect to production database',
+        description:
+          'Getting connection timeout errors when trying to connect to production database',
         reporter_name: 'IT Support Department',
         reporter_department: 'IT Support',
         reporter_phone: '+1234567890',
         reporter_id: departmentUser.id,
         priority: 'high',
-        status: 'open'
+        status: 'open',
       });
 
       expect(ticket.status).toBe('open');
@@ -68,12 +67,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       const admin = await User.create(adminData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: adminData.username,
-          password: adminData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: adminData.username,
+        password: adminData.password,
+      });
 
       const adminCookies = loginResponse.headers['set-cookie'];
 
@@ -108,8 +105,8 @@ describe('Ticket Lifecycle E2E Tests', () => {
 
       // Verify audit log entry created
       const auditLogs1 = await AuditLog.findByTarget('ticket', ticket.id);
-      const statusUpdateLog = auditLogs1.find(log =>
-        log.action === 'TICKET_UPDATED' && log.details.status === 'in_progress'
+      const statusUpdateLog = auditLogs1.find(
+        (log) => log.action === 'TICKET_UPDATED' && log.details.status === 'in_progress',
       );
       expect(statusUpdateLog).toBeDefined();
 
@@ -118,7 +115,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
         .post(`/admin/tickets/${ticket.id}/comments`)
         .set('Cookie', adminCookies)
         .send({
-          content: 'Checking database connection logs. Appears to be a network issue.'
+          content: 'Checking database connection logs. Appears to be a network issue.',
         });
 
       expect(firstCommentResponse.status).toBe(302);
@@ -134,7 +131,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
         .post(`/admin/tickets/${ticket.id}/comments`)
         .set('Cookie', adminCookies)
         .send({
-          content: 'We are investigating the database connection issue. Our team is working on it.'
+          content: 'We are investigating the database connection issue. Our team is working on it.',
         });
 
       expect(secondCommentResponse.status).toBe(302);
@@ -173,7 +170,8 @@ describe('Ticket Lifecycle E2E Tests', () => {
         .post(`/admin/tickets/${ticket.id}/comments`)
         .set('Cookie', adminCookies)
         .send({
-          content: 'Issue resolved. Firewall rules have been updated to allow database connections.'
+          content:
+            'Issue resolved. Firewall rules have been updated to allow database connections.',
         });
 
       expect(resolutionCommentResponse.status).toBe(302);
@@ -202,11 +200,11 @@ describe('Ticket Lifecycle E2E Tests', () => {
       expect(finalAuditLogs.length).toBeGreaterThanOrEqual(1);
 
       // Verify ticket creation log
-      const creationLog = finalAuditLogs.find(log => log.action === 'TICKET_CREATED');
+      const creationLog = finalAuditLogs.find((log) => log.action === 'TICKET_CREATED');
       expect(creationLog).toBeDefined();
 
       // Verify update logs
-      const updateLogs = finalAuditLogs.filter(log => log.action === 'TICKET_UPDATED');
+      const updateLogs = finalAuditLogs.filter((log) => log.action === 'TICKET_UPDATED');
       expect(updateLogs.length).toBeGreaterThan(0);
     });
 
@@ -215,12 +213,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       const admin = await User.create(adminData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: adminData.username,
-          password: adminData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: adminData.username,
+        password: adminData.password,
+      });
 
       const adminCookies = loginResponse.headers['set-cookie'];
 
@@ -238,8 +234,8 @@ describe('Ticket Lifecycle E2E Tests', () => {
 
       // Assert - Verify all transitions logged
       const auditLogs = await AuditLog.findByTarget('ticket', ticket.id);
-      const statusUpdateLogs = auditLogs.filter(log =>
-        log.action === 'TICKET_UPDATED' && log.details.status
+      const statusUpdateLogs = auditLogs.filter(
+        (log) => log.action === 'TICKET_UPDATED' && log.details.status,
       );
 
       expect(statusUpdateLogs.length).toBeGreaterThanOrEqual(statuses.length);
@@ -256,12 +252,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       const admin = await User.create(adminData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: adminData.username,
-          password: adminData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: adminData.username,
+        password: adminData.password,
+      });
 
       const adminCookies = loginResponse.headers['set-cookie'];
 
@@ -307,12 +301,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
 
       const ticket = await Ticket.create(createTicketData({ assigned_to: admin1.id }));
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: admin1Data.username,
-          password: admin1Data.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: admin1Data.username,
+        password: admin1Data.password,
+      });
 
       const adminCookies = loginResponse.headers['set-cookie'];
 
@@ -337,12 +329,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       await User.create(adminData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: adminData.username,
-          password: adminData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: adminData.username,
+        password: adminData.password,
+      });
 
       const adminCookies = loginResponse.headers['set-cookie'];
 
@@ -375,8 +365,8 @@ describe('Ticket Lifecycle E2E Tests', () => {
 
       // Step 6: Verify audit trail shows all escalations
       const auditLogs = await AuditLog.findByTarget('ticket', ticket.id);
-      const priorityLogs = auditLogs.filter(log =>
-        log.action === 'TICKET_UPDATED' && log.details.priority
+      const priorityLogs = auditLogs.filter(
+        (log) => log.action === 'TICKET_UPDATED' && log.details.priority,
       );
 
       expect(priorityLogs.length).toBeGreaterThanOrEqual(3);
@@ -394,55 +384,42 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const admin1 = await User.create(admin1Data);
       const admin2 = await User.create(admin2Data);
 
-      const login1 = await request(app)
-        .post('/auth/login')
-        .send({
-          username: admin1Data.username,
-          password: admin1Data.password
-        });
+      const login1 = await request(app).post('/auth/login').send({
+        username: admin1Data.username,
+        password: admin1Data.password,
+      });
 
       const cookies1 = login1.headers['set-cookie'];
 
-      const login2 = await request(app)
-        .post('/auth/login')
-        .send({
-          username: admin2Data.username,
-          password: admin2Data.password
-        });
+      const login2 = await request(app).post('/auth/login').send({
+        username: admin2Data.username,
+        password: admin2Data.password,
+      });
 
       const cookies2 = login2.headers['set-cookie'];
 
       // Act - Admin 1 adds comment
-      await request(app)
-        .post(`/admin/tickets/${ticket.id}/comments`)
-        .set('Cookie', cookies1)
-        .send({
-          content: 'I will investigate this issue.'
-        });
+      await request(app).post(`/admin/tickets/${ticket.id}/comments`).set('Cookie', cookies1).send({
+        content: 'I will investigate this issue.',
+      });
 
       // Admin 2 adds comment
-      await request(app)
-        .post(`/admin/tickets/${ticket.id}/comments`)
-        .set('Cookie', cookies2)
-        .send({
-          content: 'I can help with the database side.'
-        });
+      await request(app).post(`/admin/tickets/${ticket.id}/comments`).set('Cookie', cookies2).send({
+        content: 'I can help with the database side.',
+      });
 
       // Admin 1 adds another comment
-      await request(app)
-        .post(`/admin/tickets/${ticket.id}/comments`)
-        .set('Cookie', cookies1)
-        .send({
-          content: 'Issue has been resolved.'
-        });
+      await request(app).post(`/admin/tickets/${ticket.id}/comments`).set('Cookie', cookies1).send({
+        content: 'Issue has been resolved.',
+      });
 
       // Assert
       const comments = await Comment.findByTicketId(ticket.id);
       expect(comments.length).toBe(3);
 
       // Verify authors (all comments are admin-only)
-      const admin1Comments = comments.filter(c => c.user_id === admin1.id);
-      const admin2Comments = comments.filter(c => c.user_id === admin2.id);
+      const admin1Comments = comments.filter((c) => c.user_id === admin1.id);
+      const admin2Comments = comments.filter((c) => c.user_id === admin2.id);
 
       expect(admin1Comments.length).toBe(2);
       expect(admin2Comments.length).toBe(1);
@@ -460,12 +437,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       await User.create(adminData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: adminData.username,
-          password: adminData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: adminData.username,
+        password: adminData.password,
+      });
 
       const adminCookies = loginResponse.headers['set-cookie'];
 
@@ -484,9 +459,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
       expect(closedResponse.status).toBe(200);
 
       // Assert - All tickets shown when no filter
-      const allResponse = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', adminCookies);
+      const allResponse = await request(app).get('/admin/dashboard').set('Cookie', adminCookies);
 
       expect(allResponse.status).toBe(200);
     });

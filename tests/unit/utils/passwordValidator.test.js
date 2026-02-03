@@ -114,7 +114,7 @@ describe('passwordValidator', () => {
         const specialChars = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+'];
 
         // Act & Assert
-        specialChars.forEach(char => {
+        specialChars.forEach((char) => {
           const password = `Test123${char}`;
           const result = validatePassword(password);
           expect(result.isValid).toBe(true);
@@ -123,7 +123,7 @@ describe('passwordValidator', () => {
 
       it('should accept all fixture valid passwords', () => {
         // Arrange & Act & Assert
-        validPasswords.forEach(password => {
+        validPasswords.forEach((password) => {
           const result = validatePassword(password);
           expect(result.isValid).toBe(true);
         });

@@ -39,42 +39,41 @@ const validateUserCreate = [
     .isIn([USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN, USER_ROLE.DEPARTMENT])
     .withMessage(VALIDATION_MESSAGES.ROLE_INVALID),
 
-  body('department')
-    .custom(async (value, { req }) => {
-      const role = req.body.role;
-      const logger = require('../utils/logger');
+  body('department').custom(async (value, { req }) => {
+    const role = req.body.role;
+    const logger = require('../utils/logger');
 
-      // Trim the value for validation
-      const trimmedValue = value ? value.trim() : '';
+    // Trim the value for validation
+    const trimmedValue = value ? value.trim() : '';
 
-      // If role is department, department must be provided and valid
-      if (role === USER_ROLE.DEPARTMENT) {
-        if (!trimmedValue) {
-          throw new Error('Department is required for department role users');
-        }
-
-        // Fetch active departments from database (exclude system departments)
-        const validDepartments = await Department.findAll(false);
-        const validNames = validDepartments.map(d => d.name);
-
-        logger.debug('Department validation', {
-          role,
-          department: trimmedValue,
-          validDepartments: validNames
-        });
-
-        if (!validNames.includes(trimmedValue)) {
-          throw new Error('Invalid department selected');
-        }
+    // If role is department, department must be provided and valid
+    if (role === USER_ROLE.DEPARTMENT) {
+      if (!trimmedValue) {
+        throw new Error('Department is required for department role users');
       }
 
-      // If role is not department, department should be empty (we'll convert to null in routes)
-      if (role !== USER_ROLE.DEPARTMENT && trimmedValue) {
-        throw new Error('Department can only be set for department role users');
-      }
+      // Fetch active departments from database (exclude system departments)
+      const validDepartments = await Department.findAll(false);
+      const validNames = validDepartments.map((d) => d.name);
 
-      return true;
-    })
+      logger.debug('Department validation', {
+        role,
+        department: trimmedValue,
+        validDepartments: validNames,
+      });
+
+      if (!validNames.includes(trimmedValue)) {
+        throw new Error('Invalid department selected');
+      }
+    }
+
+    // If role is not department, department should be empty (we'll convert to null in routes)
+    if (role !== USER_ROLE.DEPARTMENT && trimmedValue) {
+      throw new Error('Department can only be set for department role users');
+    }
+
+    return true;
+  }),
 ];
 
 const validateUserUpdate = [
@@ -121,7 +120,7 @@ const validateUserUpdate = [
 
           // Fetch active departments from database (exclude system departments)
           const validDepartments = await Department.findAll(false);
-          const validNames = validDepartments.map(d => d.name);
+          const validNames = validDepartments.map((d) => d.name);
 
           if (!validNames.includes(value)) {
             throw new Error('Invalid department selected');
@@ -138,7 +137,7 @@ const validateUserUpdate = [
       if (role === undefined && value) {
         // Fetch active departments from database (exclude system departments)
         const validDepartments = await Department.findAll(false);
-        const validNames = validDepartments.map(d => d.name);
+        const validNames = validDepartments.map((d) => d.name);
 
         if (!validNames.includes(value)) {
           throw new Error('Invalid department selected');
@@ -146,16 +145,16 @@ const validateUserUpdate = [
       }
 
       return true;
-    })
+    }),
 ];
 
 const validatePasswordReset = [
   param('id').isInt().withMessage('Invalid user ID'),
-  passwordValidation('password')
+  passwordValidation('password'),
 ];
 
 module.exports = {
   validateUserCreate,
   validateUserUpdate,
-  validatePasswordReset
+  validatePasswordReset,
 };

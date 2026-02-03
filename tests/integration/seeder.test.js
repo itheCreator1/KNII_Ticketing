@@ -84,7 +84,7 @@ describe('Seeder Integration Tests', () => {
       if (!existing) {
         const floor = await Floor.create(
           { name: floorConfig.name, sort_order: floorConfig.sort_order },
-          db
+          db,
         );
         createdFloors.push(floor);
       }
@@ -99,14 +99,16 @@ describe('Seeder Integration Tests', () => {
   async function createSuperAdmin(superAdminConfig, client = null) {
     const db = client || pool;
     const existing = await User.findByUsername(superAdminConfig.username);
-    if (existing) return existing;
+    if (existing) {
+      return existing;
+    }
 
     return User.create({
       username: superAdminConfig.username,
       email: superAdminConfig.email,
       password: superAdminConfig.password,
       role: 'super_admin',
-      department: null
+      department: null,
     });
   }
 
@@ -120,18 +122,20 @@ describe('Seeder Integration Tests', () => {
     for (const deptConfig of departmentsConfig) {
       const existing = await Department.findByName(deptConfig.name);
       if (!existing) {
-        await Department.create({
-          name: deptConfig.name,
-          description: deptConfig.description,
-          floor: deptConfig.floor
-        }, db);
+        await Department.create(
+          {
+            name: deptConfig.name,
+            description: deptConfig.description,
+            floor: deptConfig.floor,
+          },
+          db,
+        );
 
         // If Internal department, manually set is_system=true
         if (deptConfig.name === 'Internal') {
-          await db.query(
-            'UPDATE departments SET is_system = true WHERE name = $1',
-            [deptConfig.name]
-          );
+          await db.query('UPDATE departments SET is_system = true WHERE name = $1', [
+            deptConfig.name,
+          ]);
         }
 
         createdDepartments.push(deptConfig);
@@ -148,7 +152,9 @@ describe('Seeder Integration Tests', () => {
     const createdUsers = [];
 
     for (const deptConfig of departmentsConfig) {
-      if (!deptConfig.user) continue;
+      if (!deptConfig.user) {
+        continue;
+      }
 
       const userConfig = deptConfig.user;
       const existing = await User.findByUsername(userConfig.username);
@@ -158,7 +164,7 @@ describe('Seeder Integration Tests', () => {
           email: userConfig.email,
           password: userConfig.password,
           role: 'department',
-          department: deptConfig.name
+          department: deptConfig.name,
         });
         createdUsers.push({ user, deptName: deptConfig.name });
       }
@@ -200,7 +206,7 @@ describe('Seeder Integration Tests', () => {
 
     it('should include Internal department in config', () => {
       const { departmentsData } = loadConfig();
-      const internal = departmentsData.departments.find(d => d.name === 'Internal');
+      const internal = departmentsData.departments.find((d) => d.name === 'Internal');
       expect(internal).toBeDefined();
       expect(internal.user).toBeNull();
     });

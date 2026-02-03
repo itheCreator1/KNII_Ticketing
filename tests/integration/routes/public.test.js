@@ -24,8 +24,7 @@ describe('Public Routes Integration Tests', () => {
   describe('GET /', () => {
     it('should redirect to login page', async () => {
       // Act
-      const response = await request(app)
-        .get('/');
+      const response = await request(app).get('/');
 
       // Assert
       expect(response.status).toBe(302);
@@ -36,8 +35,7 @@ describe('Public Routes Integration Tests', () => {
   describe('GET /health', () => {
     it('should return 200 status with health information', async () => {
       // Act
-      const response = await request(app)
-        .get('/health');
+      const response = await request(app).get('/health');
 
       // Assert
       expect(response.status).toBe(200);
@@ -49,8 +47,7 @@ describe('Public Routes Integration Tests', () => {
 
     it('should include database status', async () => {
       // Act
-      const response = await request(app)
-        .get('/health');
+      const response = await request(app).get('/health');
 
       // Assert
       expect(response.body.database).toBeDefined();
@@ -60,8 +57,7 @@ describe('Public Routes Integration Tests', () => {
 
     it('should include memory usage information', async () => {
       // Act
-      const response = await request(app)
-        .get('/health');
+      const response = await request(app).get('/health');
 
       // Assert
       expect(response.body.memory).toBeDefined();
@@ -71,8 +67,7 @@ describe('Public Routes Integration Tests', () => {
 
     it('should return JSON format', async () => {
       // Act
-      const response = await request(app)
-        .get('/health');
+      const response = await request(app).get('/health');
 
       // Assert
       expect(response.headers['content-type']).toContain('application/json');

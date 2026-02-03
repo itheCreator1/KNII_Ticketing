@@ -33,7 +33,7 @@ describe('Comment Model', () => {
         ticket_id: commentData.ticket_id,
         user_id: commentData.user_id,
         content: commentData.content,
-        created_at: new Date()
+        created_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockComment] });
 
@@ -44,11 +44,7 @@ describe('Comment Model', () => {
       expect(result).toEqual(mockComment);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO comments'),
-        expect.arrayContaining([
-          commentData.ticket_id,
-          commentData.user_id,
-          commentData.content
-        ])
+        expect.arrayContaining([commentData.ticket_id, commentData.user_id, commentData.content]),
       );
     });
 
@@ -61,7 +57,7 @@ describe('Comment Model', () => {
         ticket_id: commentData.ticket_id,
         user_id: commentData.user_id,
         content: commentData.content,
-        created_at: now
+        created_at: now,
       };
       pool.query.mockResolvedValue({ rows: [mockComment] });
 
@@ -81,7 +77,7 @@ describe('Comment Model', () => {
       const commentData = createCommentData({
         ticket_id: 5,
         user_id: 10,
-        content: 'Test comment content'
+        content: 'Test comment content',
       });
       const mockComment = { id: 4, ...commentData, created_at: new Date() };
       pool.query.mockResolvedValue({ rows: [mockComment] });
@@ -92,7 +88,7 @@ describe('Comment Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('$1, $2, $3, $4'),
-        [5, 10, 'Test comment content', 'public'] // visibility_type defaults to 'public'
+        [5, 10, 'Test comment content', 'public'], // visibility_type defaults to 'public'
       );
     });
 
@@ -117,7 +113,7 @@ describe('Comment Model', () => {
           user_id: 10,
           content: 'First comment',
           created_at: new Date('2024-01-01'),
-          username: 'admin'
+          username: 'admin',
         },
         {
           id: 2,
@@ -125,8 +121,8 @@ describe('Comment Model', () => {
           user_id: 11,
           content: 'Second comment',
           created_at: new Date('2024-01-02'),
-          username: 'support'
-        }
+          username: 'support',
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockComments });
 
@@ -144,7 +140,7 @@ describe('Comment Model', () => {
     it('should execute JOIN with users table to get username', async () => {
       // Arrange
       const mockComments = [
-        { id: 1, ticket_id: 3, user_id: 5, content: 'Comment', username: 'testuser' }
+        { id: 1, ticket_id: 3, user_id: 5, content: 'Comment', username: 'testuser' },
       ];
       pool.query.mockResolvedValue({ rows: mockComments });
 
@@ -154,11 +150,11 @@ describe('Comment Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('JOIN users u ON c.user_id = u.id'),
-        [3]
+        [3],
       );
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('u.username'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -167,7 +163,7 @@ describe('Comment Model', () => {
       const mockComments = [
         { id: 1, content: 'First', created_at: new Date('2024-01-01') },
         { id: 2, content: 'Second', created_at: new Date('2024-01-02') },
-        { id: 3, content: 'Third', created_at: new Date('2024-01-03') }
+        { id: 3, content: 'Third', created_at: new Date('2024-01-03') },
       ];
       pool.query.mockResolvedValue({ rows: mockComments });
 
@@ -177,7 +173,7 @@ describe('Comment Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY c.created_at ASC'),
-        [1]
+        [1],
       );
     });
 

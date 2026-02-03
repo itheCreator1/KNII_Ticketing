@@ -36,12 +36,10 @@ describe('User Management Routes Integration Tests', () => {
     const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
     superAdminUser = await User.create(superAdminData);
 
-    const superAdminLogin = await request(app)
-      .post('/auth/login')
-      .send({
-        username: superAdminData.username,
-        password: superAdminData.password
-      });
+    const superAdminLogin = await request(app).post('/auth/login').send({
+      username: superAdminData.username,
+      password: superAdminData.password,
+    });
 
     superAdminCookies = superAdminLogin.headers['set-cookie'];
 
@@ -49,12 +47,10 @@ describe('User Management Routes Integration Tests', () => {
     const adminData = createUserData({ role: 'admin', status: 'active' });
     adminUser = await User.create(adminData);
 
-    const adminLogin = await request(app)
-      .post('/auth/login')
-      .send({
-        username: adminData.username,
-        password: adminData.password
-      });
+    const adminLogin = await request(app).post('/auth/login').send({
+      username: adminData.username,
+      password: adminData.password,
+    });
 
     adminCookies = adminLogin.headers['set-cookie'];
   });
@@ -66,9 +62,7 @@ describe('User Management Routes Integration Tests', () => {
   describe('GET /admin/users', () => {
     it('should require super_admin role', async () => {
       // Act - Use admin (not super_admin) cookies
-      const response = await request(app)
-        .get('/admin/users')
-        .set('Cookie', adminCookies);
+      const response = await request(app).get('/admin/users').set('Cookie', adminCookies);
 
       // Assert
       expect(response.status).toBe(302);
@@ -81,9 +75,7 @@ describe('User Management Routes Integration Tests', () => {
       await User.create(createUserData({ status: 'inactive', username: 'testuser2' }));
 
       // Act
-      const response = await request(app)
-        .get('/admin/users')
-        .set('Cookie', superAdminCookies);
+      const response = await request(app).get('/admin/users').set('Cookie', superAdminCookies);
 
       // Assert
       expect(response.status).toBe(200);
@@ -94,9 +86,7 @@ describe('User Management Routes Integration Tests', () => {
 
     it('should display user status and role', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/users')
-        .set('Cookie', superAdminCookies);
+      const response = await request(app).get('/admin/users').set('Cookie', superAdminCookies);
 
       // Assert
       expect(response.status).toBe(200);
@@ -106,8 +96,7 @@ describe('User Management Routes Integration Tests', () => {
 
     it('should require authentication', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/users');
+      const response = await request(app).get('/admin/users');
 
       // Assert
       expect(response.status).toBe(302);
@@ -118,9 +107,7 @@ describe('User Management Routes Integration Tests', () => {
   describe('GET /admin/users/new', () => {
     it('should require super_admin role', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/users/new')
-        .set('Cookie', adminCookies);
+      const response = await request(app).get('/admin/users/new').set('Cookie', adminCookies);
 
       // Assert
       expect(response.status).toBe(302);
@@ -128,9 +115,7 @@ describe('User Management Routes Integration Tests', () => {
 
     it('should render create user form for super_admin', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/users/new')
-        .set('Cookie', superAdminCookies);
+      const response = await request(app).get('/admin/users/new').set('Cookie', superAdminCookies);
 
       // Assert
       expect(response.status).toBe(200);
@@ -179,16 +164,15 @@ describe('User Management Routes Integration Tests', () => {
       const userData = createUserData({ username: 'hasheduser' });
 
       // Act
-      await request(app)
-        .post('/admin/users')
-        .set('Cookie', superAdminCookies)
-        .send(userData);
+      await request(app).post('/admin/users').set('Cookie', superAdminCookies).send(userData);
 
       // Assert
       const user = await User.findByUsernameWithPassword('hasheduser');
       expect(user.password_hash).toBeDefined();
       expect(user.password_hash).not.toBe(userData.password);
-      expect(user.password_hash.startsWith('$2a$') || user.password_hash.startsWith('$2b$')).toBe(true);
+      expect(user.password_hash.startsWith('$2a$') || user.password_hash.startsWith('$2b$')).toBe(
+        true,
+      );
 
       // Verify password can be verified
       const isValid = await bcrypt.compare(userData.password, user.password_hash);
@@ -248,10 +232,7 @@ describe('User Management Routes Integration Tests', () => {
       delete userData.status;
 
       // Act
-      await request(app)
-        .post('/admin/users')
-        .set('Cookie', superAdminCookies)
-        .send(userData);
+      await request(app).post('/admin/users').set('Cookie', superAdminCookies).send(userData);
 
       // Assert
       const user = await User.findByUsername('defaultactive');
@@ -263,16 +244,13 @@ describe('User Management Routes Integration Tests', () => {
       const userData = createUserData({ username: 'audituser' });
 
       // Act
-      await request(app)
-        .post('/admin/users')
-        .set('Cookie', superAdminCookies)
-        .send(userData);
+      await request(app).post('/admin/users').set('Cookie', superAdminCookies).send(userData);
 
       // Assert
       const user = await User.findByUsername('audituser');
       const auditLogs = await AuditLog.findByTarget('user', user.id);
 
-      const creationLog = auditLogs.find(log => log.action === 'USER_CREATED');
+      const creationLog = auditLogs.find((log) => log.action === 'USER_CREATED');
       expect(creationLog).toBeDefined();
       expect(creationLog.actor_id).toBe(superAdminUser.id);
     });
@@ -347,7 +325,7 @@ describe('User Management Routes Integration Tests', () => {
         .send({
           username: 'updated',
           email: 'updated@example.com',
-          role: 'super_admin'
+          role: 'super_admin',
         });
 
       // Assert
@@ -404,7 +382,7 @@ describe('User Management Routes Integration Tests', () => {
 
       // Assert
       const auditLogs = await AuditLog.findByTarget('user', user.id);
-      const updateLog = auditLogs.find(log => log.action === 'USER_UPDATED');
+      const updateLog = auditLogs.find((log) => log.action === 'USER_UPDATED');
 
       expect(updateLog).toBeDefined();
       expect(updateLog.actor_id).toBe(superAdminUser.id);
@@ -459,7 +437,9 @@ describe('User Management Routes Integration Tests', () => {
       // Assert
       const updatedUser = await User.findByUsernameWithPassword(user.username);
       expect(updatedUser.password_hash).not.toBe(newPassword);
-      expect(updatedUser.password_hash.startsWith('$2a$') || updatedUser.password_hash.startsWith('$2b$')).toBe(true);
+      expect(
+        updatedUser.password_hash.startsWith('$2a$') || updatedUser.password_hash.startsWith('$2b$'),
+      ).toBe(true);
     });
 
     it('should validate password complexity on reset', async () => {
@@ -504,7 +484,7 @@ describe('User Management Routes Integration Tests', () => {
 
       // Assert
       const auditLogs = await AuditLog.findByTarget('user', user.id);
-      const passwordLog = auditLogs.find(log => log.action === 'PASSWORD_RESET');
+      const passwordLog = auditLogs.find((log) => log.action === 'PASSWORD_RESET');
 
       expect(passwordLog).toBeDefined();
       expect(passwordLog.actor_id).toBe(superAdminUser.id);
@@ -547,9 +527,7 @@ describe('User Management Routes Integration Tests', () => {
       const user = await User.create(createUserData());
 
       // Act
-      await request(app)
-        .post(`/admin/users/${user.id}/delete`)
-        .set('Cookie', superAdminCookies);
+      await request(app).post(`/admin/users/${user.id}/delete`).set('Cookie', superAdminCookies);
 
       // Assert - User.clearUserSessions should have been called
       const deletedUser = await User.findById(user.id);
@@ -572,13 +550,11 @@ describe('User Management Routes Integration Tests', () => {
       const user = await User.create(createUserData());
 
       // Act
-      await request(app)
-        .post(`/admin/users/${user.id}/delete`)
-        .set('Cookie', superAdminCookies);
+      await request(app).post(`/admin/users/${user.id}/delete`).set('Cookie', superAdminCookies);
 
       // Assert
       const auditLogs = await AuditLog.findByTarget('user', user.id);
-      const deleteLog = auditLogs.find(log => log.action === 'USER_DELETED');
+      const deleteLog = auditLogs.find((log) => log.action === 'USER_DELETED');
 
       expect(deleteLog).toBeDefined();
       expect(deleteLog.actor_id).toBe(superAdminUser.id);
@@ -590,14 +566,10 @@ describe('User Management Routes Integration Tests', () => {
       const user = await User.create(userData);
 
       // Act
-      await request(app)
-        .post(`/admin/users/${user.id}/delete`)
-        .set('Cookie', superAdminCookies);
+      await request(app).post(`/admin/users/${user.id}/delete`).set('Cookie', superAdminCookies);
 
       // Verify deletion
-      const response = await request(app)
-        .get('/admin/users')
-        .set('Cookie', superAdminCookies);
+      const response = await request(app).get('/admin/users').set('Cookie', superAdminCookies);
 
       // Assert
       expect(response.status).toBe(200);

@@ -32,8 +32,8 @@ describe('Auth Middleware', () => {
       // Arrange
       const req = createMockRequest({
         session: {
-          user: { id: 1, username: 'testuser', role: 'admin' }
-        }
+          user: { id: 1, username: 'testuser', role: 'admin' },
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -41,7 +41,7 @@ describe('Auth Middleware', () => {
       User.findById.mockResolvedValue({
         id: 1,
         username: 'testuser',
-        status: 'active'
+        status: 'active',
       });
 
       // Act
@@ -63,19 +63,14 @@ describe('Auth Middleware', () => {
       await requireAuth(req, res, next);
 
       // Assert
-      expect(errorRedirect).toHaveBeenCalledWith(
-        req,
-        res,
-        expect.any(String),
-        '/auth/login'
-      );
+      expect(errorRedirect).toHaveBeenCalledWith(req, res, expect.any(String), '/auth/login');
       expect(next).not.toHaveBeenCalled();
     });
 
     it('should redirect to login when session.user is missing', async () => {
       // Arrange
       const req = createMockRequest({
-        session: { someOtherData: 'value' }
+        session: { someOtherData: 'value' },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -84,12 +79,7 @@ describe('Auth Middleware', () => {
       await requireAuth(req, res, next);
 
       // Assert
-      expect(errorRedirect).toHaveBeenCalledWith(
-        req,
-        res,
-        expect.any(String),
-        '/auth/login'
-      );
+      expect(errorRedirect).toHaveBeenCalledWith(req, res, expect.any(String), '/auth/login');
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -99,8 +89,8 @@ describe('Auth Middleware', () => {
       const req = createMockRequest({
         session: {
           user: { id: 1, username: 'testuser' },
-          destroy: destroyCallback
-        }
+          destroy: destroyCallback,
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -108,7 +98,7 @@ describe('Auth Middleware', () => {
       User.findById.mockResolvedValue({
         id: 1,
         username: 'testuser',
-        status: 'inactive'
+        status: 'inactive',
       });
 
       // Act
@@ -126,8 +116,8 @@ describe('Auth Middleware', () => {
       const req = createMockRequest({
         session: {
           user: { id: 1, username: 'testuser' },
-          destroy: destroyCallback
-        }
+          destroy: destroyCallback,
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -135,7 +125,7 @@ describe('Auth Middleware', () => {
       User.findById.mockResolvedValue({
         id: 1,
         username: 'testuser',
-        status: 'deleted'
+        status: 'deleted',
       });
 
       // Act
@@ -153,8 +143,8 @@ describe('Auth Middleware', () => {
       const req = createMockRequest({
         session: {
           user: { id: 999, username: 'deleteduser' },
-          destroy: destroyCallback
-        }
+          destroy: destroyCallback,
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -174,8 +164,8 @@ describe('Auth Middleware', () => {
       // Arrange
       const req = createMockRequest({
         session: {
-          user: { id: 1, username: 'testuser' }
-        }
+          user: { id: 1, username: 'testuser' },
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -194,8 +184,8 @@ describe('Auth Middleware', () => {
       // Arrange - session says active but DB says inactive
       const req = createMockRequest({
         session: {
-          user: { id: 1, username: 'testuser', status: 'active' }
-        }
+          user: { id: 1, username: 'testuser', status: 'active' },
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -205,7 +195,7 @@ describe('Auth Middleware', () => {
       User.findById.mockResolvedValue({
         id: 1,
         username: 'testuser',
-        status: 'inactive'
+        status: 'inactive',
       });
 
       // Act
@@ -223,8 +213,8 @@ describe('Auth Middleware', () => {
       // Arrange
       const req = createMockRequest({
         session: {
-          user: { id: 1, username: 'admin', role: 'admin' }
-        }
+          user: { id: 1, username: 'admin', role: 'admin' },
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -241,8 +231,8 @@ describe('Auth Middleware', () => {
       // Arrange
       const req = createMockRequest({
         session: {
-          user: { id: 1, username: 'superadmin', role: 'super_admin' }
-        }
+          user: { id: 1, username: 'superadmin', role: 'super_admin' },
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -265,12 +255,7 @@ describe('Auth Middleware', () => {
       requireAdmin(req, res, next);
 
       // Assert
-      expect(errorRedirect).toHaveBeenCalledWith(
-        req,
-        res,
-        expect.any(String),
-        '/auth/login'
-      );
+      expect(errorRedirect).toHaveBeenCalledWith(req, res, expect.any(String), '/auth/login');
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -278,8 +263,8 @@ describe('Auth Middleware', () => {
       // Arrange
       const req = createMockRequest({
         session: {
-          user: { id: 1, username: 'user', role: 'user' }
-        }
+          user: { id: 1, username: 'user', role: 'user' },
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -288,12 +273,7 @@ describe('Auth Middleware', () => {
       requireAdmin(req, res, next);
 
       // Assert
-      expect(errorRedirect).toHaveBeenCalledWith(
-        req,
-        res,
-        expect.any(String),
-        '/admin/dashboard'
-      );
+      expect(errorRedirect).toHaveBeenCalledWith(req, res, expect.any(String), '/admin/dashboard');
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -301,8 +281,8 @@ describe('Auth Middleware', () => {
       // Arrange
       const req = createMockRequest({
         session: {
-          user: { id: 1, username: 'user', role: 'user' }
-        }
+          user: { id: 1, username: 'user', role: 'user' },
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -315,7 +295,7 @@ describe('Auth Middleware', () => {
         req,
         res,
         expect.stringContaining('permission'),
-        expect.any(String)
+        expect.any(String),
       );
     });
   });
@@ -325,8 +305,8 @@ describe('Auth Middleware', () => {
       // Arrange
       const req = createMockRequest({
         session: {
-          user: { id: 1, username: 'superadmin', role: 'super_admin' }
-        }
+          user: { id: 1, username: 'superadmin', role: 'super_admin' },
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -343,8 +323,8 @@ describe('Auth Middleware', () => {
       // Arrange
       const req = createMockRequest({
         session: {
-          user: { id: 1, username: 'admin', role: 'admin' }
-        }
+          user: { id: 1, username: 'admin', role: 'admin' },
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -353,12 +333,7 @@ describe('Auth Middleware', () => {
       requireSuperAdmin(req, res, next);
 
       // Assert
-      expect(errorRedirect).toHaveBeenCalledWith(
-        req,
-        res,
-        expect.any(String),
-        '/admin/dashboard'
-      );
+      expect(errorRedirect).toHaveBeenCalledWith(req, res, expect.any(String), '/admin/dashboard');
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -372,12 +347,7 @@ describe('Auth Middleware', () => {
       requireSuperAdmin(req, res, next);
 
       // Assert
-      expect(errorRedirect).toHaveBeenCalledWith(
-        req,
-        res,
-        expect.any(String),
-        '/auth/login'
-      );
+      expect(errorRedirect).toHaveBeenCalledWith(req, res, expect.any(String), '/auth/login');
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -385,8 +355,8 @@ describe('Auth Middleware', () => {
       // Arrange
       const req = createMockRequest({
         session: {
-          user: { id: 1, username: 'admin', role: 'admin' }
-        }
+          user: { id: 1, username: 'admin', role: 'admin' },
+        },
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -399,7 +369,7 @@ describe('Auth Middleware', () => {
         req,
         res,
         expect.stringContaining('Super admin'),
-        expect.any(String)
+        expect.any(String),
       );
     });
   });

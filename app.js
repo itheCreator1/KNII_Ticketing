@@ -35,41 +35,44 @@ if (process.env.NODE_ENV !== 'test') {
   const csrfConfig = doubleCsrf({
     getSecret: () => process.env.SESSION_SECRET,
     // Use __Host- prefix only in production (requires HTTPS)
-    cookieName: process.env.NODE_ENV === 'production' ? '__Host-psifi.x-csrf-token' : 'psifi.x-csrf-token',
+    cookieName:
+      process.env.NODE_ENV === 'production' ? '__Host-psifi.x-csrf-token' : 'psifi.x-csrf-token',
     cookieOptions: {
       sameSite: 'strict',
       path: '/',
       secure: process.env.NODE_ENV === 'production',
-      httpOnly: true
+      httpOnly: true,
     },
     size: 64,
     ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
     getCsrfTokenFromRequest: (req) => req.body?._csrf,
-    getSessionIdentifier: (req) => req.sessionID || ''
+    getSessionIdentifier: (req) => req.sessionID || '',
   });
   generateCsrfToken = csrfConfig.generateCsrfToken;
   doubleCsrfProtection = csrfConfig.doubleCsrfProtection;
 } else {
   // Test environment: Disable CSRF protection for simpler testing
   // Tests focus on business logic, not CSRF library validation
-  generateCsrfToken = (req, res, options) => 'test-csrf-token';
-  doubleCsrfProtection = (req, res, next) => next();
+  generateCsrfToken = (_req, _res, _options) => 'test-csrf-token';
+  doubleCsrfProtection = (_req, _res, next) => next();
 }
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
-      upgradeInsecureRequests: null
-    }
-  },
-  hsts: process.env.NODE_ENV === 'production'
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+        scriptSrc: ["'self'", 'https://cdn.jsdelivr.net'],
+        upgradeInsecureRequests: null,
+      },
+    },
+    hsts: process.env.NODE_ENV === 'production',
+  }),
+);
 app.use(morgan('combined'));
 app.use(compression());
 
@@ -154,7 +157,7 @@ app.use((req, res) => {
     isDevelopment: process.env.NODE_ENV === 'development',
     stackTrace: null,
     t: req.t,
-    language: req.language || 'el'
+    language: req.language || 'el',
   });
 });
 

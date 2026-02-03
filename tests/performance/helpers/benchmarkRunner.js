@@ -23,14 +23,14 @@ function printResults(result, name = 'Benchmark') {
   }
 
   if (result.requests) {
-    console.log(`\n📈 Throughput:`);
+    console.log('\n📈 Throughput:');
     console.log(`  Total Requests: ${result.requests.total}`);
     console.log(`  Average: ${result.requests.average.toFixed(2)} req/sec`);
     console.log(`  Per Second: ${result.requests.p99} req/sec (p99)`);
   }
 
   if (result.latency) {
-    console.log(`\n⏱️  Latency (ms):`);
+    console.log('\n⏱️  Latency (ms):');
     console.log(`  P50: ${result.latency.p50.toFixed(2)}ms`);
     console.log(`  P95: ${result.latency.p95.toFixed(2)}ms`);
     console.log(`  P99: ${result.latency.p99.toFixed(2)}ms`);
@@ -38,7 +38,7 @@ function printResults(result, name = 'Benchmark') {
   }
 
   if (result.throughput) {
-    console.log(`\n💾 Throughput:`);
+    console.log('\n💾 Throughput:');
     console.log(`  P50: ${(result.throughput.p50 / 1024).toFixed(2)} KB/sec`);
     console.log(`  P95: ${(result.throughput.p95 / 1024).toFixed(2)} KB/sec`);
     console.log(`  Mean: ${(result.throughput.mean / 1024).toFixed(2)} KB/sec`);
@@ -58,7 +58,7 @@ async function runBenchmark(options) {
       ...options,
       setupClient: (client) => {
         client.on('response', () => {});
-      }
+      },
     });
     return result;
   } catch (error) {
@@ -76,12 +76,12 @@ async function createTestUser(overrides = {}) {
     const userData = createUserData({ role: 'admin', ...overrides });
     const result = await pool.query(
       'INSERT INTO users (username, email, password_hash, role, status) VALUES ($1, $2, $3, $4, $5) RETURNING id, username',
-      [userData.username, userData.email, userData.password_hash, userData.role, userData.status]
+      [userData.username, userData.email, userData.password_hash, userData.role, userData.status],
     );
     return {
       id: result.rows[0].id,
       username: userData.username,
-      password: userData.password || 'ValidPass123!'
+      password: userData.password || 'ValidPass123!',
     };
   } catch (error) {
     console.error(`Error creating test user: ${error.message}`);
@@ -97,7 +97,7 @@ async function createTestDepartment(name = 'BenchmarkDept') {
   try {
     const result = await pool.query(
       'INSERT INTO departments (name, description, floor, is_system, active) VALUES ($1, $2, $3, $4, $5) RETURNING name',
-      [name, 'Benchmark Department', 'Ground Floor', false, true]
+      [name, 'Benchmark Department', 'Ground Floor', false, true],
     );
     return result.rows[0].name;
   } catch (error) {
@@ -120,8 +120,8 @@ async function createTestTicket(overrides = {}) {
         overrides.status || 'open',
         overrides.priority || 'unset',
         overrides.reporter_name || 'BenchmarkUser',
-        overrides.reporter_department || 'Internal'
-      ]
+        overrides.reporter_department || 'Internal',
+      ],
     );
     return result.rows[0].id;
   } catch (error) {
@@ -197,5 +197,5 @@ module.exports = {
   seedBenchmarkData,
   cleanupBenchmarkData,
   formatLatency,
-  meetsLodgingSLA
+  meetsLodgingSLA,
 };

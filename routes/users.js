@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth, requireSuperAdmin } = require('../middleware/auth');
-const { validateUserCreate, validateUserUpdate, validatePasswordReset } = require('../validators/userValidators');
+const {
+  validateUserCreate,
+  validateUserUpdate,
+  validatePasswordReset,
+} = require('../validators/userValidators');
 const { validateRequest } = require('../middleware/validation');
 const userService = require('../services/userService');
 const departmentService = require('../services/departmentService');
@@ -16,7 +20,7 @@ router.get('/', requireAuth, requireSuperAdmin, async (req, res, next) => {
     res.render('admin/users/index', {
       title: 'User Management',
       users,
-      user: req.session.user
+      user: req.session.user,
     });
   } catch (error) {
     logger.error('Error fetching users', { error: error.message, stack: error.stack });
@@ -31,7 +35,7 @@ router.get('/new', requireAuth, requireSuperAdmin, async (req, res, next) => {
     res.render('admin/users/create', {
       title: 'Create User',
       user: req.session.user,
-      departments
+      departments,
     });
   } catch (error) {
     logger.error('Error loading create user form', { error: error.message });
@@ -40,26 +44,33 @@ router.get('/new', requireAuth, requireSuperAdmin, async (req, res, next) => {
 });
 
 // POST /admin/users - Create new user
-router.post('/',
+router.post(
+  '/',
   requireAuth,
   requireSuperAdmin,
   adminMutationLimiter,
   validateUserCreate,
   validateRequest,
-  async (req, res, next) => {
+  async (req, res, _next) => {
     try {
       const { username, email, password, role, department } = req.body;
       // Convert empty string to null for database constraint
       const cleanDepartment = department && department.trim() !== '' ? department : null;
 
-      await userService.createUser({ username, email, password, role, department: cleanDepartment });
+      await userService.createUser({
+        username,
+        email,
+        password,
+        role,
+        department: cleanDepartment,
+      });
 
       return successRedirect(req, res, 'User created successfully', '/admin/users');
     } catch (error) {
       logger.error('Error creating user', { error: error.message, stack: error.stack });
       return errorRedirect(req, res, error.message, 'back');
     }
-  }
+  },
 );
 
 // GET /admin/users/:id/edit - Show edit user form
@@ -80,7 +91,7 @@ router.get('/:id/edit', requireAuth, requireSuperAdmin, async (req, res, next) =
       title: 'Edit User',
       targetUser,
       user: req.session.user,
-      departments
+      departments,
     });
   } catch (error) {
     logger.error('Error loading user', { error: error.message, stack: error.stack });
@@ -89,45 +100,52 @@ router.get('/:id/edit', requireAuth, requireSuperAdmin, async (req, res, next) =
 });
 
 // POST /admin/users/:id - Update user
-router.post('/:id',
+router.post(
+  '/:id',
   requireAuth,
   requireSuperAdmin,
   adminMutationLimiter,
   validateUserUpdate,
   validateRequest,
-  async (req, res, next) => {
+  async (req, res, _next) => {
     try {
       const userId = parseInt(req.params.id);
       const { username, email, role, status, department } = req.body;
       const updates = {};
 
-      if (username) updates.username = username;
-      if (email) updates.email = email;
-      if (role) updates.role = role;
-      if (status) updates.status = status;
-      if (department !== undefined) updates.department = department || null;
+      if (username) {
+        updates.username = username;
+      }
+      if (email) {
+        updates.email = email;
+      }
+      if (role) {
+        updates.role = role;
+      }
+      if (status) {
+        updates.status = status;
+      }
+      if (department !== undefined) {
+        updates.department = department || null;
+      }
 
-      await userService.updateUser(
-        req.session.user.id,
-        userId,
-        updates,
-        req.ip
-      );
+      await userService.updateUser(req.session.user.id, userId, updates, req.ip);
 
       return successRedirect(req, res, 'User updated successfully', '/admin/users');
     } catch (error) {
       logger.error('Error updating user', { error: error.message, stack: error.stack });
       return errorRedirect(req, res, error.message, 'back');
     }
-  }
+  },
 );
 
 // POST /admin/users/:id/delete - Delete user
-router.post('/:id/delete',
+router.post(
+  '/:id/delete',
   requireAuth,
   requireSuperAdmin,
   adminMutationLimiter,
-  async (req, res, next) => {
+  async (req, res, _next) => {
     try {
       const userId = parseInt(req.params.id);
       await userService.deleteUser(req.session.user.id, userId, req.ip);
@@ -137,17 +155,18 @@ router.post('/:id/delete',
       logger.error('Error deleting user', { error: error.message, stack: error.stack });
       return errorRedirect(req, res, error.message, '/admin/users');
     }
-  }
+  },
 );
 
 // POST /admin/users/:id/password - Reset user password
-router.post('/:id/password',
+router.post(
+  '/:id/password',
   requireAuth,
   requireSuperAdmin,
   adminMutationLimiter,
   validatePasswordReset,
   validateRequest,
-  async (req, res, next) => {
+  async (req, res, _next) => {
     try {
       const userId = parseInt(req.params.id);
       const { password } = req.body;
@@ -159,15 +178,16 @@ router.post('/:id/password',
       logger.error('Error resetting password', { error: error.message, stack: error.stack });
       return errorRedirect(req, res, error.message, 'back');
     }
-  }
+  },
 );
 
 // POST /admin/users/:id/toggle-status - Toggle user status
-router.post('/:id/toggle-status',
+router.post(
+  '/:id/toggle-status',
   requireAuth,
   requireSuperAdmin,
   adminMutationLimiter,
-  async (req, res, next) => {
+  async (req, res, _next) => {
     try {
       const userId = parseInt(req.params.id);
       const { status } = req.body;
@@ -179,7 +199,7 @@ router.post('/:id/toggle-status',
       logger.error('Error toggling status', { error: error.message, stack: error.stack });
       return errorRedirect(req, res, error.message, '/admin/users');
     }
-  }
+  },
 );
 
 module.exports = router;

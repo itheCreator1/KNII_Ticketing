@@ -10,13 +10,15 @@
 ![Tests](https://img.shields.io/badge/Tests-797%2F945%20Passing-orange)
 ![Coverage](https://img.shields.io/badge/Coverage-84%25-orange)
 
-**Version**: 2.3.0 | [Features](#features) | [Architecture](#architecture) | [Quick Start](#quick-start) | [Documentation](#documentation)
+**Version**: 2.3.0 | [Features](#features) | [Architecture](#architecture) |
+[Quick Start](#quick-start) | [Documentation](#documentation)
 
 ---
 
 ## What's New in v2.3.0 ⚡
 
-- **CI/CD Automation**: GitHub Actions workflows for automated testing and linting
+- **CI/CD Automation**: GitHub Actions workflows for automated testing and
+  linting
 - **Test Infrastructure**: Improved test reliability (73% → 84.3% pass rate)
 - **Performance**: Composite indexes provide 50-80% query improvement
 - **Security**: Admin mutation rate limiting and search input sanitization
@@ -25,9 +27,11 @@
 
 ## Features
 
-**Dual-Portal Architecture**: Separate client portal for departments and admin portal for support staff.
+**Dual-Portal Architecture**: Separate client portal for departments and admin
+portal for support staff.
 
 ### Department Portal (`/client/*`)
+
 - Create and manage department tickets
 - View tickets from own department only
 - Add public comments
@@ -35,6 +39,7 @@
 - Auto-populated department information
 
 ### Admin Portal (`/admin/*`)
+
 - Manage all tickets (department + internal)
 - Create department tickets on behalf of users
 - Create internal admin-only tickets
@@ -45,12 +50,14 @@
 - Department management (super_admin only)
 
 ### Core Capabilities
+
 - **Authentication**: Session-based auth with bcrypt (cost 10)
 - **Authorization**: Role-based access control (super_admin, admin, department)
 - **Audit Trail**: Complete logging of administrative actions
 - **Rate Limiting**: Login protection (10/15min), Admin mutations (20/min)
 - **Security**: CSRF protection, SQL injection prevention, search sanitization
-- **Workflow States**: open, in_progress, waiting_on_admin, waiting_on_department, closed
+- **Workflow States**: open, in_progress, waiting_on_admin,
+  waiting_on_department, closed
 
 ---
 
@@ -76,6 +83,7 @@ Request Flow:
 ```
 
 **Directory Structure**:
+
 ```
 ├── config/           # Database pool, session config
 ├── constants/        # Enums, messages, validation rules
@@ -89,7 +97,8 @@ Request Flow:
 └── views/            # EJS templates
 ```
 
-See: **[Node.js Development Rules](docs/node_js.md)** for comprehensive architecture documentation.
+See: **[Node.js Development Rules](docs/node_js.md)** for comprehensive
+architecture documentation.
 
 ---
 
@@ -98,6 +107,7 @@ See: **[Node.js Development Rules](docs/node_js.md)** for comprehensive architec
 **Zero Known Vulnerabilities** | **98% Code Quality Compliance**
 
 ### Security Features
+
 - Parameterized SQL queries (all queries)
 - Input validation (express-validator)
 - CSRF protection (double-submit cookie)
@@ -111,6 +121,7 @@ See: **[Node.js Development Rules](docs/node_js.md)** for comprehensive architec
 - Internal ticket visibility
 
 ### Compliance
+
 - **OWASP Top 10**: SQL Injection ✓ | XSS ✓ | CSRF ✓ | Authentication ✓
 - **Session Management**: Secure cookies, automatic invalidation
 - **Data Protection**: Minimal session data, no sensitive logging
@@ -125,18 +136,21 @@ See: **[Node.js Development Rules](docs/node_js.md)** for security patterns.
 **Test Suite**: 797 passing / 945 total (84.3% pass rate)
 
 ### Test Breakdown
-| Category | Passing | Total | Pass Rate | Status |
-|----------|---------|-------|-----------|--------|
-| Unit Tests | 416 | 416 | 100% | ✅ |
-| Database Tests | 112 | 112 | 100% | ✅ |
-| Integration/E2E | 269 | 417 | 64.5% | 🔄 |
+
+| Category        | Passing | Total | Pass Rate | Status |
+| --------------- | ------- | ----- | --------- | ------ |
+| Unit Tests      | 416     | 416   | 100%      | ✅     |
+| Database Tests  | 112     | 112   | 100%      | ✅     |
+| Integration/E2E | 269     | 417   | 64.5%     | 🔄     |
 
 ### Coverage
+
 - **Thresholds**: 70% minimum (branches, functions, lines, statements)
 - **Enforcement**: Jest enforces thresholds on every run
 - **Current**: ~70-80% across critical paths
 
 ### Test Infrastructure (v2.3.0)
+
 - Transaction-based isolation for unit tests
 - FK-aware database cleanup
 - Floor seeding for department constraints
@@ -144,6 +158,7 @@ See: **[Node.js Development Rules](docs/node_js.md)** for security patterns.
 - Schema integrity validation
 
 ### Running Tests
+
 ```bash
 npm test                  # All tests (945)
 npm run test:unit         # Unit tests only (416)
@@ -151,13 +166,15 @@ npm run test:integration  # Integration + E2E + Database (529)
 npm run test:coverage     # Generate coverage report
 ```
 
-See: **[Testing Guidelines](docs/testing_rules.md)** for comprehensive testing documentation.
+See: **[Testing Guidelines](docs/testing_rules.md)** for comprehensive testing
+documentation.
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Docker & Docker Compose
 - Node.js 20+ (for local development)
 - PostgreSQL 16+ (or use Docker)
@@ -220,21 +237,33 @@ Role: super_admin
 
 ## 📚 Documentation
 
-Comprehensive documentation covering all aspects of development, deployment, and maintenance.
+Comprehensive documentation covering all aspects of development, deployment, and
+maintenance.
 
 ### Core Guides
-- **[Node.js Development Rules](docs/node_js.md)** (2,470 lines) - Coding standards, architecture patterns, security best practices
-- **[Debugging & Troubleshooting](docs/debug_rules.md)** (4,085 lines) - Logging infrastructure, error handling, performance debugging
-- **[Testing Guidelines](docs/testing_rules.md)** (850+ lines) - Test structure, patterns, and best practices
-- **[CI/CD Guide](docs/ci-cd.md)** (480+ lines) - GitHub Actions, ESLint, Prettier, troubleshooting
+
+- **[Node.js Development Rules](docs/node_js.md)** (2,470 lines) - Coding
+  standards, architecture patterns, security best practices
+- **[Debugging & Troubleshooting](docs/debug_rules.md)** (4,085 lines) - Logging
+  infrastructure, error handling, performance debugging
+- **[Testing Guidelines](docs/testing_rules.md)** (850+ lines) - Test structure,
+  patterns, and best practices
+- **[CI/CD Guide](docs/ci-cd.md)** (480+ lines) - GitHub Actions, ESLint,
+  Prettier, troubleshooting
 
 ### Operational Guides
-- **[Git Workflow](docs/git_rules.md)** - Branching strategy, commit standards, PR discipline
-- **[Deployment Guide](docs/howToDeploy.md)** - Docker production, PM2 cluster mode, environment setup
-- **[Customization Guide](docs/customisation_guide.md)** - Floors, departments, and configuration
+
+- **[Git Workflow](docs/git_rules.md)** - Branching strategy, commit standards,
+  PR discipline
+- **[Deployment Guide](docs/howToDeploy.md)** - Docker production, PM2 cluster
+  mode, environment setup
+- **[Customization Guide](docs/customisation_guide.md)** - Floors, departments,
+  and configuration
 
 ### Reference
-- **[Performance Baseline](docs/performance-baseline.md)** - SLA targets, benchmark results, optimization patterns
+
+- **[Performance Baseline](docs/performance-baseline.md)** - SLA targets,
+  benchmark results, optimization patterns
 - **[CLAUDE.md](CLAUDE.md)** - Complete project context for AI assistants
 
 ---
@@ -299,6 +328,7 @@ See: **[Git Workflow Rules](docs/git_rules.md)**
 ### CI/CD
 
 GitHub Actions automatically:
+
 - Runs full test suite on Node.js 18, 20, 22
 - Generates test coverage reports
 - Enforces ESLint and Prettier standards
@@ -363,15 +393,18 @@ Before deploying v2.3.0:
 - [ ] Check performance with new indexes
 - [ ] Backup database before migration
 
-See: **[Deployment Guide](docs/howToDeploy.md)** for comprehensive deployment instructions.
+See: **[Deployment Guide](docs/howToDeploy.md)** for comprehensive deployment
+instructions.
 
 ---
 
 ## Database Schema
 
-**25 Migrations** (000-025) | **7 Tables** | **FK Constraints** | **Composite Indexes**
+**25 Migrations** (000-025) | **7 Tables** | **FK Constraints** | **Composite
+Indexes**
 
 ### Key Tables
+
 - `floors` (8 predefined) - Building floor locations (v2.2.0+)
 - `departments` (customizable) - Department management with floor FK (v2.2.0+)
 - `users` (RBAC) - Authentication with department FK
@@ -381,6 +414,7 @@ See: **[Deployment Guide](docs/howToDeploy.md)** for comprehensive deployment in
 - `session` (connect-pg-simple) - Session storage
 
 ### Recent Migrations
+
 - **Migration 022** (v2.3.0): Create floors table (database-driven)
 - **Migration 023** (v2.3.0): Convert floor to FK constraint
 - **Migration 024** (v2.3.0): Remove hardcoded floors (fully dynamic)
@@ -393,13 +427,16 @@ See: **[CLAUDE.md](CLAUDE.md)** for complete schema documentation.
 ## Contributing
 
 ### Code Standards
-- Follow **[Node.js Development Rules](docs/node_js.md)** (98% compliance required)
+
+- Follow **[Node.js Development Rules](docs/node_js.md)** (98% compliance
+  required)
 - Write tests for all new features (maintain 70%+ coverage)
 - Run `npm run format && npm run lint && npm test` before committing
 - Follow git workflow in **[Git Rules](docs/git_rules.md)**
 - Ensure CI/CD passes (GitHub Actions)
 
 ### Pull Request Process
+
 1. Create feature branch (`feature/`, `fix/`, `refactor/`, `chore/`)
 2. Implement changes with tests
 3. Update documentation
@@ -410,6 +447,7 @@ See: **[CLAUDE.md](CLAUDE.md)** for complete schema documentation.
 8. Request code review
 
 ### Reporting Issues
+
 - Use GitHub Issues
 - Include reproduction steps
 - Specify Node.js/PostgreSQL versions
@@ -428,9 +466,11 @@ This project is proprietary and confidential.
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/itheCreator1/KNII_Ticketing/issues)
+- **Issues**:
+  [GitHub Issues](https://github.com/itheCreator1/KNII_Ticketing/issues)
 - **Documentation**: See [Documentation](#documentation) section
-- **CI/CD**: [Actions Tab](https://github.com/itheCreator1/KNII_Ticketing/actions)
+- **CI/CD**:
+  [Actions Tab](https://github.com/itheCreator1/KNII_Ticketing/actions)
 
 ---
 
@@ -440,6 +480,7 @@ This project is proprietary and confidential.
 <summary><strong>v2.3.0</strong> (Current - January 2026)</summary>
 
 ### Test Infrastructure Improvements ✅
+
 - Floor seeding in test setup (fixes FK violations)
 - Database cleanup order fix (DELETE not TRUNCATE)
 - Schema helper SQL fixes
@@ -447,27 +488,32 @@ This project is proprietary and confidential.
 - Pass rate: 73% → 84.3% (+107 tests fixed)
 
 ### Performance Optimizations ⚡
+
 - **Migration 025**: Composite indexes
   - `tickets(status, priority)` - 50-80% dashboard improvement
   - `session(expire)` - faster session cleanup
 
 ### Security Enhancements 🛡️
+
 - Admin mutation rate limiter (20 req/min)
 - Search input sanitization (SQL wildcard escaping)
 - Defense-in-depth for ILIKE queries
 
 ### CI/CD Implementation 🔄
+
 - GitHub Actions CI workflow (tests, coverage, security)
 - GitHub Actions Lint workflow (ESLint, Prettier)
 - Multi-version Node.js testing (18, 20, 22)
 - Automated code quality enforcement
 
 ### Code Quality Tools 📐
+
 - ESLint configuration (eslint:recommended)
 - Prettier configuration (consistent formatting)
 - Pre-commit linting and formatting
 
 ### Database Migrations
+
 - **Migration 022**: Create floors table
 - **Migration 023**: Convert floor to FK constraint
 - **Migration 024**: Remove hardcoded floors (fully dynamic)
@@ -479,6 +525,7 @@ This project is proprietary and confidential.
 <summary><strong>v2.2.0</strong> (Previous - January 2026)</summary>
 
 ### Department Floor Locations 🏢
+
 - Added floor column to departments (8 predefined floors)
 - CHECK constraint validation
 - Floor display in department management
@@ -486,6 +533,7 @@ This project is proprietary and confidential.
 - Migration 020: add_department_floor
 
 ### Admin-Created Department Tickets Visible ✅
+
 - Fixed visibility issue: Department users can now see admin-created tickets
 - Session data: Added department field
 - Query change: Filter by reporter_department (not reporter_id)
@@ -497,6 +545,7 @@ This project is proprietary and confidential.
 <summary><strong>v2.1.0</strong> (Previous - January 2026)</summary>
 
 ### Department Accounts Feature 🏢
+
 - Dual-portal architecture (client + admin)
 - Department user role with client portal
 - Department-based ticket ownership
@@ -507,4 +556,5 @@ This project is proprietary and confidential.
 
 ---
 
-**Built with ❤️ by the KNII Team** | **Version 2.3.0** | **Node.js 20 + Express 5 + PostgreSQL 16**
+**Built with ❤️ by the KNII Team** | **Version 2.3.0** | **Node.js 20 + Express
+5 + PostgreSQL 16**

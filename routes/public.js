@@ -14,7 +14,7 @@ router.get('/health', async (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV
+    environment: process.env.NODE_ENV,
   };
 
   try {
@@ -23,16 +23,16 @@ router.get('/health', async (req, res) => {
     await pool.query('SELECT 1');
     health.database = {
       status: 'connected',
-      responseTime: Date.now() - dbStart
+      responseTime: Date.now() - dbStart,
     };
   } catch (error) {
     health.status = 'degraded';
     health.database = {
       status: 'disconnected',
-      error: error.message
+      error: error.message,
     };
     logger.error('Health check: Database connection failed', {
-      error: error.message
+      error: error.message,
     });
   }
 
@@ -40,7 +40,7 @@ router.get('/health', async (req, res) => {
   const mem = process.memoryUsage();
   health.memory = {
     heapUsed: Math.round(mem.heapUsed / 1024 / 1024) + ' MB',
-    heapTotal: Math.round(mem.heapTotal / 1024 / 1024) + ' MB'
+    heapTotal: Math.round(mem.heapTotal / 1024 / 1024) + ' MB',
   };
 
   res.status(health.status === 'ok' ? 200 : 503).json(health);
@@ -53,11 +53,11 @@ if (process.env.NODE_ENV === 'development') {
       const poolStats = {
         totalCount: pool.totalCount,
         idleCount: pool.idleCount,
-        waitingCount: pool.waitingCount
+        waitingCount: pool.waitingCount,
       };
 
       const activeSessions = await pool.query(
-        'SELECT COUNT(*) as count FROM pg_stat_activity WHERE datname = current_database()'
+        'SELECT COUNT(*) as count FROM pg_stat_activity WHERE datname = current_database()',
       );
 
       res.json({
@@ -67,13 +67,13 @@ if (process.env.NODE_ENV === 'development') {
         memory: process.memoryUsage(),
         database: {
           pool: poolStats,
-          activeConnections: activeSessions.rows[0].count
-        }
+          activeConnections: activeSessions.rows[0].count,
+        },
       });
     } catch (error) {
       logger.error('Diagnostics endpoint error', {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
       res.status(500).json({ error: error.message });
     }
@@ -83,15 +83,17 @@ if (process.env.NODE_ENV === 'development') {
   router.get('/csrf-debug', (req, res) => {
     res.json({
       cookies: req.cookies,
-      session: req.session ? {
-        id: req.session.id,
-        hasUser: !!req.session.user
-      } : null,
+      session: req.session
+        ? {
+          id: req.session.id,
+          hasUser: !!req.session.user,
+        }
+        : null,
       csrfToken: res.locals.csrfToken || 'NOT_GENERATED',
       headers: {
         cookie: req.headers.cookie,
-        userAgent: req.headers['user-agent']
-      }
+        userAgent: req.headers['user-agent'],
+      },
     });
   });
 }

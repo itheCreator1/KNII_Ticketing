@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth, requireSuperAdmin } = require('../middleware/auth');
-const { validateFloorId, validateFloorCreate, validateFloorUpdate } = require('../validators/floorValidators');
+const {
+  validateFloorId,
+  validateFloorCreate,
+  validateFloorUpdate,
+} = require('../validators/floorValidators');
 const { validateRequest } = require('../middleware/validation');
 const floorService = require('../services/floorService');
 const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
@@ -20,12 +24,12 @@ router.get('/', async (req, res, next) => {
 
     logger.info('Viewed floor list', {
       userId: req.session.user.id,
-      username: req.session.user.username
+      username: req.session.user.username,
     });
 
     res.render('admin/floors/index', {
       title: 'Manage Floors',
-      floors
+      floors,
     });
   } catch (error) {
     logger.error('Error loading floors', { error: error.message, stack: error.stack });
@@ -38,7 +42,7 @@ router.get('/', async (req, res, next) => {
  */
 router.get('/new', (req, res) => {
   res.render('admin/floors/create', {
-    title: 'Create Floor'
+    title: 'Create Floor',
   });
 });
 
@@ -50,13 +54,13 @@ router.post('/', validateFloorCreate, validateRequest, async (req, res, next) =>
     const floor = await floorService.createFloor(
       req.session.user.id,
       { name: req.body.name, sort_order: req.body.sort_order },
-      req.ip
+      req.ip,
     );
 
     logger.info('Floor created', {
       floorId: floor.id,
       name: floor.name,
-      createdBy: req.session.user.username
+      createdBy: req.session.user.username,
     });
 
     successRedirect(req, res, 'Floor created successfully', '/admin/floors');
@@ -85,7 +89,7 @@ router.get('/:id/edit', validateFloorId, validateRequest, async (req, res, next)
     res.render('admin/floors/edit', {
       title: 'Edit Floor',
       floor,
-      departmentCount
+      departmentCount,
     });
   } catch (error) {
     logger.error('Error loading floor', { error: error.message, stack: error.stack });
@@ -104,12 +108,12 @@ router.post('/:id', validateFloorUpdate, validateRequest, async (req, res, next)
       req.session.user.id,
       floorId,
       { name: req.body.name, sort_order: req.body.sort_order, active: req.body.active },
-      req.ip
+      req.ip,
     );
 
     logger.info('Floor updated', {
       floorId,
-      updatedBy: req.session.user.username
+      updatedBy: req.session.user.username,
     });
 
     successRedirect(req, res, 'Floor updated successfully', '/admin/floors');
@@ -135,7 +139,12 @@ router.post('/:id/deactivate', validateFloorId, validateRequest, async (req, res
     // Get department count
     const departmentCount = await Floor.countDepartments(floor.name);
     if (departmentCount > 0) {
-      errorRedirect(req, res, `Cannot deactivate floor with ${departmentCount} department(s). Please reassign first.`, '/admin/floors');
+      errorRedirect(
+        req,
+        res,
+        `Cannot deactivate floor with ${departmentCount} department(s). Please reassign first.`,
+        '/admin/floors',
+      );
       return;
     }
 
@@ -143,7 +152,7 @@ router.post('/:id/deactivate', validateFloorId, validateRequest, async (req, res
 
     logger.info('Floor deactivated', {
       floorId,
-      deactivatedBy: req.session.user.username
+      deactivatedBy: req.session.user.username,
     });
 
     successRedirect(req, res, 'Floor deactivated successfully', '/admin/floors');
@@ -164,7 +173,7 @@ router.post('/:id/reactivate', validateFloorId, validateRequest, async (req, res
 
     logger.info('Floor reactivated', {
       floorId,
-      reactivatedBy: req.session.user.username
+      reactivatedBy: req.session.user.username,
     });
 
     successRedirect(req, res, 'Floor reactivated successfully', '/admin/floors');

@@ -43,5 +43,5 @@ function sanitizeSearchInput(input) {
 }
 
 module.exports = {
-  sanitizeSearchInput
+  sanitizeSearchInput,
 };

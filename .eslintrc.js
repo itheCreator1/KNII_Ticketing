@@ -14,10 +14,13 @@ module.exports = {
   },
   rules: {
     // Code Quality
-    'no-unused-vars': ['error', {
-      argsIgnorePattern: '^_',
-      varsIgnorePattern: '^_',
-    }],
+    'no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
+    ],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-debugger': 'error',
     'no-eval': 'error',
@@ -31,17 +34,17 @@ module.exports = {
     'no-return-await': 'error',
 
     // Best Practices
-    'eqeqeq': ['error', 'always'],
-    'curly': ['error', 'all'],
+    eqeqeq: ['error', 'always'],
+    curly: ['error', 'all'],
     'brace-style': ['error', '1tbs'],
     'no-throw-literal': 'error',
     'prefer-promise-reject-errors': 'error',
     'no-async-promise-executor': 'error',
 
     // Style (minimal - let Prettier handle most)
-    'indent': ['error', 2, { SwitchCase: 1 }],
-    'quotes': ['error', 'single', { avoidEscape: true }],
-    'semi': ['error', 'always'],
+    indent: ['error', 2, { SwitchCase: 1 }],
+    quotes: ['error', 'single', { avoidEscape: true }],
+    semi: ['error', 'always'],
     'comma-dangle': ['error', 'always-multiline'],
     'no-trailing-spaces': 'error',
     'eol-last': ['error', 'always'],
@@ -53,18 +56,22 @@ module.exports = {
   },
   overrides: [
     {
-      // Test files can use console
+      // Test files can use console and have more relaxed unused var rules
       files: ['tests/**/*.js', 'scripts/**/*.js'],
       rules: {
         'no-console': 'off',
+        'no-unused-vars': 'warn', // Downgrade to warning for test files
+        'no-return-await': 'warn', // Downgrade to warning
+      },
+    },
+    {
+      // Client-side JavaScript files need browser globals
+      files: ['public/js/**/*.js'],
+      env: {
+        browser: true,
+        node: false,
       },
     },
   ],
-  ignorePatterns: [
-    'node_modules/',
-    'coverage/',
-    'dist/',
-    'build/',
-    '*.min.js',
-  ],
+  ignorePatterns: ['node_modules/', 'coverage/', 'dist/', 'build/', '*.min.js'],
 };

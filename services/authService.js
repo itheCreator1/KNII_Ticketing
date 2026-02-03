@@ -13,13 +13,17 @@ class AuthService {
       // Always perform a password comparison even if user doesn't exist
       // This prevents timing attacks that could enumerate valid usernames
       // Using a dummy hash that will never match but takes similar time
-      const passwordToCompare = user?.password_hash || '$2a$10$invalidhashtopreventtimingattack1234567890123456';
+      const passwordToCompare =
+        user?.password_hash || '$2a$10$invalidhashtopreventtimingattack1234567890123456';
       const isValidPassword = await bcrypt.compare(password, passwordToCompare);
 
       // If user doesn't exist, return null (but after doing the comparison)
       if (!user) {
         const duration = Date.now() - startTime;
-        logger.warn('authService.authenticate: Authentication failed - user not found or invalid credentials', { username, duration });
+        logger.warn(
+          'authService.authenticate: Authentication failed - user not found or invalid credentials',
+          { username, duration },
+        );
         return null;
       }
 
@@ -31,7 +35,7 @@ class AuthService {
           username,
           userId: user.id,
           loginAttempts: user.login_attempts,
-          duration
+          duration,
         });
         return null;
       }
@@ -44,7 +48,7 @@ class AuthService {
           username,
           userId: user.id,
           status: user.status,
-          duration
+          duration,
         });
         return null;
       }
@@ -57,7 +61,7 @@ class AuthService {
           username,
           userId: user.id,
           newLoginAttempts: user.login_attempts + 1,
-          duration
+          duration,
         });
         return null;
       }
@@ -70,7 +74,7 @@ class AuthService {
         username,
         userId: user.id,
         role: user.role,
-        duration
+        duration,
       });
 
       return user;
@@ -80,20 +84,24 @@ class AuthService {
         username,
         error: error.message,
         stack: error.stack,
-        duration
+        duration,
       });
       throw error;
     }
   }
 
   createSessionData(user) {
-    logger.debug('authService.createSessionData: Creating session data', { userId: user.id, username: user.username, role: user.role });
+    logger.debug('authService.createSessionData: Creating session data', {
+      userId: user.id,
+      username: user.username,
+      role: user.role,
+    });
     return {
       id: user.id,
       username: user.username,
       email: user.email,
       role: user.role,
-      department: user.department
+      department: user.department,
     };
   }
 }

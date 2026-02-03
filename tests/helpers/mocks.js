@@ -13,7 +13,7 @@ function createMockPool() {
   return {
     query: jest.fn(),
     connect: jest.fn(),
-    end: jest.fn()
+    end: jest.fn(),
   };
 }
 
@@ -32,7 +32,7 @@ function createMockRequest(overrides = {}) {
     headers: {},
     ip: '127.0.0.1',
     get: jest.fn(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -69,7 +69,7 @@ function createMockLogger() {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
   };
 }
 
@@ -81,7 +81,7 @@ function createMockLogger() {
 function createMockSession(user = null) {
   return {
     user: user,
-    destroy: jest.fn((callback) => callback && callback())
+    destroy: jest.fn((callback) => callback && callback()),
   };
 }
 
@@ -96,11 +96,11 @@ function createMockValidationResult(errors = []) {
     array: jest.fn(() => errors),
     mapped: jest.fn(() => {
       const mapped = {};
-      errors.forEach(err => {
+      errors.forEach((err) => {
         mapped[err.param] = err;
       });
       return mapped;
-    })
+    }),
   };
 }
 
@@ -111,5 +111,5 @@ module.exports = {
   createMockNext,
   createMockLogger,
   createMockSession,
-  createMockValidationResult
+  createMockValidationResult,
 };

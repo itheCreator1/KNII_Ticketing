@@ -25,7 +25,7 @@ class Floor {
    */
   static async findAllForAdmin() {
     const result = await pool.query(
-      'SELECT * FROM floors ORDER BY is_system DESC, active DESC, sort_order, name'
+      'SELECT * FROM floors ORDER BY is_system DESC, active DESC, sort_order, name',
     );
     return result.rows;
   }
@@ -36,10 +36,7 @@ class Floor {
    * @returns {Promise<Object|undefined>} Floor object or undefined
    */
   static async findById(id) {
-    const result = await pool.query(
-      'SELECT * FROM floors WHERE id = $1',
-      [id]
-    );
+    const result = await pool.query('SELECT * FROM floors WHERE id = $1', [id]);
     return result.rows[0];
   }
 
@@ -49,10 +46,7 @@ class Floor {
    * @returns {Promise<Object|undefined>} Floor object or undefined
    */
   static async findByName(name) {
-    const result = await pool.query(
-      'SELECT * FROM floors WHERE name = $1',
-      [name]
-    );
+    const result = await pool.query('SELECT * FROM floors WHERE name = $1', [name]);
     return result.rows[0];
   }
 
@@ -68,7 +62,7 @@ class Floor {
       `INSERT INTO floors (name, sort_order, is_system, active)
        VALUES ($1, $2, false, true)
        RETURNING *`,
-      [name, sort_order || 0]
+      [name, sort_order || 0],
     );
     return result.rows[0];
   }
@@ -104,7 +98,7 @@ class Floor {
       paramCount++;
     }
 
-    fields.push(`updated_at = NOW()`);
+    fields.push('updated_at = NOW()');
     values.push(id);
 
     const result = await db.query(
@@ -112,7 +106,7 @@ class Floor {
        SET ${fields.join(', ')}
        WHERE id = $${paramCount} AND is_system = false
        RETURNING *`,
-      values
+      values,
     );
 
     return result.rows[0];
@@ -129,7 +123,7 @@ class Floor {
        SET active = false, updated_at = NOW()
        WHERE id = $1 AND is_system = false
        RETURNING *`,
-      [id]
+      [id],
     );
     return result.rows[0];
   }
@@ -145,7 +139,7 @@ class Floor {
        SET active = true, updated_at = NOW()
        WHERE id = $1 AND is_system = false
        RETURNING *`,
-      [id]
+      [id],
     );
     return result.rows[0];
   }
@@ -156,10 +150,9 @@ class Floor {
    * @returns {Promise<number>} Count of departments
    */
   static async countDepartments(name) {
-    const result = await pool.query(
-      'SELECT COUNT(*) as count FROM departments WHERE floor = $1',
-      [name]
-    );
+    const result = await pool.query('SELECT COUNT(*) as count FROM departments WHERE floor = $1', [
+      name,
+    ]);
     return parseInt(result.rows[0].count);
   }
 }

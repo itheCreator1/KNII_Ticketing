@@ -4,7 +4,7 @@
  * Works for both create.ejs and edit.ejs templates
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const roleSelect = document.getElementById('role');
   const deptField = document.getElementById('department-field');
   const deptSelect = document.getElementById('department');
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
    * Show field and make required when role = 'department'
    * Hide field and clear value when role = 'admin' or 'super_admin'
    */
-  roleSelect.addEventListener('change', function() {
+  roleSelect.addEventListener('change', function () {
     if (this.value === 'department') {
       deptField.style.display = 'block';
       deptSelect.required = true;
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
    * Only adds listener if form exists (create.ejs has form ID, edit.ejs doesn't)
    */
   if (form) {
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
       if (roleSelect.value === 'department' && !deptSelect.value) {
         e.preventDefault();
         alert('Please select a department for department role users');

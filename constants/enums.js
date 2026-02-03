@@ -3,7 +3,7 @@ const TICKET_STATUS = {
   IN_PROGRESS: 'in_progress',
   CLOSED: 'closed',
   WAITING_ON_ADMIN: 'waiting_on_admin',
-  WAITING_ON_DEPARTMENT: 'waiting_on_department'
+  WAITING_ON_DEPARTMENT: 'waiting_on_department',
 };
 
 const TICKET_PRIORITY = {
@@ -11,19 +11,19 @@ const TICKET_PRIORITY = {
   LOW: 'low',
   MEDIUM: 'medium',
   HIGH: 'high',
-  CRITICAL: 'critical'
+  CRITICAL: 'critical',
 };
 
 const USER_ROLE = {
   ADMIN: 'admin',
   SUPER_ADMIN: 'super_admin',
-  DEPARTMENT: 'department'
+  DEPARTMENT: 'department',
 };
 
 const USER_STATUS = {
   ACTIVE: 'active',
   INACTIVE: 'inactive',
-  DELETED: 'deleted'
+  DELETED: 'deleted',
 };
 
 /**
@@ -43,12 +43,12 @@ const REPORTER_DEPARTMENT = {
   HUMAN_RESOURCES: 'Human Resources',
   FINANCE: 'Finance',
   FACILITIES: 'Facilities',
-  INTERNAL: 'Internal'
+  INTERNAL: 'Internal',
 };
 
 const COMMENT_VISIBILITY = {
   PUBLIC: 'public',
-  INTERNAL: 'internal'
+  INTERNAL: 'internal',
 };
 
 /**
@@ -65,5 +65,5 @@ module.exports = {
   USER_ROLE,
   USER_STATUS,
   REPORTER_DEPARTMENT,
-  COMMENT_VISIBILITY
+  COMMENT_VISIBILITY,
 };

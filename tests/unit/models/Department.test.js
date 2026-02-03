@@ -40,8 +40,24 @@ describe('Department Model', () => {
     it('should return all active departments when includeSystem=false', async () => {
       // Arrange
       const mockDepartments = [
-        { id: 1, name: 'Cardiology', description: 'Heart care', is_system: false, active: true, created_at: new Date(), updated_at: new Date() },
-        { id: 2, name: 'Radiology', description: 'Imaging', is_system: false, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Cardiology',
+          description: 'Heart care',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: 'Radiology',
+          description: 'Imaging',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockDepartments });
 
@@ -52,14 +68,22 @@ describe('Department Model', () => {
       expect(result).toHaveLength(2);
       expect(result[0]).toBeValidDepartment();
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE active = true AND is_system = false')
+        expect.stringContaining('WHERE active = true AND is_system = false'),
       );
     });
 
     it('should exclude Internal department when includeSystem=false', async () => {
       // Arrange
       const mockDepartments = [
-        { id: 1, name: 'Cardiology', description: 'Heart care', is_system: false, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Cardiology',
+          description: 'Heart care',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockDepartments });
 
@@ -68,16 +92,30 @@ describe('Department Model', () => {
 
       // Assert
       expect(result).not.toContainEqual(expect.objectContaining({ name: 'Internal' }));
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('is_system = false')
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('is_system = false'));
     });
 
     it('should include Internal department when includeSystem=true', async () => {
       // Arrange
       const mockDepartments = [
-        { id: 1, name: 'Cardiology', description: 'Heart care', is_system: false, active: true, created_at: new Date(), updated_at: new Date() },
-        { id: 2, name: 'Internal', description: 'Admin only', is_system: true, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Cardiology',
+          description: 'Heart care',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: 'Internal',
+          description: 'Admin only',
+          is_system: true,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockDepartments });
 
@@ -87,17 +125,23 @@ describe('Department Model', () => {
       // Assert
       expect(result).toHaveLength(2);
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE active = true ORDER BY name')
+        expect.stringContaining('WHERE active = true ORDER BY name'),
       );
-      expect(pool.query).not.toHaveBeenCalledWith(
-        expect.stringContaining('is_system = false')
-      );
+      expect(pool.query).not.toHaveBeenCalledWith(expect.stringContaining('is_system = false'));
     });
 
     it('should only return active departments', async () => {
       // Arrange
       const mockDepartments = [
-        { id: 1, name: 'Cardiology', description: 'Heart care', is_system: false, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Cardiology',
+          description: 'Heart care',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockDepartments });
 
@@ -105,16 +149,22 @@ describe('Department Model', () => {
       const result = await Department.findAll(false);
 
       // Assert
-      expect(result.every(dept => dept.active === true)).toBe(true);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE active = true')
-      );
+      expect(result.every((dept) => dept.active === true)).toBe(true);
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('WHERE active = true'));
     });
 
     it('should exclude soft-deleted departments', async () => {
       // Arrange
       const mockDepartments = [
-        { id: 1, name: 'Cardiology', description: 'Heart care', is_system: false, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Cardiology',
+          description: 'Heart care',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockDepartments });
 
@@ -128,8 +178,24 @@ describe('Department Model', () => {
     it('should order departments alphabetically by name', async () => {
       // Arrange
       const mockDepartments = [
-        { id: 1, name: 'Cardiology', description: 'Heart care', is_system: false, active: true, created_at: new Date(), updated_at: new Date() },
-        { id: 2, name: 'Radiology', description: 'Imaging', is_system: false, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Cardiology',
+          description: 'Heart care',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: 'Radiology',
+          description: 'Imaging',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockDepartments });
 
@@ -137,9 +203,7 @@ describe('Department Model', () => {
       await Department.findAll(false);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('ORDER BY name')
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('ORDER BY name'));
     });
 
     it('should handle empty result set', async () => {
@@ -168,8 +232,22 @@ describe('Department Model', () => {
     it('should return all departments including inactive', async () => {
       // Arrange
       const mockDepartments = [
-        { id: 1, name: 'Cardiology', is_system: false, active: true, created_at: new Date(), updated_at: new Date() },
-        { id: 2, name: 'Old Dept', is_system: false, active: false, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Cardiology',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: 'Old Dept',
+          is_system: false,
+          active: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockDepartments });
 
@@ -178,14 +256,28 @@ describe('Department Model', () => {
 
       // Assert
       expect(result).toHaveLength(2);
-      expect(result.some(dept => dept.active === false)).toBe(true);
+      expect(result.some((dept) => dept.active === false)).toBe(true);
     });
 
     it('should include system departments', async () => {
       // Arrange
       const mockDepartments = [
-        { id: 1, name: 'Cardiology', is_system: false, active: true, created_at: new Date(), updated_at: new Date() },
-        { id: 2, name: 'Internal', is_system: true, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Cardiology',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: 'Internal',
+          is_system: true,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockDepartments });
 
@@ -193,14 +285,28 @@ describe('Department Model', () => {
       const result = await Department.findAllForAdmin();
 
       // Assert
-      expect(result.some(dept => dept.is_system === true)).toBe(true);
+      expect(result.some((dept) => dept.is_system === true)).toBe(true);
     });
 
     it('should include soft-deleted departments', async () => {
       // Arrange
       const mockDepartments = [
-        { id: 1, name: 'Active Dept', is_system: false, active: true, created_at: new Date(), updated_at: new Date() },
-        { id: 2, name: 'Deleted Dept', is_system: false, active: false, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Active Dept',
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: 'Deleted Dept',
+          is_system: false,
+          active: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockDepartments });
 
@@ -209,7 +315,7 @@ describe('Department Model', () => {
 
       // Assert
       expect(result).toHaveLength(2);
-      expect(result.some(dept => dept.active === false)).toBe(true);
+      expect(result.some((dept) => dept.active === false)).toBe(true);
     });
 
     it('should order departments by is_system DESC, active DESC, name', async () => {
@@ -221,7 +327,7 @@ describe('Department Model', () => {
 
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('ORDER BY is_system DESC, active DESC, name')
+        expect.stringContaining('ORDER BY is_system DESC, active DESC, name'),
       );
     });
 
@@ -245,7 +351,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -255,10 +361,7 @@ describe('Department Model', () => {
       // Assert
       expect(result).toBeValidDepartment();
       expect(result.name).toBe('Cardiology');
-      expect(pool.query).toHaveBeenCalledWith(
-        'SELECT * FROM departments WHERE id = $1',
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith('SELECT * FROM departments WHERE id = $1', [1]);
     });
 
     it('should return undefined for non-existent ID', async () => {
@@ -280,7 +383,7 @@ describe('Department Model', () => {
         is_system: false,
         active: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -300,7 +403,7 @@ describe('Department Model', () => {
         is_system: true,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -320,10 +423,7 @@ describe('Department Model', () => {
       await Department.findById(42);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.any(String),
-        [42]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.any(String), [42]);
     });
 
     it('should throw error on database failure', async () => {
@@ -345,7 +445,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -355,10 +455,9 @@ describe('Department Model', () => {
       // Assert
       expect(result).toBeValidDepartment();
       expect(result.name).toBe('Cardiology');
-      expect(pool.query).toHaveBeenCalledWith(
-        'SELECT * FROM departments WHERE name = $1',
-        ['Cardiology']
-      );
+      expect(pool.query).toHaveBeenCalledWith('SELECT * FROM departments WHERE name = $1', [
+        'Cardiology',
+      ]);
     });
 
     it('should return undefined for non-existent name', async () => {
@@ -380,10 +479,7 @@ describe('Department Model', () => {
       await Department.findByName('cardiology');
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.any(String),
-        ['cardiology']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.any(String), ['cardiology']);
     });
 
     it('should handle special characters in name', async () => {
@@ -394,7 +490,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -426,7 +522,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -437,10 +533,10 @@ describe('Department Model', () => {
       expect(result).toBeValidDepartment();
       expect(result.name).toBe('Neurology');
       expect(result.description).toBe('Brain care');
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO departments'),
-        ['Neurology', 'Brain care']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO departments'), [
+        'Neurology',
+        'Brain care',
+      ]);
     });
 
     it('should set is_system=false for non-system departments', async () => {
@@ -451,7 +547,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -462,7 +558,7 @@ describe('Department Model', () => {
       expect(result.is_system).toBe(false);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('is_system, active'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -474,7 +570,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -494,7 +590,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -503,10 +599,7 @@ describe('Department Model', () => {
 
       // Assert
       expect(result.description).toBeNull();
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.any(String),
-        ['Neurology', null]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.any(String), ['Neurology', null]);
     });
 
     it('should prevent duplicate names via UNIQUE constraint', async () => {
@@ -516,8 +609,9 @@ describe('Department Model', () => {
       pool.query.mockRejectedValue(dbError);
 
       // Act & Assert
-      await expect(Department.create({ name: 'Cardiology', description: 'Heart care' }))
-        .rejects.toThrow('duplicate key value');
+      await expect(
+        Department.create({ name: 'Cardiology', description: 'Heart care' }),
+      ).rejects.toThrow('duplicate key value');
     });
 
     it('should handle names with whitespace', async () => {
@@ -528,7 +622,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -546,8 +640,9 @@ describe('Department Model', () => {
       pool.query.mockRejectedValue(dbError);
 
       // Act & Assert
-      await expect(Department.create({ name: longName, description: 'Test' }))
-        .rejects.toThrow('value too long');
+      await expect(Department.create({ name: longName, description: 'Test' })).rejects.toThrow(
+        'value too long',
+      );
     });
 
     it('should throw error on database failure', async () => {
@@ -556,8 +651,9 @@ describe('Department Model', () => {
       pool.query.mockRejectedValue(dbError);
 
       // Act & Assert
-      await expect(Department.create({ name: 'Neurology', description: 'Brain care' }))
-        .rejects.toThrow('Database error');
+      await expect(
+        Department.create({ name: 'Neurology', description: 'Brain care' }),
+      ).rejects.toThrow('Database error');
     });
   });
 
@@ -571,7 +667,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -583,7 +679,7 @@ describe('Department Model', () => {
       expect(result.name).toBe('Updated Name');
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('WHERE id = $2 AND is_system = false'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -596,7 +692,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -615,7 +711,7 @@ describe('Department Model', () => {
         is_system: false,
         active: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -637,7 +733,7 @@ describe('Department Model', () => {
       expect(result).toBeUndefined();
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('is_system = false'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -649,7 +745,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -660,7 +756,7 @@ describe('Department Model', () => {
       expect(result).toBeValidDepartment();
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('RETURNING *'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -673,7 +769,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -693,7 +789,7 @@ describe('Department Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -711,8 +807,9 @@ describe('Department Model', () => {
       pool.query.mockRejectedValue(dbError);
 
       // Act & Assert
-      await expect(Department.update(1, { name: 'Existing Name' }))
-        .rejects.toThrow('duplicate key value');
+      await expect(Department.update(1, { name: 'Existing Name' })).rejects.toThrow(
+        'duplicate key value',
+      );
     });
 
     it('should return undefined for non-existent ID', async () => {
@@ -732,8 +829,7 @@ describe('Department Model', () => {
       pool.query.mockRejectedValue(dbError);
 
       // Act & Assert
-      await expect(Department.update(1, { name: 'New Name' }))
-        .rejects.toThrow('Database error');
+      await expect(Department.update(1, { name: 'New Name' })).rejects.toThrow('Database error');
     });
   });
 
@@ -746,7 +842,7 @@ describe('Department Model', () => {
         is_system: false,
         active: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -756,10 +852,7 @@ describe('Department Model', () => {
       // Assert
       expect(result).toBeDefined();
       expect(result.active).toBe(false);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SET active = false'),
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('SET active = false'), [1]);
     });
 
     it('should prevent deactivating system department', async () => {
@@ -771,10 +864,7 @@ describe('Department Model', () => {
 
       // Assert
       expect(result).toBeUndefined();
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('is_system = false'),
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('is_system = false'), [1]);
     });
 
     it('should return deactivated department', async () => {
@@ -785,7 +875,7 @@ describe('Department Model', () => {
         is_system: false,
         active: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -796,7 +886,7 @@ describe('Department Model', () => {
       expect(result).toBeValidDepartment();
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('RETURNING *'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -819,7 +909,7 @@ describe('Department Model', () => {
         is_system: false,
         active: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockDepartment] });
 
@@ -829,7 +919,7 @@ describe('Department Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('updated_at = NOW()'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -855,7 +945,7 @@ describe('Department Model', () => {
       expect(result).toBe(5);
       expect(pool.query).toHaveBeenCalledWith(
         'SELECT COUNT(*) as count FROM users WHERE department = $1',
-        ['Cardiology']
+        ['Cardiology'],
       );
     });
 
@@ -881,7 +971,7 @@ describe('Department Model', () => {
       expect(result).toBe(10);
       expect(pool.query).not.toHaveBeenCalledWith(
         expect.stringContaining('status ='),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -907,7 +997,7 @@ describe('Department Model', () => {
       expect(result).toBe(15);
       expect(pool.query).toHaveBeenCalledWith(
         'SELECT COUNT(*) as count FROM tickets WHERE reporter_department = $1',
-        ['Cardiology']
+        ['Cardiology'],
       );
     });
 
@@ -933,7 +1023,7 @@ describe('Department Model', () => {
       expect(result).toBe(25);
       expect(pool.query).not.toHaveBeenCalledWith(
         expect.stringContaining('status ='),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -951,8 +1041,22 @@ describe('Department Model', () => {
     it('should return all users assigned to department', async () => {
       // Arrange
       const mockUsers = [
-        { id: 1, username: 'user1', email: 'user1@example.com', role: 'department', status: 'active', created_at: new Date() },
-        { id: 2, username: 'user2', email: 'user2@example.com', role: 'department', status: 'active', created_at: new Date() }
+        {
+          id: 1,
+          username: 'user1',
+          email: 'user1@example.com',
+          role: 'department',
+          status: 'active',
+          created_at: new Date(),
+        },
+        {
+          id: 2,
+          username: 'user2',
+          email: 'user2@example.com',
+          role: 'department',
+          status: 'active',
+          created_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockUsers });
 
@@ -961,10 +1065,9 @@ describe('Department Model', () => {
 
       // Assert
       expect(result).toHaveLength(2);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE department = $1'),
-        ['Cardiology']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('WHERE department = $1'), [
+        'Cardiology',
+      ]);
     });
 
     it('should order users by username', async () => {
@@ -977,7 +1080,7 @@ describe('Department Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY username'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -995,7 +1098,14 @@ describe('Department Model', () => {
     it('should return users NOT assigned to department', async () => {
       // Arrange
       const mockUsers = [
-        { id: 3, username: 'user3', email: 'user3@example.com', role: 'department', status: 'active', department: 'Radiology' }
+        {
+          id: 3,
+          username: 'user3',
+          email: 'user3@example.com',
+          role: 'department',
+          status: 'active',
+          department: 'Radiology',
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockUsers });
 
@@ -1006,7 +1116,7 @@ describe('Department Model', () => {
       expect(result).toHaveLength(1);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('WHERE (department != $1 OR department IS NULL)'),
-        ['Cardiology']
+        ['Cardiology'],
       );
     });
 
@@ -1020,11 +1130,11 @@ describe('Department Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining("role = 'department'"),
-        expect.any(Array)
+        expect.any(Array),
       );
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining("status = 'active'"),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 

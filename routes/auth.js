@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { validateRequest } = require('../middleware/validation');
-const { AUTH_MESSAGES } = require('../constants/messages');
+// const { AUTH_MESSAGES } = require('../constants/messages'); // Not currently used
 const { USER_ROLE } = require('../constants/enums');
 const authService = require('../services/authService');
 const { validateLogin } = require('../validators/authValidators');
@@ -12,15 +12,14 @@ const { loginLimiter } = require('../middleware/rateLimiter');
 router.get('/login', (req, res) => {
   if (req.session.user) {
     // Role-based redirect
-    const redirectPath = req.session.user.role === USER_ROLE.DEPARTMENT
-      ? '/client/dashboard'
-      : '/admin/dashboard';
+    const redirectPath =
+      req.session.user.role === USER_ROLE.DEPARTMENT ? '/client/dashboard' : '/admin/dashboard';
     return res.redirect(redirectPath);
   }
   res.render('auth/login', {
     title: req.t('auth:login.title'),
     t: req.t,
-    language: req.language || 'el'
+    language: req.language || 'el',
   });
 });
 
@@ -42,13 +41,12 @@ router.post('/login', loginLimiter, validateLogin, validateRequest, async (req, 
       targetType: 'user',
       targetId: user.id,
       details: { success: true },
-      ipAddress: req.ip
+      ipAddress: req.ip,
     });
 
     // Role-based redirect after login
-    const redirectPath = user.role === USER_ROLE.DEPARTMENT
-      ? '/client/dashboard'
-      : '/admin/dashboard';
+    const redirectPath =
+      user.role === USER_ROLE.DEPARTMENT ? '/client/dashboard' : '/admin/dashboard';
 
     successRedirect(req, res, 'auth:messages.loginSuccess', redirectPath);
   } catch (error) {
@@ -60,9 +58,8 @@ router.post('/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       // Role-based fallback redirect on error
-      const redirectPath = req.session.user?.role === USER_ROLE.DEPARTMENT
-        ? '/client/dashboard'
-        : '/admin/dashboard';
+      const redirectPath =
+        req.session.user?.role === USER_ROLE.DEPARTMENT ? '/client/dashboard' : '/admin/dashboard';
       return res.redirect(redirectPath);
     }
     res.clearCookie('connect.sid');

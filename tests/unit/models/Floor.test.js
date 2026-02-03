@@ -38,8 +38,24 @@ describe('Floor Model', () => {
     it('should return all active floors when includeSystem=false', async () => {
       // Arrange
       const mockFloors = [
-        { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true, created_at: new Date(), updated_at: new Date() },
-        { id: 2, name: '1st Floor', sort_order: 1, is_system: false, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Ground Floor',
+          sort_order: 0,
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: '1st Floor',
+          sort_order: 1,
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockFloors });
 
@@ -51,14 +67,22 @@ describe('Floor Model', () => {
       expect(result[0]).toBeValidFloor();
       expect(result[0].name).toBe('Ground Floor');
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE active = true AND is_system = false')
+        expect.stringContaining('WHERE active = true AND is_system = false'),
       );
     });
 
     it('should exclude system floors when includeSystem=false', async () => {
       // Arrange
       const mockFloors = [
-        { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Ground Floor',
+          sort_order: 0,
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockFloors });
 
@@ -67,16 +91,30 @@ describe('Floor Model', () => {
 
       // Assert
       expect(result).not.toContainEqual(expect.objectContaining({ is_system: true }));
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('is_system = false')
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('is_system = false'));
     });
 
     it('should include system floors when includeSystem=true', async () => {
       // Arrange
       const mockFloors = [
-        { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true, created_at: new Date(), updated_at: new Date() },
-        { id: 2, name: 'System Floor', sort_order: 999, is_system: true, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Ground Floor',
+          sort_order: 0,
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: 'System Floor',
+          sort_order: 999,
+          is_system: true,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockFloors });
 
@@ -85,15 +123,21 @@ describe('Floor Model', () => {
 
       // Assert
       expect(result).toHaveLength(2);
-      expect(pool.query).not.toHaveBeenCalledWith(
-        expect.stringContaining('is_system = false')
-      );
+      expect(pool.query).not.toHaveBeenCalledWith(expect.stringContaining('is_system = false'));
     });
 
     it('should only return active floors', async () => {
       // Arrange
       const mockFloors = [
-        { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Ground Floor',
+          sort_order: 0,
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockFloors });
 
@@ -101,10 +145,8 @@ describe('Floor Model', () => {
       const result = await Floor.findAll(false);
 
       // Assert
-      expect(result.every(floor => floor.active === true)).toBe(true);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE active = true')
-      );
+      expect(result.every((floor) => floor.active === true)).toBe(true);
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('WHERE active = true'));
     });
 
     it('should order floors by sort_order then name', async () => {
@@ -115,9 +157,7 @@ describe('Floor Model', () => {
       await Floor.findAll(false);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('ORDER BY sort_order, name')
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('ORDER BY sort_order, name'));
     });
 
     it('should handle empty result set', async () => {
@@ -164,8 +204,24 @@ describe('Floor Model', () => {
     it('should return all floors including inactive', async () => {
       // Arrange
       const mockFloors = [
-        { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true, created_at: new Date(), updated_at: new Date() },
-        { id: 2, name: 'Old Floor', sort_order: 10, is_system: false, active: false, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Ground Floor',
+          sort_order: 0,
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: 'Old Floor',
+          sort_order: 10,
+          is_system: false,
+          active: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockFloors });
 
@@ -174,14 +230,30 @@ describe('Floor Model', () => {
 
       // Assert
       expect(result).toHaveLength(2);
-      expect(result.some(floor => floor.active === false)).toBe(true);
+      expect(result.some((floor) => floor.active === false)).toBe(true);
     });
 
     it('should include system floors', async () => {
       // Arrange
       const mockFloors = [
-        { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true, created_at: new Date(), updated_at: new Date() },
-        { id: 2, name: 'System Floor', sort_order: 999, is_system: true, active: true, created_at: new Date(), updated_at: new Date() }
+        {
+          id: 1,
+          name: 'Ground Floor',
+          sort_order: 0,
+          is_system: false,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: 'System Floor',
+          sort_order: 999,
+          is_system: true,
+          active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockFloors });
 
@@ -189,7 +261,7 @@ describe('Floor Model', () => {
       const result = await Floor.findAllForAdmin();
 
       // Assert
-      expect(result.some(floor => floor.is_system === true)).toBe(true);
+      expect(result.some((floor) => floor.is_system === true)).toBe(true);
     });
 
     it('should order by is_system DESC, active DESC, sort_order, name', async () => {
@@ -201,7 +273,7 @@ describe('Floor Model', () => {
 
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('ORDER BY is_system DESC, active DESC, sort_order, name')
+        expect.stringContaining('ORDER BY is_system DESC, active DESC, sort_order, name'),
       );
     });
 
@@ -236,7 +308,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -246,10 +318,7 @@ describe('Floor Model', () => {
       // Assert
       expect(result).toBeValidFloor();
       expect(result.name).toBe('Ground Floor');
-      expect(pool.query).toHaveBeenCalledWith(
-        'SELECT * FROM floors WHERE id = $1',
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith('SELECT * FROM floors WHERE id = $1', [1]);
     });
 
     it('should return undefined for non-existent ID', async () => {
@@ -272,7 +341,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -293,7 +362,7 @@ describe('Floor Model', () => {
         is_system: true,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -313,10 +382,7 @@ describe('Floor Model', () => {
       await Floor.findById(42);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.any(String),
-        [42]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.any(String), [42]);
     });
 
     it('should throw error on database failure', async () => {
@@ -339,7 +405,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -349,10 +415,9 @@ describe('Floor Model', () => {
       // Assert
       expect(result).toBeValidFloor();
       expect(result.name).toBe('Ground Floor');
-      expect(pool.query).toHaveBeenCalledWith(
-        'SELECT * FROM floors WHERE name = $1',
-        ['Ground Floor']
-      );
+      expect(pool.query).toHaveBeenCalledWith('SELECT * FROM floors WHERE name = $1', [
+        'Ground Floor',
+      ]);
     });
 
     it('should return undefined for non-existent name', async () => {
@@ -374,10 +439,7 @@ describe('Floor Model', () => {
       await Floor.findByName('ground floor');
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.any(String),
-        ['ground floor']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.any(String), ['ground floor']);
     });
 
     it('should handle special characters in name', async () => {
@@ -389,7 +451,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -421,7 +483,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -432,10 +494,10 @@ describe('Floor Model', () => {
       expect(result).toBeValidFloor();
       expect(result.name).toBe('2nd Floor');
       expect(result.sort_order).toBe(2);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO floors'),
-        ['2nd Floor', 2]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO floors'), [
+        '2nd Floor',
+        2,
+      ]);
     });
 
     it('should set is_system=false for non-system floors', async () => {
@@ -447,7 +509,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -458,7 +520,7 @@ describe('Floor Model', () => {
       expect(result.is_system).toBe(false);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('is_system'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -471,7 +533,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -491,7 +553,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -499,10 +561,7 @@ describe('Floor Model', () => {
       const result = await Floor.create({ name: 'Test Floor' });
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.any(String),
-        ['Test Floor', 0]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.any(String), ['Test Floor', 0]);
     });
 
     it('should prevent duplicate names via UNIQUE constraint', async () => {
@@ -512,8 +571,9 @@ describe('Floor Model', () => {
       pool.query.mockRejectedValue(dbError);
 
       // Act & Assert
-      await expect(Floor.create({ name: 'Ground Floor', sort_order: 0 }))
-        .rejects.toThrow('duplicate key value');
+      await expect(Floor.create({ name: 'Ground Floor', sort_order: 0 })).rejects.toThrow(
+        'duplicate key value',
+      );
     });
 
     it('should handle names with whitespace', async () => {
@@ -525,7 +585,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -545,7 +605,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -555,7 +615,7 @@ describe('Floor Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('RETURNING *'),
-        expect.any(Array)
+        expect.any(Array),
       );
       expect(result).toBeDefined();
     });
@@ -570,7 +630,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       mockClient.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -581,7 +641,7 @@ describe('Floor Model', () => {
       expect(result).toBeValidFloor();
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO floors'),
-        expect.any(Array)
+        expect.any(Array),
       );
       expect(pool.query).not.toHaveBeenCalled();
     });
@@ -592,8 +652,9 @@ describe('Floor Model', () => {
       pool.query.mockRejectedValue(dbError);
 
       // Act & Assert
-      await expect(Floor.create({ name: 'Test Floor', sort_order: 0 }))
-        .rejects.toThrow('Database error');
+      await expect(Floor.create({ name: 'Test Floor', sort_order: 0 })).rejects.toThrow(
+        'Database error',
+      );
     });
   });
 
@@ -607,7 +668,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -619,7 +680,7 @@ describe('Floor Model', () => {
       expect(result.name).toBe('Updated Floor');
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('WHERE id = $'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -632,7 +693,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -652,7 +713,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -674,7 +735,7 @@ describe('Floor Model', () => {
       expect(result).toBeUndefined();
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('is_system = false'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -687,7 +748,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -698,7 +759,7 @@ describe('Floor Model', () => {
       expect(result).toBeDefined();
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('RETURNING *'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -711,7 +772,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -731,7 +792,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -751,7 +812,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -761,7 +822,7 @@ describe('Floor Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('updated_at = NOW()'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -786,7 +847,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       mockClient.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -797,7 +858,7 @@ describe('Floor Model', () => {
       expect(result).toBeValidFloor();
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE floors'),
-        expect.any(Array)
+        expect.any(Array),
       );
       expect(pool.query).not.toHaveBeenCalled();
     });
@@ -808,8 +869,7 @@ describe('Floor Model', () => {
       pool.query.mockRejectedValue(dbError);
 
       // Act & Assert
-      await expect(Floor.update(1, { name: 'New Name' }))
-        .rejects.toThrow('Database error');
+      await expect(Floor.update(1, { name: 'New Name' })).rejects.toThrow('Database error');
     });
   });
 
@@ -823,7 +883,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -833,10 +893,7 @@ describe('Floor Model', () => {
       // Assert
       expect(result).toBeDefined();
       expect(result.active).toBe(false);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SET active = false'),
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('SET active = false'), [1]);
     });
 
     it('should prevent deactivating system floor', async () => {
@@ -848,10 +905,7 @@ describe('Floor Model', () => {
 
       // Assert
       expect(result).toBeUndefined();
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('is_system = false'),
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('is_system = false'), [1]);
     });
 
     it('should return deactivated floor with RETURNING', async () => {
@@ -863,7 +917,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -874,7 +928,7 @@ describe('Floor Model', () => {
       expect(result).toBeValidFloor();
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('RETURNING *'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -898,7 +952,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: false,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -908,7 +962,7 @@ describe('Floor Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('updated_at = NOW()'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -932,7 +986,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -942,10 +996,7 @@ describe('Floor Model', () => {
       // Assert
       expect(result).toBeValidFloor();
       expect(result.active).toBe(true);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SET active = true'),
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('SET active = true'), [1]);
     });
 
     it('should return reactivated floor with RETURNING', async () => {
@@ -957,7 +1008,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -968,7 +1019,7 @@ describe('Floor Model', () => {
       expect(result).toBeValidFloor();
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('RETURNING *'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -981,10 +1032,7 @@ describe('Floor Model', () => {
 
       // Assert
       expect(result).toBeUndefined();
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('is_system = false'),
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('is_system = false'), [1]);
     });
 
     it('should update updated_at timestamp on reactivation', async () => {
@@ -996,7 +1044,7 @@ describe('Floor Model', () => {
         is_system: false,
         active: true,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockFloor] });
 
@@ -1006,7 +1054,7 @@ describe('Floor Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('updated_at = NOW()'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -1032,7 +1080,7 @@ describe('Floor Model', () => {
       expect(result).toBe(5);
       expect(pool.query).toHaveBeenCalledWith(
         'SELECT COUNT(*) as count FROM departments WHERE floor = $1',
-        ['Ground Floor']
+        ['Ground Floor'],
       );
     });
 

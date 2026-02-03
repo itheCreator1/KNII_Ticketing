@@ -40,7 +40,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/not-found',
-        method: 'GET'
+        method: 'GET',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -50,24 +50,27 @@ describe('Error Handler Middleware', () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.render).toHaveBeenCalledWith('errors/404', expect.objectContaining({
-        title: 'Error',
-        status: 404,
-        message: 'Not Found',
-        user: null,
-        correlationId: expect.any(String),
-        errorCategory: 'NOT_FOUND',
-        isDevelopment: true,
-        stackTrace: expect.any(String)
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        'errors/404',
+        expect.objectContaining({
+          title: 'Error',
+          status: 404,
+          message: 'Not Found',
+          user: null,
+          correlationId: expect.any(String),
+          errorCategory: 'NOT_FOUND',
+          isDevelopment: true,
+          stackTrace: expect.any(String),
+        }),
+      );
       expect(logger.error).toHaveBeenCalledWith(
         'Error handler caught exception',
         expect.objectContaining({
           error: 'Not Found',
           status: 404,
           url: '/not-found',
-          method: 'GET'
-        })
+          method: 'GET',
+        }),
       );
     });
 
@@ -78,7 +81,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/forbidden',
-        method: 'GET'
+        method: 'GET',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -88,16 +91,19 @@ describe('Error Handler Middleware', () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.render).toHaveBeenCalledWith('errors/403', expect.objectContaining({
-        title: 'Error',
-        status: 403,
-        message: 'Forbidden',
-        user: null,
-        correlationId: expect.any(String),
-        errorCategory: 'FORBIDDEN',
-        isDevelopment: true,
-        stackTrace: expect.any(String)
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        'errors/403',
+        expect.objectContaining({
+          title: 'Error',
+          status: 403,
+          message: 'Forbidden',
+          user: null,
+          correlationId: expect.any(String),
+          errorCategory: 'FORBIDDEN',
+          isDevelopment: true,
+          stackTrace: expect.any(String),
+        }),
+      );
     });
 
     it('should render 500 template for 500 status', () => {
@@ -107,7 +113,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/error',
-        method: 'POST'
+        method: 'POST',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -117,16 +123,19 @@ describe('Error Handler Middleware', () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.render).toHaveBeenCalledWith('errors/500', expect.objectContaining({
-        title: 'Error',
-        status: 500,
-        message: 'Internal Server Error',
-        user: null,
-        correlationId: expect.any(String),
-        errorCategory: 'SERVER_ERROR',
-        isDevelopment: true,
-        stackTrace: expect.any(String)
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        'errors/500',
+        expect.objectContaining({
+          title: 'Error',
+          status: 500,
+          message: 'Internal Server Error',
+          user: null,
+          correlationId: expect.any(String),
+          errorCategory: 'SERVER_ERROR',
+          isDevelopment: true,
+          stackTrace: expect.any(String),
+        }),
+      );
     });
 
     it('should render generic error template for other status codes', () => {
@@ -136,7 +145,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/bad',
-        method: 'POST'
+        method: 'POST',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -146,16 +155,19 @@ describe('Error Handler Middleware', () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.render).toHaveBeenCalledWith('errors/error', expect.objectContaining({
-        title: 'Error',
-        status: 400,
-        message: 'Bad Request',
-        user: null,
-        correlationId: expect.any(String),
-        errorCategory: 'CLIENT_ERROR',
-        isDevelopment: true,
-        stackTrace: expect.any(String)
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        'errors/error',
+        expect.objectContaining({
+          title: 'Error',
+          status: 400,
+          message: 'Bad Request',
+          user: null,
+          correlationId: expect.any(String),
+          errorCategory: 'CLIENT_ERROR',
+          isDevelopment: true,
+          stackTrace: expect.any(String),
+        }),
+      );
     });
 
     it('should hide error details in production mode for 500 errors', () => {
@@ -166,7 +178,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/error',
-        method: 'GET'
+        method: 'GET',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -175,16 +187,19 @@ describe('Error Handler Middleware', () => {
       errorHandler(error, req, res, next);
 
       // Assert
-      expect(res.render).toHaveBeenCalledWith('errors/500', expect.objectContaining({
-        title: 'Error',
-        status: 500,
-        message: 'Internal server error',
-        user: null,
-        correlationId: expect.any(String),
-        errorCategory: 'SERVER_ERROR',
-        isDevelopment: false,
-        stackTrace: null
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        'errors/500',
+        expect.objectContaining({
+          title: 'Error',
+          status: 500,
+          message: 'Internal server error',
+          user: null,
+          correlationId: expect.any(String),
+          errorCategory: 'SERVER_ERROR',
+          isDevelopment: false,
+          stackTrace: null,
+        }),
+      );
     });
 
     it('should hide error details in production mode for non-500 errors', () => {
@@ -195,7 +210,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/error',
-        method: 'GET'
+        method: 'GET',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -204,16 +219,19 @@ describe('Error Handler Middleware', () => {
       errorHandler(error, req, res, next);
 
       // Assert
-      expect(res.render).toHaveBeenCalledWith('errors/error', expect.objectContaining({
-        title: 'Error',
-        status: 400,
-        message: 'An error occurred',
-        user: null,
-        correlationId: expect.any(String),
-        errorCategory: 'CLIENT_ERROR',
-        isDevelopment: false,
-        stackTrace: null
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        'errors/error',
+        expect.objectContaining({
+          title: 'Error',
+          status: 400,
+          message: 'An error occurred',
+          user: null,
+          correlationId: expect.any(String),
+          errorCategory: 'CLIENT_ERROR',
+          isDevelopment: false,
+          stackTrace: null,
+        }),
+      );
     });
 
     it('should show error details in development mode', () => {
@@ -224,7 +242,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/error',
-        method: 'GET'
+        method: 'GET',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -233,16 +251,19 @@ describe('Error Handler Middleware', () => {
       errorHandler(error, req, res, next);
 
       // Assert
-      expect(res.render).toHaveBeenCalledWith('errors/500', expect.objectContaining({
-        title: 'Error',
-        status: 500,
-        message: 'Detailed development error',
-        user: null,
-        correlationId: expect.any(String),
-        errorCategory: 'SERVER_ERROR',
-        isDevelopment: true,
-        stackTrace: expect.any(String)
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        'errors/500',
+        expect.objectContaining({
+          title: 'Error',
+          status: 500,
+          message: 'Detailed development error',
+          user: null,
+          correlationId: expect.any(String),
+          errorCategory: 'SERVER_ERROR',
+          isDevelopment: true,
+          stackTrace: expect.any(String),
+        }),
+      );
     });
 
     it('should return JSON response when client accepts application/json', () => {
@@ -253,7 +274,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(false),
         url: '/api/endpoint',
-        method: 'POST'
+        method: 'POST',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -268,8 +289,8 @@ describe('Error Handler Middleware', () => {
         error: {
           message: 'API error',
           correlationId: expect.any(String),
-          category: 'CLIENT_ERROR'
-        }
+          category: 'CLIENT_ERROR',
+        },
       });
       expect(res.render).not.toHaveBeenCalled();
     });
@@ -282,7 +303,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(false),
         url: '/api/endpoint',
-        method: 'POST'
+        method: 'POST',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -296,8 +317,8 @@ describe('Error Handler Middleware', () => {
         error: {
           message: 'Internal server error',
           correlationId: expect.any(String),
-          category: 'SERVER_ERROR'
-        }
+          category: 'SERVER_ERROR',
+        },
       });
     });
 
@@ -309,7 +330,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/test',
-        method: 'POST'
+        method: 'POST',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -334,8 +355,8 @@ describe('Error Handler Middleware', () => {
           requestStartTime: null,
           headers: expect.any(Object),
           ip: '127.0.0.1',
-          userAgent: undefined
-        })
+          userAgent: undefined,
+        }),
       );
     });
 
@@ -345,7 +366,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/test',
-        method: 'GET'
+        method: 'GET',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -355,9 +376,12 @@ describe('Error Handler Middleware', () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.render).toHaveBeenCalledWith('errors/500', expect.objectContaining({
-        status: 500
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        'errors/500',
+        expect.objectContaining({
+          status: 500,
+        }),
+      );
     });
 
     it('should use default message when err.message is undefined', () => {
@@ -367,7 +391,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/test',
-        method: 'GET'
+        method: 'GET',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -376,9 +400,12 @@ describe('Error Handler Middleware', () => {
       errorHandler(error, req, res, next);
 
       // Assert
-      expect(res.render).toHaveBeenCalledWith('errors/500', expect.objectContaining({
-        message: 'Something went wrong'
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        'errors/500',
+        expect.objectContaining({
+          message: 'Something went wrong',
+        }),
+      );
     });
 
     it('should include user from res.locals if available', () => {
@@ -388,7 +415,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/test',
-        method: 'GET'
+        method: 'GET',
       });
       const res = createMockResponse();
       res.locals.user = { id: 1, username: 'testuser', role: 'admin' };
@@ -398,9 +425,12 @@ describe('Error Handler Middleware', () => {
       errorHandler(error, req, res, next);
 
       // Assert
-      expect(res.render).toHaveBeenCalledWith('errors/404', expect.objectContaining({
-        user: { id: 1, username: 'testuser', role: 'admin' }
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        'errors/404',
+        expect.objectContaining({
+          user: { id: 1, username: 'testuser', role: 'admin' },
+        }),
+      );
     });
 
     it('should log stack trace from error object', () => {
@@ -410,7 +440,7 @@ describe('Error Handler Middleware', () => {
       const req = createMockRequest({
         accepts: jest.fn().mockReturnValue(true),
         url: '/test',
-        method: 'GET'
+        method: 'GET',
       });
       const res = createMockResponse();
       const next = createMockNext();
@@ -422,8 +452,8 @@ describe('Error Handler Middleware', () => {
       expect(logger.error).toHaveBeenCalledWith(
         'Error handler caught exception',
         expect.objectContaining({
-          stack: expect.any(String)
-        })
+          stack: expect.any(String),
+        }),
       );
     });
   });

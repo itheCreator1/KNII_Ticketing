@@ -27,7 +27,7 @@ const { requireAuth } = require('../middleware/auth');
  */
 router.get('/test-components', requireAuth, (req, res) => {
   res.render('test-components', {
-    title: 'Component Tester - KNII Ticketing System'
+    title: 'Component Tester - KNII Ticketing System',
   });
 });
 

@@ -1,20 +1,33 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const passwordInput = document.getElementById('password') || document.getElementById('new-password');
+document.addEventListener('DOMContentLoaded', function () {
+  const passwordInput =
+    document.getElementById('password') || document.getElementById('new-password');
   const strengthIndicator = document.getElementById('password-strength');
 
   if (passwordInput && strengthIndicator) {
-    passwordInput.addEventListener('input', function() {
+    passwordInput.addEventListener('input', function () {
       const password = this.value;
       let strength = 0;
       let message = '';
       let className = '';
 
-      if (password.length >= 8) strength++;
-      if (password.length >= 12) strength++;
-      if (/[a-z]/.test(password)) strength++;
-      if (/[A-Z]/.test(password)) strength++;
-      if (/[0-9]/.test(password)) strength++;
-      if (/[^a-zA-Z0-9]/.test(password)) strength++;
+      if (password.length >= 8) {
+        strength++;
+      }
+      if (password.length >= 12) {
+        strength++;
+      }
+      if (/[a-z]/.test(password)) {
+        strength++;
+      }
+      if (/[A-Z]/.test(password)) {
+        strength++;
+      }
+      if (/[0-9]/.test(password)) {
+        strength++;
+      }
+      if (/[^a-zA-Z0-9]/.test(password)) {
+        strength++;
+      }
 
       if (strength <= 2) {
         message = 'Weak';

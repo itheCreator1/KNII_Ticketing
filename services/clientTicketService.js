@@ -17,7 +17,7 @@ class ClientTicketService {
     try {
       logger.info('clientTicketService.createTicket: Creating ticket for department user', {
         userId,
-        titleLength: ticketData.title?.length
+        titleLength: ticketData.title?.length,
       });
 
       // CRITICAL: Fetch user to get their department
@@ -36,12 +36,12 @@ class ClientTicketService {
       const ticket = await Ticket.create({
         title: ticketData.title,
         description: ticketData.description,
-        reporter_name: user.username,  // AUTO-POPULATED from user (fixes "Anonymous" display)
-        reporter_department: user.department,  // AUTO-POPULATED from user
+        reporter_name: user.username, // AUTO-POPULATED from user (fixes "Anonymous" display)
+        reporter_department: user.department, // AUTO-POPULATED from user
         reporter_phone: ticketData.reporter_phone,
-        reporter_id: userId,  // Ownership enforcement
-        priority: 'unset',  // FORCED - department users cannot set priority
-        status: 'waiting_on_admin'  // Department-created tickets start as 'waiting_on_admin'
+        reporter_id: userId, // Ownership enforcement
+        priority: 'unset', // FORCED - department users cannot set priority
+        status: 'waiting_on_admin', // Department-created tickets start as 'waiting_on_admin'
       });
 
       const duration = Date.now() - startTime;
@@ -49,8 +49,8 @@ class ClientTicketService {
       logger.info('clientTicketService.createTicket: Ticket created successfully', {
         ticketId: ticket.id,
         userId,
-        department: user.department,  // Log actual department used
-        duration
+        department: user.department, // Log actual department used
+        duration,
       });
 
       return ticket;
@@ -60,7 +60,7 @@ class ClientTicketService {
         userId,
         error: error.message,
         stack: error.stack,
-        duration
+        duration,
       });
       throw error;
     }
@@ -73,12 +73,16 @@ class ClientTicketService {
   async getDepartmentTickets(userId, department, filters = {}) {
     const startTime = Date.now();
     try {
-      logger.debug('clientTicketService.getDepartmentTickets: Fetching tickets', { userId, department, filters });
+      logger.debug('clientTicketService.getDepartmentTickets: Fetching tickets', {
+        userId,
+        department,
+        filters,
+      });
 
       const cleanFilters = {
         status: filters.status || undefined,
         priority: filters.priority || undefined,
-        search: filters.search || undefined
+        search: filters.search || undefined,
       };
 
       const tickets = await Ticket.findByDepartment(department, cleanFilters);
@@ -88,7 +92,7 @@ class ClientTicketService {
         userId,
         department,
         ticketCount: tickets.length,
-        duration
+        duration,
       });
 
       return tickets;
@@ -100,7 +104,7 @@ class ClientTicketService {
         filters,
         error: error.message,
         stack: error.stack,
-        duration
+        duration,
       });
       throw error;
     }
@@ -111,7 +115,7 @@ class ClientTicketService {
    * Note: Ownership verification must be done in route layer
    */
   async getTicketById(id) {
-    return await Ticket.findById(id);
+    return Ticket.findById(id);
   }
 
   /**
@@ -129,7 +133,7 @@ class ClientTicketService {
       logger.debug('clientTicketService.getVisibleComments: Comments fetched', {
         ticketId,
         commentCount: comments.length,
-        duration
+        duration,
       });
 
       return comments;
@@ -139,7 +143,7 @@ class ClientTicketService {
         ticketId,
         error: error.message,
         stack: error.stack,
-        duration
+        duration,
       });
       throw error;
     }
@@ -152,7 +156,11 @@ class ClientTicketService {
   async addComment(ticketId, userId, content) {
     const startTime = Date.now();
     try {
-      logger.info('clientTicketService.addComment: Adding comment', { ticketId, userId, contentLength: content?.length });
+      logger.info('clientTicketService.addComment: Adding comment', {
+        ticketId,
+        userId,
+        contentLength: content?.length,
+      });
 
       // Get current ticket to check status
       const ticket = await Ticket.findById(ticketId);
@@ -165,7 +173,7 @@ class ClientTicketService {
         ticket_id: ticketId,
         user_id: userId,
         content,
-        visibility_type: 'public'
+        visibility_type: 'public',
       });
 
       // AUTO-STATUS UPDATE: Department user adding public comment → "waiting_on_admin"
@@ -174,10 +182,12 @@ class ClientTicketService {
         await Ticket.update(ticketId, { status: 'waiting_on_admin' });
         logger.info('clientTicketService.addComment: Auto-updated status to waiting_on_admin', {
           ticketId,
-          oldStatus: ticket.status
+          oldStatus: ticket.status,
         });
       } else {
-        logger.debug('clientTicketService.addComment: Skipped status update (ticket closed)', { ticketId });
+        logger.debug('clientTicketService.addComment: Skipped status update (ticket closed)', {
+          ticketId,
+        });
       }
 
       const duration = Date.now() - startTime;
@@ -187,7 +197,7 @@ class ClientTicketService {
         ticketId,
         userId,
         statusUpdated: ticket.status !== 'closed',
-        duration
+        duration,
       });
 
       return comment;
@@ -198,7 +208,7 @@ class ClientTicketService {
         userId,
         error: error.message,
         stack: error.stack,
-        duration
+        duration,
       });
       throw error;
     }
@@ -220,13 +230,16 @@ class ClientTicketService {
       const error = new Error(`Department users cannot set status to: ${status}`);
       logger.warn('clientTicketService.updateTicketStatus: Invalid status for department user', {
         ticketId,
-        attemptedStatus: status
+        attemptedStatus: status,
       });
       throw error;
     }
 
     try {
-      logger.info('clientTicketService.updateTicketStatus: Updating ticket status', { ticketId, status });
+      logger.info('clientTicketService.updateTicketStatus: Updating ticket status', {
+        ticketId,
+        status,
+      });
 
       const updatedTicket = await Ticket.update(ticketId, { status });
       const duration = Date.now() - startTime;
@@ -234,7 +247,7 @@ class ClientTicketService {
       logger.info('clientTicketService.updateTicketStatus: Status updated successfully', {
         ticketId,
         newStatus: status,
-        duration
+        duration,
       });
 
       return updatedTicket;
@@ -245,7 +258,7 @@ class ClientTicketService {
         status,
         error: error.message,
         stack: error.stack,
-        duration
+        duration,
       });
       throw error;
     }

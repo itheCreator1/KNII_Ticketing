@@ -30,19 +30,15 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act - Access protected route
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       // Assert
       expect(response.status).toBe(200);
@@ -51,8 +47,7 @@ describe('Auth Middleware Integration Tests', () => {
 
     it('should redirect to login when no session exists', async () => {
       // Act - Access protected route without session
-      const response = await request(app)
-        .get('/admin/dashboard');
+      const response = await request(app).get('/admin/dashboard');
 
       // Assert
       expect(response.status).toBe(302);
@@ -64,12 +59,10 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
@@ -77,9 +70,7 @@ describe('Auth Middleware Integration Tests', () => {
       await User.update(user.id, { status: 'inactive' });
 
       // Act - Try to access protected route
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       // Assert - Should be redirected to login
       expect(response.status).toBe(302);
@@ -91,12 +82,10 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
@@ -104,9 +93,7 @@ describe('Auth Middleware Integration Tests', () => {
       await User.update(user.id, { status: 'deleted' });
 
       // Act - Try to access protected route
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       // Assert - Should be redirected to login
       expect(response.status).toBe(302);
@@ -118,12 +105,10 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
@@ -131,9 +116,7 @@ describe('Auth Middleware Integration Tests', () => {
       await User.update(user.id, { status: 'deleted', deleted_at: new Date() });
 
       // Act - Try to access protected route
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       // Assert - Should be redirected to login
       expect(response.status).toBe(302);
@@ -142,9 +125,7 @@ describe('Auth Middleware Integration Tests', () => {
 
     it('should set flash error message on redirect', async () => {
       // Act - Access protected route without session
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Accept', 'text/html');
+      const response = await request(app).get('/admin/dashboard').set('Accept', 'text/html');
 
       // Assert
       expect(response.status).toBe(302);
@@ -157,12 +138,10 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
@@ -170,9 +149,7 @@ describe('Auth Middleware Integration Tests', () => {
       await User.update(user.id, { status: 'inactive' });
 
       // Act
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       // Assert - Should check DB and redirect
       expect(response.status).toBe(302);
@@ -184,12 +161,10 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
@@ -197,14 +172,10 @@ describe('Auth Middleware Integration Tests', () => {
       await User.update(user.id, { status: 'inactive' });
 
       // Act - Access protected route (should destroy session)
-      await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       // Try to use the same session again
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       // Assert - Session should be destroyed
       expect(response.status).toBe(302);
@@ -218,12 +189,10 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
@@ -233,7 +202,7 @@ describe('Auth Middleware Integration Tests', () => {
         description: 'Test Description',
         reporter_name: 'John Doe',
         reporter_department: 'IT Support',
-        status: 'open'
+        status: 'open',
       };
 
       // Create a ticket first
@@ -255,12 +224,10 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'super_admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
@@ -270,7 +237,7 @@ describe('Auth Middleware Integration Tests', () => {
         description: 'Test Description',
         reporter_name: 'John Doe',
         reporter_department: 'IT Support',
-        status: 'open'
+        status: 'open',
       };
 
       const Ticket = require('../../../models/Ticket');
@@ -294,7 +261,7 @@ describe('Auth Middleware Integration Tests', () => {
         description: 'Test Description',
         reporter_name: 'John Doe',
         reporter_department: 'IT Support',
-        status: 'open'
+        status: 'open',
       });
 
       // Act - Access admin route without session
@@ -317,7 +284,7 @@ describe('Auth Middleware Integration Tests', () => {
         title: 'Test',
         description: 'Test',
         reporter_name: 'Test',
-        reporter_department: 'IT Support'
+        reporter_department: 'IT Support',
       });
 
       const response = await request(app)
@@ -336,19 +303,15 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'super_admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act - Access super_admin route
-      const response = await request(app)
-        .get('/admin/users')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/users').set('Cookie', cookies);
 
       // Assert - Should succeed
       expect(response.status).toBe(200);
@@ -360,19 +323,15 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act - Try to access super_admin route
-      const response = await request(app)
-        .get('/admin/users')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/users').set('Cookie', cookies);
 
       // Assert - Should be rejected
       expect(response.status).toBe(302);
@@ -381,8 +340,7 @@ describe('Auth Middleware Integration Tests', () => {
 
     it('should redirect to login when no session exists', async () => {
       // Act - Access super_admin route without session
-      const response = await request(app)
-        .get('/admin/users');
+      const response = await request(app).get('/admin/users');
 
       // Assert
       expect(response.status).toBe(302);
@@ -391,8 +349,7 @@ describe('Auth Middleware Integration Tests', () => {
 
     it('should require requireAuth to be called first', async () => {
       // Act - Try without authentication
-      const response = await request(app)
-        .get('/admin/users');
+      const response = await request(app).get('/admin/users');
 
       // Assert - requireAuth catches this first
       expect(response.status).toBe(302);
@@ -404,19 +361,15 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act
-      const response = await request(app)
-        .get('/admin/users')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/users').set('Cookie', cookies);
 
       // Assert - Should redirect with error message
       expect(response.status).toBe(302);
@@ -428,12 +381,10 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
@@ -458,7 +409,7 @@ describe('Auth Middleware Integration Tests', () => {
         title: 'Test',
         description: 'Test',
         reporter_name: 'Test',
-        reporter_department: 'IT Support'
+        reporter_department: 'IT Support',
       });
 
       // Act - No auth, should fail at requireAuth
@@ -473,8 +424,7 @@ describe('Auth Middleware Integration Tests', () => {
 
     it('should process requireAuth before requireSuperAdmin', async () => {
       // Act - No auth
-      const response = await request(app)
-        .get('/admin/users');
+      const response = await request(app).get('/admin/users');
 
       // Assert - Caught by requireAuth
       expect(response.status).toBe(302);
@@ -489,19 +439,15 @@ describe('Auth Middleware Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act - Normal access should work
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       // Assert
       expect(response.status).toBe(200);

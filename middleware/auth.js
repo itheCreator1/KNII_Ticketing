@@ -16,7 +16,9 @@ async function requireAuth(req, res, next) {
     if (!user || user.status !== 'active') {
       return new Promise((resolve) => {
         req.session.destroy((err) => {
-          if (err) logger.error('Session destruction error', { error: err.message });
+          if (err) {
+            logger.error('Session destruction error', { error: err.message });
+          }
           res.redirect('/auth/login');
           resolve();
         });
@@ -71,5 +73,5 @@ module.exports = {
   requireAuth,
   requireAdmin,
   requireDepartment,
-  requireSuperAdmin
+  requireSuperAdmin,
 };

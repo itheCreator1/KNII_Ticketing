@@ -11,7 +11,7 @@ class FloorService {
    * @returns {Promise<Array>} Active floors
    */
   async getActiveFloors() {
-    return await Floor.findAll(false);
+    return Floor.findAll(false);
   }
 
   /**
@@ -19,7 +19,7 @@ class FloorService {
    * @returns {Promise<Array>} All floors
    */
   async getAllFloors() {
-    return await Floor.findAllForAdmin();
+    return Floor.findAllForAdmin();
   }
 
   /**
@@ -57,7 +57,7 @@ class FloorService {
     // Create floor
     const floor = await Floor.create({
       name: name.trim(),
-      sort_order: sort_order || 0
+      sort_order: sort_order || 0,
     });
 
     // Log action
@@ -67,7 +67,7 @@ class FloorService {
       targetType: 'floor',
       targetId: floor.id,
       details: { name: floor.name, sort_order: floor.sort_order },
-      ipAddress
+      ipAddress,
     });
 
     return floor;
@@ -102,7 +102,7 @@ class FloorService {
     const updated = await Floor.update(id, {
       name: name?.trim(),
       sort_order,
-      active
+      active,
     });
 
     if (!updated) {
@@ -117,9 +117,9 @@ class FloorService {
       targetId: id,
       details: {
         old: { name: current.name, sort_order: current.sort_order, active: current.active },
-        new: { name: updated.name, sort_order: updated.sort_order, active: updated.active }
+        new: { name: updated.name, sort_order: updated.sort_order, active: updated.active },
       },
-      ipAddress
+      ipAddress,
     });
 
     return updated;
@@ -144,7 +144,9 @@ class FloorService {
     // Check if floor has departments
     const departmentCount = await Floor.countDepartments(floor.name);
     if (departmentCount > 0) {
-      throw new Error(`Cannot deactivate floor: ${departmentCount} department(s) still assigned. Please reassign departments first.`);
+      throw new Error(
+        `Cannot deactivate floor: ${departmentCount} department(s) still assigned. Please reassign departments first.`,
+      );
     }
 
     // Deactivate
@@ -161,7 +163,7 @@ class FloorService {
       targetType: 'floor',
       targetId: id,
       details: { name: floor.name },
-      ipAddress
+      ipAddress,
     });
 
     return deactivated;
@@ -188,7 +190,7 @@ class FloorService {
       targetType: 'floor',
       targetId: id,
       details: { name: floor.name },
-      ipAddress
+      ipAddress,
     });
 
     return reactivated;

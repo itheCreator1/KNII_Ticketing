@@ -20,7 +20,7 @@ const {
   seedBenchmarkData,
   cleanupBenchmarkData,
   formatLatency,
-  meetsLodgingSLA
+  meetsLodgingSLA,
 } = require('./helpers/benchmarkRunner');
 
 let server;
@@ -39,7 +39,7 @@ async function startServer() {
   app.get('/admin/dashboard', async (req, res) => {
     try {
       const result = await pool.query(
-        'SELECT id, title, status, priority FROM tickets ORDER BY created_at DESC LIMIT 50'
+        'SELECT id, title, status, priority FROM tickets ORDER BY created_at DESC LIMIT 50',
       );
       res.status(200).json({ tickets: result.rows });
     } catch (error) {
@@ -52,7 +52,7 @@ async function startServer() {
     try {
       const result = await pool.query(
         'SELECT id, title, status, priority FROM tickets WHERE reporter_department = $1 AND is_admin_created = false ORDER BY created_at DESC LIMIT 50',
-        ['BenchmarkDept']
+        ['BenchmarkDept'],
       );
       res.status(200).json({ tickets: result.rows });
     } catch (error) {
@@ -63,10 +63,9 @@ async function startServer() {
   // Mock ticket detail view
   app.get('/admin/tickets/:id', async (req, res) => {
     try {
-      const result = await pool.query(
-        'SELECT * FROM tickets WHERE id = $1',
-        [parseInt(req.params.id)]
-      );
+      const result = await pool.query('SELECT * FROM tickets WHERE id = $1', [
+        parseInt(req.params.id),
+      ]);
       res.status(200).json(result.rows[0] || {});
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -78,7 +77,7 @@ async function startServer() {
     try {
       const result = await pool.query(
         'INSERT INTO tickets (title, description, status, priority, reporter_name, reporter_department) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-        ['Benchmark Ticket', 'Description', 'open', 'unset', 'Reporter', 'BenchmarkDept']
+        ['Benchmark Ticket', 'Description', 'open', 'unset', 'Reporter', 'BenchmarkDept'],
       );
       res.status(201).json({ id: result.rows[0].id });
     } catch (error) {
@@ -89,10 +88,10 @@ async function startServer() {
   // Mock ticket status update
   app.put('/admin/tickets/:id', async (req, res) => {
     try {
-      await pool.query(
-        'UPDATE tickets SET status = $1 WHERE id = $2',
-        ['in_progress', parseInt(req.params.id)]
-      );
+      await pool.query('UPDATE tickets SET status = $1 WHERE id = $2', [
+        'in_progress',
+        parseInt(req.params.id),
+      ]);
       res.status(200).json({ success: true });
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -150,7 +149,7 @@ async function runAllBenchmarks() {
       url: 'http://localhost:3002/health',
       connections: 1,
       duration: 2,
-      pipelining: 1
+      pipelining: 1,
     });
 
     // Benchmark 1: Admin ticket listing
@@ -160,7 +159,7 @@ async function runAllBenchmarks() {
       method: 'GET',
       connections: 10,
       duration: 10,
-      pipelining: 1
+      pipelining: 1,
     });
     printResults(adminListResult, 'GET /admin/dashboard');
     console.log(`  P95 Latency: ${formatLatency(adminListResult.latency.p95, 400)}`);
@@ -173,7 +172,7 @@ async function runAllBenchmarks() {
       method: 'GET',
       connections: 10,
       duration: 10,
-      pipelining: 1
+      pipelining: 1,
     });
     printResults(deptListResult, 'GET /client/dashboard');
     console.log(`  P95 Latency: ${formatLatency(deptListResult.latency.p95, 300)}`);
@@ -186,7 +185,7 @@ async function runAllBenchmarks() {
       method: 'GET',
       connections: 10,
       duration: 10,
-      pipelining: 1
+      pipelining: 1,
     });
     printResults(detailResult, 'GET /admin/tickets/:id');
     console.log(`  P95 Latency: ${formatLatency(detailResult.latency.p95, 200)}`);
@@ -198,16 +197,16 @@ async function runAllBenchmarks() {
       url: 'http://localhost:3002/admin/tickets',
       method: 'POST',
       headers: {
-        'content-type': 'application/json'
+        'content-type': 'application/json',
       },
       body: JSON.stringify({
         title: 'Benchmark Ticket',
         description: 'Test ticket',
-        priority: 'unset'
+        priority: 'unset',
       }),
       connections: 5,
       duration: 10,
-      pipelining: 1
+      pipelining: 1,
     });
     printResults(createResult, 'POST /admin/tickets');
     console.log(`  P95 Latency: ${formatLatency(createResult.latency.p95, 300)}`);
@@ -219,12 +218,12 @@ async function runAllBenchmarks() {
       url: `http://localhost:3002/admin/tickets/${testData.ticket}`,
       method: 'PUT',
       headers: {
-        'content-type': 'application/json'
+        'content-type': 'application/json',
       },
       body: JSON.stringify({ status: 'in_progress' }),
       connections: 5,
       duration: 10,
-      pipelining: 1
+      pipelining: 1,
     });
     printResults(updateResult, 'PUT /admin/tickets/:id');
     console.log(`  P95 Latency: ${formatLatency(updateResult.latency.p95, 300)}`);

@@ -9,7 +9,7 @@ const { validationResult } = require('express-validator');
 const {
   validateFloorId,
   validateFloorCreate,
-  validateFloorUpdate
+  validateFloorUpdate,
 } = require('../../../validators/floorValidators');
 const { createMockRequest } = require('../../helpers/mocks');
 
@@ -32,7 +32,7 @@ describe('Floor Validators', () => {
     it('should pass validation for valid positive integer ID', async () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '1' }
+        params: { id: '1' },
       });
 
       // Act
@@ -45,7 +45,7 @@ describe('Floor Validators', () => {
     it('should pass validation for large integer ID', async () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '9999' }
+        params: { id: '9999' },
       });
 
       // Act
@@ -58,7 +58,7 @@ describe('Floor Validators', () => {
     it('should fail when ID is not an integer', async () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: 'invalid' }
+        params: { id: 'invalid' },
       });
 
       // Act
@@ -67,13 +67,13 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'id')).toBe(true);
+      expect(errors.some((e) => e.path === 'id')).toBe(true);
     });
 
     it('should fail when ID is zero', async () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '0' }
+        params: { id: '0' },
       });
 
       // Act
@@ -82,13 +82,13 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'id')).toBe(true);
+      expect(errors.some((e) => e.path === 'id')).toBe(true);
     });
 
     it('should fail when ID is negative', async () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '-1' }
+        params: { id: '-1' },
       });
 
       // Act
@@ -97,13 +97,13 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'id')).toBe(true);
+      expect(errors.some((e) => e.path === 'id')).toBe(true);
     });
 
     it('should fail when ID is decimal', async () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '1.5' }
+        params: { id: '1.5' },
       });
 
       // Act
@@ -116,7 +116,7 @@ describe('Floor Validators', () => {
     it('should fail when ID is empty', async () => {
       // Arrange
       const req = createMockRequest({
-        params: { id: '' }
+        params: { id: '' },
       });
 
       // Act
@@ -133,8 +133,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: 'Ground Floor',
-          sort_order: 0
-        }
+          sort_order: 0,
+        },
       });
 
       // Act
@@ -149,8 +149,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: '1st Floor',
-          sort_order: 1
-        }
+          sort_order: 1,
+        },
       });
 
       // Act
@@ -164,8 +164,8 @@ describe('Floor Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          name: 'Test Floor'
-        }
+          name: 'Test Floor',
+        },
       });
 
       // Act
@@ -180,8 +180,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: 'Test Floor',
-          sort_order: '5'
-        }
+          sort_order: '5',
+        },
       });
 
       // Act
@@ -197,8 +197,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: '',
-          sort_order: 0
-        }
+          sort_order: 0,
+        },
       });
 
       // Act
@@ -207,7 +207,7 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'name')).toBe(true);
+      expect(errors.some((e) => e.path === 'name')).toBe(true);
     });
 
     it('should fail when name is only whitespace', async () => {
@@ -215,8 +215,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: '   ',
-          sort_order: 0
-        }
+          sort_order: 0,
+        },
       });
 
       // Act
@@ -225,7 +225,7 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'name')).toBe(true);
+      expect(errors.some((e) => e.path === 'name')).toBe(true);
     });
 
     it('should fail when name is too short (less than 2 chars)', async () => {
@@ -233,8 +233,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: 'A',
-          sort_order: 0
-        }
+          sort_order: 0,
+        },
       });
 
       // Act
@@ -243,7 +243,7 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'name')).toBe(true);
+      expect(errors.some((e) => e.path === 'name')).toBe(true);
     });
 
     it('should fail when name exceeds 50 characters', async () => {
@@ -252,8 +252,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: longName,
-          sort_order: 0
-        }
+          sort_order: 0,
+        },
       });
 
       // Act
@@ -262,7 +262,7 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'name')).toBe(true);
+      expect(errors.some((e) => e.path === 'name')).toBe(true);
     });
 
     it('should accept name with exactly 2 characters', async () => {
@@ -270,8 +270,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: 'AB',
-          sort_order: 0
-        }
+          sort_order: 0,
+        },
       });
 
       // Act
@@ -287,8 +287,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: fiftyCharName,
-          sort_order: 0
-        }
+          sort_order: 0,
+        },
       });
 
       // Act
@@ -303,8 +303,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: '  Ground Floor  ',
-          sort_order: 0
-        }
+          sort_order: 0,
+        },
       });
 
       // Act
@@ -319,8 +319,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: 'Test Floor',
-          sort_order: '-1'
-        }
+          sort_order: '-1',
+        },
       });
 
       // Act
@@ -329,7 +329,7 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'sort_order')).toBe(true);
+      expect(errors.some((e) => e.path === 'sort_order')).toBe(true);
     });
 
     it('should fail when sort_order is decimal', async () => {
@@ -337,8 +337,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: 'Test Floor',
-          sort_order: '1.5'
-        }
+          sort_order: '1.5',
+        },
       });
 
       // Act
@@ -353,8 +353,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: 'Test Floor',
-          sort_order: '10'
-        }
+          sort_order: '10',
+        },
       });
 
       // Act
@@ -370,8 +370,8 @@ describe('Floor Validators', () => {
       const req = createMockRequest({
         body: {
           name: 'Ground Floor',
-          sort_order: 0
-        }
+          sort_order: 0,
+        },
       });
 
       // Act
@@ -387,7 +387,7 @@ describe('Floor Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '1' },
-        body: { name: 'Updated Floor' }
+        body: { name: 'Updated Floor' },
       });
 
       // Act
@@ -401,7 +401,7 @@ describe('Floor Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '2' },
-        body: { sort_order: 5 }
+        body: { sort_order: 5 },
       });
 
       // Act
@@ -415,7 +415,7 @@ describe('Floor Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '3' },
-        body: { active: false }
+        body: { active: false },
       });
 
       // Act
@@ -432,8 +432,8 @@ describe('Floor Validators', () => {
         body: {
           name: 'Updated Floor',
           sort_order: 10,
-          active: true
-        }
+          active: true,
+        },
       });
 
       // Act
@@ -447,7 +447,7 @@ describe('Floor Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: {}
+        body: {},
       });
 
       // Act
@@ -461,7 +461,7 @@ describe('Floor Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: 'invalid' },
-        body: { name: 'Updated Floor' }
+        body: { name: 'Updated Floor' },
       });
 
       // Act
@@ -470,14 +470,14 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'id')).toBe(true);
+      expect(errors.some((e) => e.path === 'id')).toBe(true);
     });
 
     it('should fail when name is too short (less than 2 chars)', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '1' },
-        body: { name: 'A' }
+        body: { name: 'A' },
       });
 
       // Act
@@ -486,7 +486,7 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'name')).toBe(true);
+      expect(errors.some((e) => e.path === 'name')).toBe(true);
     });
 
     it('should fail when name exceeds 50 characters', async () => {
@@ -494,7 +494,7 @@ describe('Floor Validators', () => {
       const longName = 'A'.repeat(51);
       const req = createMockRequest({
         params: { id: '1' },
-        body: { name: longName }
+        body: { name: longName },
       });
 
       // Act
@@ -503,14 +503,14 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'name')).toBe(true);
+      expect(errors.some((e) => e.path === 'name')).toBe(true);
     });
 
     it('should fail when sort_order is negative', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '1' },
-        body: { sort_order: '-1' }
+        body: { sort_order: '-1' },
       });
 
       // Act
@@ -519,14 +519,14 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'sort_order')).toBe(true);
+      expect(errors.some((e) => e.path === 'sort_order')).toBe(true);
     });
 
     it('should fail when active is not boolean', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '1' },
-        body: { active: 'invalid' }
+        body: { active: 'invalid' },
       });
 
       // Act
@@ -535,14 +535,14 @@ describe('Floor Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'active')).toBe(true);
+      expect(errors.some((e) => e.path === 'active')).toBe(true);
     });
 
     it('should convert active string to boolean', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '1' },
-        body: { active: 'true' }
+        body: { active: 'true' },
       });
 
       // Act
@@ -557,7 +557,7 @@ describe('Floor Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '1' },
-        body: { sort_order: '15' }
+        body: { sort_order: '15' },
       });
 
       // Act
@@ -572,7 +572,7 @@ describe('Floor Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '1' },
-        body: { name: '  Updated Floor  ' }
+        body: { name: '  Updated Floor  ' },
       });
 
       // Act

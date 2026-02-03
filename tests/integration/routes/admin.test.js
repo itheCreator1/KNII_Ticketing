@@ -31,12 +31,10 @@ describe('Admin Routes Integration Tests', () => {
     const adminData = createUserData({ role: 'admin', status: 'active' });
     adminUser = await User.create(adminData);
 
-    const loginResponse = await request(app)
-      .post('/auth/login')
-      .send({
-        username: adminData.username,
-        password: adminData.password
-      });
+    const loginResponse = await request(app).post('/auth/login').send({
+      username: adminData.username,
+      password: adminData.password,
+    });
 
     adminCookies = loginResponse.headers['set-cookie'];
   });
@@ -48,8 +46,7 @@ describe('Admin Routes Integration Tests', () => {
   describe('GET /admin/dashboard', () => {
     it('should require authentication', async () => {
       // Act - No cookies (not authenticated)
-      const response = await request(app)
-        .get('/admin/dashboard');
+      const response = await request(app).get('/admin/dashboard');
 
       // Assert
       expect(response.status).toBe(302);
@@ -62,9 +59,7 @@ describe('Admin Routes Integration Tests', () => {
       await Ticket.create(createTicketData({ title: 'Test Ticket 2' }));
 
       // Act
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', adminCookies);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', adminCookies);
 
       // Assert
       expect(response.status).toBe(200);
@@ -146,9 +141,7 @@ describe('Admin Routes Integration Tests', () => {
 
     it('should display ticket counts when no tickets exist', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', adminCookies);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', adminCookies);
 
       // Assert
       expect(response.status).toBe(200);
@@ -162,8 +155,7 @@ describe('Admin Routes Integration Tests', () => {
       const ticket = await Ticket.create(createTicketData());
 
       // Act
-      const response = await request(app)
-        .get(`/admin/tickets/${ticket.id}`);
+      const response = await request(app).get(`/admin/tickets/${ticket.id}`);
 
       // Assert
       expect(response.status).toBe(302);
@@ -188,11 +180,13 @@ describe('Admin Routes Integration Tests', () => {
     it('should display comments for the ticket', async () => {
       // Arrange
       const ticket = await Ticket.create(createTicketData());
-      const comment = await Comment.create(createCommentData({
-        ticket_id: ticket.id,
-        user_id: adminUser.id,
-        content: 'Test comment content'
-      }));
+      const comment = await Comment.create(
+        createCommentData({
+          ticket_id: ticket.id,
+          user_id: adminUser.id,
+          content: 'Test comment content',
+        }),
+      );
 
       // Act
       const response = await request(app)
@@ -233,9 +227,7 @@ describe('Admin Routes Integration Tests', () => {
 
     it('should return 404 for non-existent ticket', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/tickets/99999')
-        .set('Cookie', adminCookies);
+      const response = await request(app).get('/admin/tickets/99999').set('Cookie', adminCookies);
 
       // Assert
       expect(response.status).toBe(302);
@@ -244,9 +236,7 @@ describe('Admin Routes Integration Tests', () => {
 
     it('should validate ticket ID parameter', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/tickets/invalid')
-        .set('Cookie', adminCookies);
+      const response = await request(app).get('/admin/tickets/invalid').set('Cookie', adminCookies);
 
       // Assert
       expect(response.status).toBe(302);
@@ -349,7 +339,7 @@ describe('Admin Routes Integration Tests', () => {
 
       // Assert
       const auditLogs = await AuditLog.findByTarget('ticket', ticket.id);
-      const updateLog = auditLogs.find(log => log.action === 'TICKET_UPDATED');
+      const updateLog = auditLogs.find((log) => log.action === 'TICKET_UPDATED');
 
       expect(updateLog).toBeDefined();
       expect(updateLog.actor_id).toBe(adminUser.id);
@@ -405,7 +395,7 @@ describe('Admin Routes Integration Tests', () => {
         .post(`/admin/tickets/${ticket.id}/comments`)
         .set('Cookie', adminCookies)
         .send({
-          content: 'This is a comment'
+          content: 'This is a comment',
         });
 
       // Assert

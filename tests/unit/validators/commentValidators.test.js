@@ -25,8 +25,8 @@ describe('Comment Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: 'This is a valid comment with sufficient detail.'
-        }
+          content: 'This is a valid comment with sufficient detail.',
+        },
       });
 
       // Act
@@ -40,8 +40,8 @@ describe('Comment Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: 'OK'
-        }
+          content: 'OK',
+        },
       });
 
       // Act
@@ -54,7 +54,7 @@ describe('Comment Validators', () => {
     it('should fail when content is missing', async () => {
       // Arrange
       const req = createMockRequest({
-        body: {}
+        body: {},
       });
 
       // Act
@@ -63,15 +63,15 @@ describe('Comment Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'content')).toBe(true);
+      expect(errors.some((e) => e.path === 'content')).toBe(true);
     });
 
     it('should fail when content is empty string', async () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: ''
-        }
+          content: '',
+        },
       });
 
       // Act
@@ -80,15 +80,15 @@ describe('Comment Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'content')).toBe(true);
+      expect(errors.some((e) => e.path === 'content')).toBe(true);
     });
 
     it('should fail when content is only whitespace', async () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: '   '
-        }
+          content: '   ',
+        },
       });
 
       // Act
@@ -97,7 +97,7 @@ describe('Comment Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'content')).toBe(true);
+      expect(errors.some((e) => e.path === 'content')).toBe(true);
     });
 
     it('should fail when content exceeds maximum length (2000 chars)', async () => {
@@ -105,8 +105,8 @@ describe('Comment Validators', () => {
       const longContent = 'a'.repeat(2001); // MAX_LENGTHS.COMMENT_CONTENT is 2000
       const req = createMockRequest({
         body: {
-          content: longContent
-        }
+          content: longContent,
+        },
       });
 
       // Act
@@ -115,7 +115,7 @@ describe('Comment Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'content')).toBe(true);
+      expect(errors.some((e) => e.path === 'content')).toBe(true);
     });
 
     it('should pass validation for content at maximum length', async () => {
@@ -123,8 +123,8 @@ describe('Comment Validators', () => {
       const maxContent = 'a'.repeat(2000); // Exactly at the limit
       const req = createMockRequest({
         body: {
-          content: maxContent
-        }
+          content: maxContent,
+        },
       });
 
       // Act
@@ -138,8 +138,8 @@ describe('Comment Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: '  Valid comment content  '
-        }
+          content: '  Valid comment content  ',
+        },
       });
 
       // Act
@@ -154,8 +154,8 @@ describe('Comment Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: 'Comment with special chars: !@#$%^&*()[]{}|\\:";\'<>?,./'
-        }
+          content: 'Comment with special chars: !@#$%^&*()[]{}|\\:";\'<>?,./',
+        },
       });
 
       // Act
@@ -169,8 +169,8 @@ describe('Comment Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: 'Line 1\nLine 2\nLine 3'
-        }
+          content: 'Line 1\nLine 2\nLine 3',
+        },
       });
 
       // Act
@@ -184,8 +184,8 @@ describe('Comment Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: 'Comment with émojis 😀 and spëcial chârs'
-        }
+          content: 'Comment with émojis 😀 and spëcial chârs',
+        },
       });
 
       // Act
@@ -199,8 +199,8 @@ describe('Comment Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: 'This looks like <strong>HTML</strong> but is just text'
-        }
+          content: 'This looks like <strong>HTML</strong> but is just text',
+        },
       });
 
       // Act
@@ -214,8 +214,8 @@ describe('Comment Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: 'Check this link: https://example.com/ticket/123'
-        }
+          content: 'Check this link: https://example.com/ticket/123',
+        },
       });
 
       // Act
@@ -229,8 +229,8 @@ describe('Comment Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          content: 'Error in code: if (x === null) { return; }'
-        }
+          content: 'Error in code: if (x === null) { return; }',
+        },
       });
 
       // Act

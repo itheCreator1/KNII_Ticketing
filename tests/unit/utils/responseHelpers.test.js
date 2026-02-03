@@ -5,7 +5,11 @@
  * Covers all 3 functions with success and edge cases.
  */
 
-const { flashAndRedirect, successRedirect, errorRedirect } = require('../../../utils/responseHelpers');
+const {
+  flashAndRedirect,
+  successRedirect,
+  errorRedirect,
+} = require('../../../utils/responseHelpers');
 const { FLASH_KEYS } = require('../../../constants/messages');
 const { createMockRequest, createMockResponse } = require('../../helpers/mocks');
 
@@ -142,7 +146,8 @@ describe('Response Helpers', () => {
 
     it('should handle long success messages', () => {
       // Arrange
-      const longMessage = 'This is a very long success message that contains a lot of information about the operation that was just completed successfully.';
+      const longMessage =
+        'This is a very long success message that contains a lot of information about the operation that was just completed successfully.';
       const path = '/test';
 
       // Act

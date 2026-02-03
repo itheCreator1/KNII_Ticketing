@@ -30,7 +30,13 @@
       "Bash(for:*)",
       "Bash(do grep -c \"User\\\\.\\\\|Ticket\\\\.\\\\|Comment\\\\.\\\\|Department\\\\.\" \"$f\")",
       "Bash(do sed -i 's/setupIntegrationTest/setupTestDatabase/g; s/teardownIntegrationTest/teardownTestDatabase/g' \"$f\")",
-      "Bash(do sed -i 's/setupTestDatabase/setupIntegrationTest/g; s/teardownTestDatabase/teardownIntegrationTest/g' \"$f\")"
+      "Bash(do sed -i 's/setupTestDatabase/setupIntegrationTest/g; s/teardownTestDatabase/teardownIntegrationTest/g' \"$f\")",
+      "Bash(head:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(test:*)",
+      "Bash(docker-compose stop:*)",
+      "Bash(docker-compose start:*)"
     ]
   }
 }

@@ -36,7 +36,7 @@ describe('User Model', () => {
         role: 'admin',
         status: 'active',
         department: null,
-        created_at: new Date()
+        created_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockUser] });
 
@@ -47,11 +47,11 @@ describe('User Model', () => {
       expect(result).toEqual(mockUser);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT id, username, email, role, status, department, created_at'),
-        [1]
+        [1],
       );
       expect(pool.query).toHaveBeenCalledWith(
         expect.not.stringContaining('password_hash'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -64,10 +64,7 @@ describe('User Model', () => {
 
       // Assert
       expect(result).toBeUndefined();
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT'),
-        [999]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('SELECT'), [999]);
     });
 
     it('should throw error on database failure', async () => {
@@ -89,7 +86,7 @@ describe('User Model', () => {
         email: 'test@example.com',
         role: 'admin',
         status: 'active',
-        login_attempts: 0
+        login_attempts: 0,
       };
       pool.query.mockResolvedValue({ rows: [mockUser] });
 
@@ -98,10 +95,9 @@ describe('User Model', () => {
 
       // Assert
       expect(result).toEqual(mockUser);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE username = $1'),
-        ['testuser']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('WHERE username = $1'), [
+        'testuser',
+      ]);
     });
 
     it('should return undefined when user not found', async () => {
@@ -125,7 +121,7 @@ describe('User Model', () => {
         email: 'test@example.com',
         password_hash: 'hashed_password',
         role: 'admin',
-        status: 'active'
+        status: 'active',
       };
       pool.query.mockResolvedValue({ rows: [mockUser] });
 
@@ -135,10 +131,9 @@ describe('User Model', () => {
       // Assert
       expect(result).toEqual(mockUser);
       expect(result.password_hash).toBe('hashed_password');
-      expect(pool.query).toHaveBeenCalledWith(
-        'SELECT * FROM users WHERE username = $1',
-        ['testuser']
-      );
+      expect(pool.query).toHaveBeenCalledWith('SELECT * FROM users WHERE username = $1', [
+        'testuser',
+      ]);
     });
 
     it('should return undefined when user not found', async () => {
@@ -159,7 +154,7 @@ describe('User Model', () => {
       const mockUser = {
         id: 1,
         username: 'testuser',
-        email: 'test@example.com'
+        email: 'test@example.com',
       };
       pool.query.mockResolvedValue({ rows: [mockUser] });
 
@@ -168,10 +163,9 @@ describe('User Model', () => {
 
       // Assert
       expect(result).toEqual(mockUser);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE email = $1'),
-        ['test@example.com']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('WHERE email = $1'), [
+        'test@example.com',
+      ]);
     });
 
     it('should return undefined when email not found', async () => {
@@ -196,7 +190,7 @@ describe('User Model', () => {
         username: userData.username,
         email: userData.email,
         role: 'admin',
-        department: null
+        department: null,
       };
 
       bcrypt.hash.mockResolvedValue(hashedPassword);
@@ -207,10 +201,13 @@ describe('User Model', () => {
 
       // Assert
       expect(bcrypt.hash).toHaveBeenCalledWith(userData.password, 10);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO users'),
-        [userData.username, userData.email, hashedPassword, 'admin', null]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO users'), [
+        userData.username,
+        userData.email,
+        hashedPassword,
+        'admin',
+        null,
+      ]);
       expect(result).toEqual(mockCreatedUser);
     });
 
@@ -226,13 +223,18 @@ describe('User Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.any(String),
-        expect.arrayContaining(['admin'])
+        expect.arrayContaining(['admin']),
       );
     });
 
     it('should use provided role when specified', async () => {
       // Arrange
-      const userData = { username: 'test', email: 'test@example.com', password: 'Pass123!', role: 'super_admin' };
+      const userData = {
+        username: 'test',
+        email: 'test@example.com',
+        password: 'Pass123!',
+        role: 'super_admin',
+      };
       bcrypt.hash.mockResolvedValue('hashed');
       pool.query.mockResolvedValue({ rows: [{ id: 1, role: 'super_admin' }] });
 
@@ -242,7 +244,7 @@ describe('User Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.any(String),
-        expect.arrayContaining(['super_admin'])
+        expect.arrayContaining(['super_admin']),
       );
     });
 
@@ -253,7 +255,7 @@ describe('User Model', () => {
         email: 'dept@example.com',
         password: 'Pass123!',
         role: 'department',
-        department: 'IT Support'
+        department: 'IT Support',
       };
       const hashedPassword = 'hashed_password';
       const mockCreatedUser = {
@@ -261,7 +263,7 @@ describe('User Model', () => {
         username: userData.username,
         email: userData.email,
         role: 'department',
-        department: 'IT Support'
+        department: 'IT Support',
       };
 
       bcrypt.hash.mockResolvedValue(hashedPassword);
@@ -271,10 +273,13 @@ describe('User Model', () => {
       const result = await User.create(userData);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO users'),
-        [userData.username, userData.email, hashedPassword, 'department', 'IT Support']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO users'), [
+        userData.username,
+        userData.email,
+        hashedPassword,
+        'department',
+        'IT Support',
+      ]);
       expect(result.department).toBe('IT Support');
     });
 
@@ -295,8 +300,18 @@ describe('User Model', () => {
     it('should return all users ordered by created_at DESC', async () => {
       // Arrange
       const mockUsers = [
-        { id: 2, username: 'user2', email: 'user2@example.com', created_at: new Date('2024-01-02') },
-        { id: 1, username: 'user1', email: 'user1@example.com', created_at: new Date('2024-01-01') }
+        {
+          id: 2,
+          username: 'user2',
+          email: 'user2@example.com',
+          created_at: new Date('2024-01-02'),
+        },
+        {
+          id: 1,
+          username: 'user1',
+          email: 'user1@example.com',
+          created_at: new Date('2024-01-01'),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockUsers });
 
@@ -305,9 +320,7 @@ describe('User Model', () => {
 
       // Assert
       expect(result).toEqual(mockUsers);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('ORDER BY created_at DESC')
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('ORDER BY created_at DESC'));
     });
 
     it('should return empty array when no users', async () => {
@@ -335,7 +348,7 @@ describe('User Model', () => {
       expect(result).toEqual(mockUpdatedUser);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('username = $1'),
-        expect.arrayContaining(['newusername', 1])
+        expect.arrayContaining(['newusername', 1]),
       );
     });
 
@@ -351,7 +364,7 @@ describe('User Model', () => {
       expect(result).toEqual(mockUpdatedUser);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('email = $1'),
-        expect.arrayContaining(['newemail@example.com', 1])
+        expect.arrayContaining(['newemail@example.com', 1]),
       );
     });
 
@@ -367,7 +380,7 @@ describe('User Model', () => {
       expect(result).toEqual(mockUpdatedUser);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('role = $1'),
-        expect.arrayContaining(['super_admin', 1])
+        expect.arrayContaining(['super_admin', 1]),
       );
     });
 
@@ -383,7 +396,7 @@ describe('User Model', () => {
       expect(result).toEqual(mockUpdatedUser);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('status = $1'),
-        expect.arrayContaining(['inactive', 1])
+        expect.arrayContaining(['inactive', 1]),
       );
     });
 
@@ -398,7 +411,7 @@ describe('User Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('deleted_at = CURRENT_TIMESTAMP'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -414,7 +427,7 @@ describe('User Model', () => {
       expect(result).toEqual(mockUpdatedUser);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('department = $1'),
-        expect.arrayContaining(['Finance', 1])
+        expect.arrayContaining(['Finance', 1]),
       );
     });
 
@@ -430,7 +443,7 @@ describe('User Model', () => {
       expect(result).toEqual(mockUpdatedUser);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('department = $1'),
-        expect.arrayContaining([null, 1])
+        expect.arrayContaining([null, 1]),
       );
     });
 
@@ -445,7 +458,7 @@ describe('User Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.not.stringContaining('email ='),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -459,7 +472,7 @@ describe('User Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('updated_at = CURRENT_TIMESTAMP'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
   });
@@ -479,7 +492,7 @@ describe('User Model', () => {
       expect(bcrypt.hash).toHaveBeenCalledWith(newPassword, 10);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE users SET password_hash = $1'),
-        [hashedPassword, 1]
+        [hashedPassword, 1],
       );
     });
 
@@ -494,7 +507,7 @@ describe('User Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('password_changed_at = CURRENT_TIMESTAMP'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
   });
@@ -508,10 +521,7 @@ describe('User Model', () => {
       await User.softDelete(1);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("status = 'deleted'"),
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining("status = 'deleted'"), [1]);
     });
 
     it('should set deleted_at timestamp', async () => {
@@ -524,7 +534,7 @@ describe('User Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('deleted_at = CURRENT_TIMESTAMP'),
-        [1]
+        [1],
       );
     });
   });
@@ -540,7 +550,7 @@ describe('User Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('last_login_at = CURRENT_TIMESTAMP'),
-        [1]
+        [1],
       );
     });
 
@@ -552,10 +562,7 @@ describe('User Model', () => {
       await User.updateLastLogin(1);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('login_attempts = 0'),
-        [1]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('login_attempts = 0'), [1]);
     });
   });
 
@@ -570,7 +577,7 @@ describe('User Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('login_attempts = login_attempts + 1'),
-        ['testuser']
+        ['testuser'],
       );
     });
   });
@@ -586,7 +593,7 @@ describe('User Model', () => {
       // Assert
       expect(result).toBe(3);
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("role = 'super_admin' AND status = 'active'")
+        expect.stringContaining("role = 'super_admin' AND status = 'active'"),
       );
     });
 
@@ -607,7 +614,7 @@ describe('User Model', () => {
       // Arrange
       const mockUsers = [
         { id: 1, username: 'user1', status: 'active' },
-        { id: 2, username: 'user2', status: 'inactive' }
+        { id: 2, username: 'user2', status: 'inactive' },
       ];
       pool.query.mockResolvedValue({ rows: mockUsers });
 
@@ -616,9 +623,7 @@ describe('User Model', () => {
 
       // Assert
       expect(result).toEqual(mockUsers);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("WHERE status != 'deleted'")
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining("WHERE status != 'deleted'"));
     });
 
     it('should order by created_at DESC', async () => {
@@ -629,9 +634,7 @@ describe('User Model', () => {
       await User.findAllActive();
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('ORDER BY created_at DESC')
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('ORDER BY created_at DESC'));
     });
   });
 
@@ -645,10 +648,9 @@ describe('User Model', () => {
 
       // Assert
       expect(result).toBe(2);
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("DELETE FROM session"),
-        ['1']
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('DELETE FROM session'), [
+        '1',
+      ]);
     });
 
     it('should return 0 when no sessions to clear', async () => {

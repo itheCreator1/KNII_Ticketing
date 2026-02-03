@@ -8,22 +8,40 @@ function generateCorrelationId() {
 
 // Categorize error types for better debugging
 function categorizeError(err, status) {
-  if (status === 404) return 'NOT_FOUND';
-  if (status === 403) return 'FORBIDDEN';
-  if (status === 401) return 'UNAUTHORIZED';
-  if (status >= 400 && status < 500) return 'CLIENT_ERROR';
-  if (status >= 500) return 'SERVER_ERROR';
+  if (status === 404) {
+    return 'NOT_FOUND';
+  }
+  if (status === 403) {
+    return 'FORBIDDEN';
+  }
+  if (status === 401) {
+    return 'UNAUTHORIZED';
+  }
+  if (status >= 400 && status < 500) {
+    return 'CLIENT_ERROR';
+  }
+  if (status >= 500) {
+    return 'SERVER_ERROR';
+  }
 
   // Check error message/type for specific categories
-  if (err.message && err.message.includes('database')) return 'DATABASE_ERROR';
-  if (err.message && err.message.includes('validation')) return 'VALIDATION_ERROR';
-  if (err.message && err.message.includes('authentication')) return 'AUTH_ERROR';
-  if (err.message && err.message.includes('authorization')) return 'AUTHZ_ERROR';
+  if (err.message && err.message.includes('database')) {
+    return 'DATABASE_ERROR';
+  }
+  if (err.message && err.message.includes('validation')) {
+    return 'VALIDATION_ERROR';
+  }
+  if (err.message && err.message.includes('authentication')) {
+    return 'AUTH_ERROR';
+  }
+  if (err.message && err.message.includes('authorization')) {
+    return 'AUTHZ_ERROR';
+  }
 
   return 'UNKNOWN_ERROR';
 }
 
-function errorHandler(err, req, res, next) {
+function errorHandler(err, req, res, _next) {
   const correlationId = generateCorrelationId();
   const status = err.status || 500;
   const message = err.message || 'Something went wrong';
@@ -49,8 +67,8 @@ function errorHandler(err, req, res, next) {
     headers: {
       accept: req.get('Accept'),
       contentType: req.get('Content-Type'),
-      referer: req.get('Referer')
-    }
+      referer: req.get('Referer'),
+    },
   });
 
   if (req.accepts('html')) {
@@ -68,22 +86,25 @@ function errorHandler(err, req, res, next) {
     res.status(status).render(errorTemplate, {
       title: 'Error',
       status: status, // Pass status for generic template
-      message: process.env.NODE_ENV === 'production'
-        ? (status === 500 ? 'Internal server error' : 'An error occurred')
-        : message,
+      message:
+        process.env.NODE_ENV === 'production'
+          ? status === 500
+            ? 'Internal server error'
+            : 'An error occurred'
+          : message,
       user: res.locals.user || null,
       correlationId,
       errorCategory,
       isDevelopment: process.env.NODE_ENV === 'development',
-      stackTrace: process.env.NODE_ENV === 'development' ? err.stack : null
+      stackTrace: process.env.NODE_ENV === 'development' ? err.stack : null,
     });
   } else {
     res.status(status).json({
       error: {
         message: process.env.NODE_ENV === 'production' ? 'Internal server error' : message,
         correlationId,
-        category: errorCategory
-      }
+        category: errorCategory,
+      },
     });
   }
 }

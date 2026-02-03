@@ -1,10 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth, requireSuperAdmin } = require('../middleware/auth');
-const { validateDepartmentCreate, validateDepartmentUpdate, validateDepartmentId, validateUserAssignment } = require('../validators/departmentValidators');
+const {
+  validateDepartmentCreate,
+  validateDepartmentUpdate,
+  validateDepartmentId,
+  validateUserAssignment,
+} = require('../validators/departmentValidators');
 const { validateRequest } = require('../middleware/validation');
 const departmentService = require('../services/departmentService');
-const { successRedirect, errorRedirect } = require('../utils/responseHelpers');
+const { successRedirect } = require('../utils/responseHelpers');
 const logger = require('../utils/logger');
 const Floor = require('../models/Floor');
 
@@ -19,7 +24,7 @@ router.get('/', async (req, res, next) => {
     const departments = await departmentService.getAllDepartments();
     res.render('admin/departments/index', {
       title: 'Manage Departments',
-      departments
+      departments,
     });
   } catch (error) {
     logger.error('Error loading departments', { error: error.message });
@@ -35,7 +40,7 @@ router.get('/new', async (req, res, next) => {
     const floors = await Floor.findAll(true); // Include system floors
     res.render('admin/departments/create', {
       title: 'Create Department',
-      floors
+      floors,
     });
   } catch (error) {
     logger.error('Error loading department form', { error: error.message });
@@ -51,13 +56,13 @@ router.post('/', validateDepartmentCreate, validateRequest, async (req, res, nex
     const department = await departmentService.createDepartment(
       req.session.user.id,
       { name: req.body.name, description: req.body.description, floor: req.body.floor },
-      req.ip
+      req.ip,
     );
 
     logger.info('Department created', {
       departmentId: department.id,
       name: department.name,
-      createdBy: req.session.user.username
+      createdBy: req.session.user.username,
     });
 
     successRedirect(req, res, 'Department created successfully', '/admin/departments');
@@ -86,7 +91,7 @@ router.get('/:id/edit', validateDepartmentId, validateRequest, async (req, res, 
 
     // Get active ticket counts for each assigned user
     const User = require('../models/User');
-    for (let user of users) {
+    for (const user of users) {
       user.active_tickets = await User.countActiveTickets(user.id);
     }
 
@@ -98,7 +103,7 @@ router.get('/:id/edit', validateDepartmentId, validateRequest, async (req, res, 
       department,
       users,
       availableUsers,
-      floors
+      floors,
     });
   } catch (error) {
     logger.error('Error loading department', { error: error.message });
@@ -114,8 +119,13 @@ router.post('/:id', validateDepartmentUpdate, validateRequest, async (req, res, 
     await departmentService.updateDepartment(
       req.session.user.id,
       parseInt(req.params.id),
-      { name: req.body.name, description: req.body.description, floor: req.body.floor, active: req.body.active },
-      req.ip
+      {
+        name: req.body.name,
+        description: req.body.description,
+        floor: req.body.floor,
+        active: req.body.active,
+      },
+      req.ip,
     );
 
     successRedirect(req, res, 'Department updated successfully', '/admin/departments');
@@ -133,7 +143,7 @@ router.post('/:id/deactivate', validateDepartmentId, validateRequest, async (req
     await departmentService.deactivateDepartment(
       req.session.user.id,
       parseInt(req.params.id),
-      req.ip
+      req.ip,
     );
 
     successRedirect(req, res, 'Department deactivated successfully', '/admin/departments');
@@ -151,7 +161,7 @@ router.post('/:id/reactivate', validateDepartmentId, validateRequest, async (req
     await departmentService.reactivateDepartment(
       req.session.user.id,
       parseInt(req.params.id),
-      req.ip
+      req.ip,
     );
 
     successRedirect(req, res, 'Department reactivated successfully', '/admin/departments');
@@ -164,47 +174,86 @@ router.post('/:id/reactivate', validateDepartmentId, validateRequest, async (req
 /**
  * POST /admin/departments/:id/users/add - Assign user to department
  */
-router.post('/:id/users/add', validateDepartmentId, validateUserAssignment, validateRequest, async (req, res, next) => {
-  try {
-    const departmentId = parseInt(req.params.id);
-    const userId = parseInt(req.body.user_id);
+router.post(
+  '/:id/users/add',
+  validateDepartmentId,
+  validateUserAssignment,
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      const departmentId = parseInt(req.params.id);
+      const userId = parseInt(req.body.user_id);
 
-    await departmentService.assignUserToDepartment(req.session.user.id, departmentId, userId, req.ip);
+      await departmentService.assignUserToDepartment(
+        req.session.user.id,
+        departmentId,
+        userId,
+        req.ip,
+      );
 
-    logger.info('User assigned to department', {
-      departmentId,
-      userId,
-      assignedBy: req.session.user.username
-    });
+      logger.info('User assigned to department', {
+        departmentId,
+        userId,
+        assignedBy: req.session.user.username,
+      });
 
-    successRedirect(req, res, 'User assigned to department successfully', `/admin/departments/${departmentId}/edit`);
-  } catch (error) {
-    logger.error('Error assigning user', { departmentId: req.params.id, userId: req.body.user_id, error: error.message });
-    next(error);
-  }
-});
+      successRedirect(
+        req,
+        res,
+        'User assigned to department successfully',
+        `/admin/departments/${departmentId}/edit`,
+      );
+    } catch (error) {
+      logger.error('Error assigning user', {
+        departmentId: req.params.id,
+        userId: req.body.user_id,
+        error: error.message,
+      });
+      next(error);
+    }
+  },
+);
 
 /**
  * POST /admin/departments/:id/users/:userId/remove - Remove user from department
  */
-router.post('/:id/users/:userId/remove', validateDepartmentId, validateRequest, async (req, res, next) => {
-  try {
-    const departmentId = parseInt(req.params.id);
-    const userId = parseInt(req.params.userId);
+router.post(
+  '/:id/users/:userId/remove',
+  validateDepartmentId,
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      const departmentId = parseInt(req.params.id);
+      const userId = parseInt(req.params.userId);
 
-    await departmentService.removeUserFromDepartment(req.session.user.id, departmentId, userId, req.ip);
+      await departmentService.removeUserFromDepartment(
+        req.session.user.id,
+        departmentId,
+        userId,
+        req.ip,
+      );
 
-    logger.info('User removed from department', {
-      departmentId,
-      userId,
-      removedBy: req.session.user.username
-    });
+      logger.info('User removed from department', {
+        departmentId,
+        userId,
+        removedBy: req.session.user.username,
+      });
 
-    successRedirect(req, res, 'User removed from department successfully', `/admin/departments/${departmentId}/edit`);
-  } catch (error) {
-    logger.error('Error removing user', { departmentId: req.params.id, userId: req.params.userId, error: error.message });
-    next(error);
-  }
-});
+      successRedirect(
+        req,
+        res,
+        'User removed from department successfully',
+        `/admin/departments/${departmentId}/edit`,
+      );
+    } catch (error) {
+      logger.error('Error removing user', {
+        departmentId: req.params.id,
+        userId: req.params.userId,
+        error: error.message,
+      });
+      next(error);
+    }
+  },
+);
 
 module.exports = router;

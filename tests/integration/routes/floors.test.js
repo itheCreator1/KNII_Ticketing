@@ -34,12 +34,10 @@ describe('Floor Management Routes Integration Tests', () => {
     const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
     superAdminUser = await User.create(superAdminData);
 
-    const superAdminLogin = await request(app)
-      .post('/auth/login')
-      .send({
-        username: superAdminData.username,
-        password: superAdminData.password
-      });
+    const superAdminLogin = await request(app).post('/auth/login').send({
+      username: superAdminData.username,
+      password: superAdminData.password,
+    });
 
     superAdminCookies = superAdminLogin.headers['set-cookie'];
 
@@ -47,12 +45,10 @@ describe('Floor Management Routes Integration Tests', () => {
     const adminData = createUserData({ role: 'admin', status: 'active' });
     adminUser = await User.create(adminData);
 
-    const adminLogin = await request(app)
-      .post('/auth/login')
-      .send({
-        username: adminData.username,
-        password: adminData.password
-      });
+    const adminLogin = await request(app).post('/auth/login').send({
+      username: adminData.username,
+      password: adminData.password,
+    });
 
     adminCookies = adminLogin.headers['set-cookie'];
   });
@@ -64,9 +60,7 @@ describe('Floor Management Routes Integration Tests', () => {
   describe('GET /admin/floors', () => {
     it('should require super_admin role', async () => {
       // Act - Use admin (not super_admin) cookies
-      const response = await request(app)
-        .get('/admin/floors')
-        .set('Cookie', adminCookies);
+      const response = await request(app).get('/admin/floors').set('Cookie', adminCookies);
 
       // Assert
       expect(response.status).toBe(302);
@@ -79,9 +73,7 @@ describe('Floor Management Routes Integration Tests', () => {
       await Floor.create({ name: 'Test Floor 2', sort_order: 2 });
 
       // Act
-      const response = await request(app)
-        .get('/admin/floors')
-        .set('Cookie', superAdminCookies);
+      const response = await request(app).get('/admin/floors').set('Cookie', superAdminCookies);
 
       // Assert
       expect(response.status).toBe(200);
@@ -97,9 +89,7 @@ describe('Floor Management Routes Integration Tests', () => {
       await Floor.deactivate(floor2.id);
 
       // Act
-      const response = await request(app)
-        .get('/admin/floors')
-        .set('Cookie', superAdminCookies);
+      const response = await request(app).get('/admin/floors').set('Cookie', superAdminCookies);
 
       // Assert
       expect(response.status).toBe(200);
@@ -109,8 +99,7 @@ describe('Floor Management Routes Integration Tests', () => {
 
     it('should require authentication', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/floors');
+      const response = await request(app).get('/admin/floors');
 
       // Assert
       expect(response.status).toBe(302);
@@ -121,9 +110,7 @@ describe('Floor Management Routes Integration Tests', () => {
   describe('GET /admin/floors/new', () => {
     it('should show create floor form for super_admin', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/floors/new')
-        .set('Cookie', superAdminCookies);
+      const response = await request(app).get('/admin/floors/new').set('Cookie', superAdminCookies);
 
       // Assert
       expect(response.status).toBe(200);
@@ -132,9 +119,7 @@ describe('Floor Management Routes Integration Tests', () => {
 
     it('should require super_admin role', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/floors/new')
-        .set('Cookie', adminCookies);
+      const response = await request(app).get('/admin/floors/new').set('Cookie', adminCookies);
 
       // Assert
       expect(response.status).toBe(302);
@@ -143,8 +128,7 @@ describe('Floor Management Routes Integration Tests', () => {
 
     it('should require authentication', async () => {
       // Act
-      const response = await request(app)
-        .get('/admin/floors/new');
+      const response = await request(app).get('/admin/floors/new');
 
       // Assert
       expect(response.status).toBe(302);
@@ -160,7 +144,7 @@ describe('Floor Management Routes Integration Tests', () => {
         .set('Cookie', superAdminCookies)
         .send({
           name: 'New Test Floor',
-          sort_order: 5
+          sort_order: 5,
         });
 
       // Assert
@@ -175,13 +159,10 @@ describe('Floor Management Routes Integration Tests', () => {
 
     it('should log floor creation to audit log', async () => {
       // Act
-      await request(app)
-        .post('/admin/floors')
-        .set('Cookie', superAdminCookies)
-        .send({
-          name: 'Audit Test Floor',
-          sort_order: 3
-        });
+      await request(app).post('/admin/floors').set('Cookie', superAdminCookies).send({
+        name: 'Audit Test Floor',
+        sort_order: 3,
+      });
 
       // Assert - Floor should be created
       const floor = await Floor.findByName('Audit Test Floor');
@@ -198,7 +179,7 @@ describe('Floor Management Routes Integration Tests', () => {
         .set('Cookie', superAdminCookies)
         .send({
           name: 'Duplicate Floor',
-          sort_order: 2
+          sort_order: 2,
         });
 
       // Assert
@@ -213,7 +194,7 @@ describe('Floor Management Routes Integration Tests', () => {
         .set('Cookie', superAdminCookies)
         .send({
           name: 'A',
-          sort_order: 1
+          sort_order: 1,
         });
 
       // Assert
@@ -227,7 +208,7 @@ describe('Floor Management Routes Integration Tests', () => {
         .set('Cookie', superAdminCookies)
         .send({
           name: 'Valid Floor',
-          sort_order: -1
+          sort_order: -1,
         });
 
       // Assert
@@ -236,13 +217,10 @@ describe('Floor Management Routes Integration Tests', () => {
 
     it('should require super_admin role', async () => {
       // Act
-      const response = await request(app)
-        .post('/admin/floors')
-        .set('Cookie', adminCookies)
-        .send({
-          name: 'New Floor',
-          sort_order: 1
-        });
+      const response = await request(app).post('/admin/floors').set('Cookie', adminCookies).send({
+        name: 'New Floor',
+        sort_order: 1,
+      });
 
       // Assert
       expect(response.status).toBe(302);
@@ -256,7 +234,7 @@ describe('Floor Management Routes Integration Tests', () => {
         .set('Cookie', superAdminCookies)
         .send({
           name: 'New Floor',
-          sort_order: 1
+          sort_order: 1,
         });
 
       // Assert - In test environment, CSRF is disabled, so this succeeds
@@ -326,7 +304,7 @@ describe('Floor Management Routes Integration Tests', () => {
         .set('Cookie', superAdminCookies)
         .send({
           name: 'Updated Floor Name',
-          sort_order: 5
+          sort_order: 5,
         });
 
       // Assert
@@ -349,7 +327,7 @@ describe('Floor Management Routes Integration Tests', () => {
         .set('Cookie', superAdminCookies)
         .send({
           name: 'Updated Name',
-          sort_order: 10
+          sort_order: 10,
         });
 
       // Assert
@@ -363,7 +341,7 @@ describe('Floor Management Routes Integration Tests', () => {
         .set('Cookie', superAdminCookies)
         .send({
           name: 'Updated Floor',
-          sort_order: 1
+          sort_order: 1,
         });
 
       // Assert
@@ -381,7 +359,7 @@ describe('Floor Management Routes Integration Tests', () => {
         .set('Cookie', superAdminCookies)
         .send({
           name: 'Floor One',
-          sort_order: 2
+          sort_order: 2,
         });
 
       // Assert
@@ -398,7 +376,7 @@ describe('Floor Management Routes Integration Tests', () => {
         .set('Cookie', adminCookies)
         .send({
           name: 'Updated Floor',
-          sort_order: 5
+          sort_order: 5,
         });
 
       // Assert
@@ -559,7 +537,7 @@ describe('Floor Management Routes Integration Tests', () => {
         { method: 'GET', path: `/admin/floors/${floor.id}/edit` },
         { method: 'POST', path: `/admin/floors/${floor.id}` },
         { method: 'POST', path: `/admin/floors/${floor.id}/deactivate` },
-        { method: 'POST', path: `/admin/floors/${floor.id}/reactivate` }
+        { method: 'POST', path: `/admin/floors/${floor.id}/reactivate` },
       ];
 
       for (const endpoint of endpoints) {
@@ -582,11 +560,12 @@ describe('Floor Management Routes Integration Tests', () => {
         { method: 'GET', path: `/admin/floors/${floor.id}/edit` },
         { method: 'POST', path: `/admin/floors/${floor.id}` },
         { method: 'POST', path: `/admin/floors/${floor.id}/deactivate` },
-        { method: 'POST', path: `/admin/floors/${floor.id}/reactivate` }
+        { method: 'POST', path: `/admin/floors/${floor.id}/reactivate` },
       ];
 
       for (const endpoint of endpoints) {
-        const req = request(app)[endpoint.method.toLowerCase()](endpoint.path)
+        const req = request(app)
+          [endpoint.method.toLowerCase()](endpoint.path)
           .set('Cookie', adminCookies);
 
         const response = await req;
@@ -607,7 +586,7 @@ expect.extend({
         pass
           ? `expected ${received} not to be one of ${expected}`
           : `expected ${received} to be one of ${expected}`,
-      pass
+      pass,
     };
-  }
+  },
 });

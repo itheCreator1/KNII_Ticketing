@@ -18,7 +18,7 @@ const {
   seedBenchmarkData,
   cleanupBenchmarkData,
   formatLatency,
-  meetsLodgingSLA
+  meetsLodgingSLA,
 } = require('./helpers/benchmarkRunner');
 
 let server;
@@ -39,14 +39,14 @@ async function startServer() {
       const ticketId = parseInt(req.params.id);
       const result = await pool.query(
         'INSERT INTO comments (ticket_id, user_id, content, visibility_type) VALUES ($1, $2, $3, $4) RETURNING id',
-        [ticketId, testData.user.id, 'Benchmark comment', 'public']
+        [ticketId, testData.user.id, 'Benchmark comment', 'public'],
       );
 
       // Auto-update ticket status
-      await pool.query(
-        'UPDATE tickets SET status = $1 WHERE id = $2',
-        ['waiting_on_department', ticketId]
-      );
+      await pool.query('UPDATE tickets SET status = $1 WHERE id = $2', [
+        'waiting_on_department',
+        ticketId,
+      ]);
 
       res.status(201).json({ id: result.rows[0].id });
     } catch (error) {
@@ -59,7 +59,7 @@ async function startServer() {
     try {
       const result = await pool.query(
         'SELECT id, user_id, content, visibility_type, created_at FROM comments WHERE ticket_id = $1 ORDER BY created_at DESC',
-        [parseInt(req.params.id)]
+        [parseInt(req.params.id)],
       );
       res.status(200).json({ comments: result.rows });
     } catch (error) {
@@ -72,7 +72,7 @@ async function startServer() {
     try {
       const result = await pool.query(
         'SELECT id, user_id, content, created_at FROM comments WHERE ticket_id = $1 AND visibility_type = $2 ORDER BY created_at DESC',
-        [parseInt(req.params.id), 'public']
+        [parseInt(req.params.id), 'public'],
       );
       res.status(200).json({ comments: result.rows });
     } catch (error) {
@@ -125,7 +125,7 @@ async function runAllBenchmarks() {
       const visibility = i % 3 === 0 ? 'internal' : 'public';
       await pool.query(
         'INSERT INTO comments (ticket_id, user_id, content, visibility_type) VALUES ($1, $2, $3, $4)',
-        [testData.ticket, testData.user.id, `Comment ${i}`, visibility]
+        [testData.ticket, testData.user.id, `Comment ${i}`, visibility],
       );
     }
 
@@ -135,7 +135,7 @@ async function runAllBenchmarks() {
       url: 'http://localhost:3003/health',
       connections: 1,
       duration: 2,
-      pipelining: 1
+      pipelining: 1,
     });
 
     // Benchmark 1: Create comment
@@ -144,15 +144,15 @@ async function runAllBenchmarks() {
       url: `http://localhost:3003/admin/tickets/${testData.ticket}/comments`,
       method: 'POST',
       headers: {
-        'content-type': 'application/json'
+        'content-type': 'application/json',
       },
       body: JSON.stringify({
         content: 'Benchmark comment',
-        visibility_type: 'public'
+        visibility_type: 'public',
       }),
       connections: 5,
       duration: 10,
-      pipelining: 1
+      pipelining: 1,
     });
     printResults(createResult, 'POST /admin/tickets/:id/comments');
     console.log(`  P95 Latency: ${formatLatency(createResult.latency.p95, 400)}`);
@@ -165,7 +165,7 @@ async function runAllBenchmarks() {
       method: 'GET',
       connections: 10,
       duration: 10,
-      pipelining: 1
+      pipelining: 1,
     });
     printResults(adminListResult, 'GET /admin/tickets/:id/comments');
     console.log(`  P95 Latency: ${formatLatency(adminListResult.latency.p95, 200)}`);
@@ -178,7 +178,7 @@ async function runAllBenchmarks() {
       method: 'GET',
       connections: 10,
       duration: 10,
-      pipelining: 1
+      pipelining: 1,
     });
     printResults(deptListResult, 'GET /client/tickets/:id/comments');
     console.log(`  P95 Latency: ${formatLatency(deptListResult.latency.p95, 200)}`);

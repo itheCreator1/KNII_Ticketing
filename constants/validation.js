@@ -6,7 +6,7 @@ const MAX_LENGTHS = {
   USERNAME: 50,
   EMAIL: 100,
   NAME: 100,
-  DEPARTMENT: 100
+  DEPARTMENT: 100,
 };
 
 const VALIDATION_MESSAGES = {
@@ -32,15 +32,16 @@ const VALIDATION_MESSAGES = {
   FLOOR_REQUIRED: 'Floor is required',
   FLOOR_INVALID: 'Invalid floor selected',
   // User management validation messages
-  USERNAME_INVALID: 'Username must be 3-50 characters and contain only letters, numbers, and underscores',
+  USERNAME_INVALID:
+    'Username must be 3-50 characters and contain only letters, numbers, and underscores',
   EMAIL_IN_USE: 'Email is already in use',
   USERNAME_IN_USE: 'Username is already in use',
   ROLE_INVALID: 'Invalid role selected',
   PASSWORD_TOO_SHORT: 'Password must be at least 8 characters',
-  PASSWORD_COMPLEXITY: 'Password must contain uppercase, lowercase, number, and special character'
+  PASSWORD_COMPLEXITY: 'Password must contain uppercase, lowercase, number, and special character',
 };
 
 module.exports = {
   VALIDATION_MESSAGES,
-  MAX_LENGTHS
+  MAX_LENGTHS,
 };

@@ -35,7 +35,7 @@ class AdminTicketService {
         adminUserId,
         department: ticketData.reporter_department,
         priority: ticketData.priority,
-        titleLength: ticketData.title?.length
+        titleLength: ticketData.title?.length,
       });
 
       // Fetch admin user for name
@@ -46,11 +46,14 @@ class AdminTicketService {
 
       // Verify user is admin or super_admin
       if (admin.role !== 'admin' && admin.role !== 'super_admin') {
-        logger.warn('adminTicketService.createAdminTicket: Non-admin attempted to create admin ticket', {
-          userId: adminUserId,
-          userRole: admin.role,
-          ip: ipAddress
-        });
+        logger.warn(
+          'adminTicketService.createAdminTicket: Non-admin attempted to create admin ticket',
+          {
+            userId: adminUserId,
+            userRole: admin.role,
+            ip: ipAddress,
+          },
+        );
         throw new Error('Only admins can create admin tickets');
       }
 
@@ -58,13 +61,13 @@ class AdminTicketService {
       const ticket = await Ticket.create({
         title: ticketData.title,
         description: ticketData.description,
-        reporter_department: ticketData.reporter_department,  // From form input
+        reporter_department: ticketData.reporter_department, // From form input
         reporter_phone: ticketData.reporter_phone || null,
-        reporter_name: admin.username,  // Auto-populate with admin username
-        reporter_id: adminUserId,  // Link to creating admin
+        reporter_name: admin.username, // Auto-populate with admin username
+        reporter_id: adminUserId, // Link to creating admin
         priority: ticketData.priority || 'unset',
         status: ticketData.status || 'open',
-        is_admin_created: true  // CRITICAL: Always true for admin-created tickets
+        is_admin_created: true, // CRITICAL: Always true for admin-created tickets
       });
 
       // Audit log for admin ticket creation
@@ -77,9 +80,9 @@ class AdminTicketService {
           title: ticket.title,
           priority: ticket.priority,
           status: ticket.status,
-          department: ticket.reporter_department
+          department: ticket.reporter_department,
         },
-        ipAddress
+        ipAddress,
       });
 
       const duration = Date.now() - startTime;
@@ -90,7 +93,7 @@ class AdminTicketService {
         adminUsername: admin.username,
         department: ticket.reporter_department,
         priority: ticket.priority,
-        duration
+        duration,
       });
 
       return ticket;
@@ -101,7 +104,7 @@ class AdminTicketService {
         department: ticketData.reporter_department,
         error: error.message,
         stack: error.stack,
-        duration
+        duration,
       });
       throw error;
     }
@@ -137,7 +140,7 @@ class AdminTicketService {
         adminUserId,
         department: ticketData.reporter_department,
         priority: ticketData.priority,
-        titleLength: ticketData.title?.length
+        titleLength: ticketData.title?.length,
       });
 
       // Fetch admin user for verification
@@ -148,30 +151,35 @@ class AdminTicketService {
 
       // Verify user is admin or super_admin
       if (admin.role !== 'admin' && admin.role !== 'super_admin') {
-        logger.warn('adminTicketService.createDepartmentTicket: Non-admin attempted to create department ticket', {
-          userId: adminUserId,
-          userRole: admin.role,
-          ip: ipAddress
-        });
+        logger.warn(
+          'adminTicketService.createDepartmentTicket: Non-admin attempted to create department ticket',
+          {
+            userId: adminUserId,
+            userRole: admin.role,
+            ip: ipAddress,
+          },
+        );
         throw new Error('Only admins can create department tickets');
       }
 
       // Prevent creating department tickets for 'Internal' department
       if (ticketData.reporter_department === 'Internal') {
-        throw new Error('Cannot create department ticket for Internal department. Use Create Internal Ticket instead.');
+        throw new Error(
+          'Cannot create department ticket for Internal department. Use Create Internal Ticket instead.',
+        );
       }
 
       // Create department ticket (visible to department users)
       const ticket = await Ticket.create({
         title: ticketData.title,
         description: ticketData.description,
-        reporter_name: ticketData.reporter_name,  // From form input (department contact)
-        reporter_department: ticketData.reporter_department,  // From form input
+        reporter_name: ticketData.reporter_name, // From form input (department contact)
+        reporter_department: ticketData.reporter_department, // From form input
         reporter_phone: ticketData.reporter_phone || null,
-        reporter_id: null,  // CRITICAL: NULL = anonymous ticket (no user account)
+        reporter_id: null, // CRITICAL: NULL = anonymous ticket (no user account)
         priority: ticketData.priority || 'unset',
-        status: 'open',  // Always start as 'open'
-        is_admin_created: false  // CRITICAL: False = visible to department users
+        status: 'open', // Always start as 'open'
+        is_admin_created: false, // CRITICAL: False = visible to department users
       });
 
       // Audit log for department ticket creation
@@ -185,33 +193,39 @@ class AdminTicketService {
           priority: ticket.priority,
           department: ticket.reporter_department,
           reporter_name: ticket.reporter_name,
-          createdBy: admin.username
+          createdBy: admin.username,
         },
-        ipAddress
+        ipAddress,
       });
 
       const duration = Date.now() - startTime;
 
-      logger.info('adminTicketService.createDepartmentTicket: Department ticket created successfully', {
-        ticketId: ticket.id,
-        adminUserId,
-        adminUsername: admin.username,
-        department: ticket.reporter_department,
-        reporterName: ticket.reporter_name,
-        priority: ticket.priority,
-        duration
-      });
+      logger.info(
+        'adminTicketService.createDepartmentTicket: Department ticket created successfully',
+        {
+          ticketId: ticket.id,
+          adminUserId,
+          adminUsername: admin.username,
+          department: ticket.reporter_department,
+          reporterName: ticket.reporter_name,
+          priority: ticket.priority,
+          duration,
+        },
+      );
 
       return ticket;
     } catch (error) {
       const duration = Date.now() - startTime;
-      logger.error('adminTicketService.createDepartmentTicket: Failed to create department ticket', {
-        adminUserId,
-        department: ticketData.reporter_department,
-        error: error.message,
-        stack: error.stack,
-        duration
-      });
+      logger.error(
+        'adminTicketService.createDepartmentTicket: Failed to create department ticket',
+        {
+          adminUserId,
+          department: ticketData.reporter_department,
+          error: error.message,
+          stack: error.stack,
+          duration,
+        },
+      );
       throw error;
     }
   }

@@ -9,7 +9,7 @@ const { VALIDATION_MESSAGES } = require('../../constants/validation');
  * - At least 1 number
  * - At least 1 special character (!@#$%^&*()_+-=[]{}|;:,.<>?)
  */
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]).{8,}$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{}|;:,.<>?]).{8,}$/;
 
 /**
  * Reusable password validation rule for express-validator
@@ -30,5 +30,5 @@ function passwordValidation(fieldName = 'password') {
 
 module.exports = {
   passwordValidation,
-  PASSWORD_REGEX
+  PASSWORD_REGEX,
 };

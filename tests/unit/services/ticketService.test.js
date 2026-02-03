@@ -29,7 +29,7 @@ describe('TicketService', () => {
         ...ticketData,
         status: 'open',
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       Ticket.create.mockResolvedValue(mockCreatedTicket);
 
@@ -50,7 +50,7 @@ describe('TicketService', () => {
         reporter_name: 'John Doe',
         reporter_department: 'IT Support',
         reporter_phone: '555-1234',
-        priority: 'critical'
+        priority: 'critical',
       });
       const mockCreatedTicket = { id: 2, ...ticketData, status: 'open' };
       Ticket.create.mockResolvedValue(mockCreatedTicket);
@@ -59,14 +59,16 @@ describe('TicketService', () => {
       await ticketService.createTicket(ticketData);
 
       // Assert
-      expect(Ticket.create).toHaveBeenCalledWith(expect.objectContaining({
-        title: 'System Error',
-        description: 'Application crashes on startup',
-        reporter_name: 'John Doe',
-        reporter_department: 'IT Support',
-        reporter_phone: '555-1234',
-        priority: 'critical'
-      }));
+      expect(Ticket.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'System Error',
+          description: 'Application crashes on startup',
+          reporter_name: 'John Doe',
+          reporter_department: 'IT Support',
+          reporter_phone: '555-1234',
+          priority: 'critical',
+        }),
+      );
     });
 
     it('should throw error when Ticket.create fails', async () => {
@@ -76,7 +78,9 @@ describe('TicketService', () => {
       Ticket.create.mockRejectedValue(dbError);
 
       // Act & Assert
-      await expect(ticketService.createTicket(ticketData)).rejects.toThrow('Database insert failed');
+      await expect(ticketService.createTicket(ticketData)).rejects.toThrow(
+        'Database insert failed',
+      );
       expect(Ticket.create).toHaveBeenCalledWith(ticketData);
     });
   });
@@ -90,7 +94,7 @@ describe('TicketService', () => {
         status: 'open',
         priority: 'medium',
         assigned_to: 5,
-        assigned_to_username: 'admin'
+        assigned_to_username: 'admin',
       };
       Ticket.findById.mockResolvedValue(mockTicket);
 
@@ -132,7 +136,7 @@ describe('TicketService', () => {
       // Arrange
       const mockTickets = [
         { id: 1, title: 'Ticket 1', status: 'open' },
-        { id: 2, title: 'Ticket 2', status: 'closed' }
+        { id: 2, title: 'Ticket 2', status: 'closed' },
       ];
       Ticket.findAll.mockResolvedValue(mockTickets);
 
@@ -144,7 +148,7 @@ describe('TicketService', () => {
       expect(Ticket.findAll).toHaveBeenCalledWith({
         status: undefined,
         priority: undefined,
-        search: undefined
+        search: undefined,
       });
     });
 
@@ -160,7 +164,7 @@ describe('TicketService', () => {
       expect(Ticket.findAll).toHaveBeenCalledWith({
         status: 'open',
         priority: undefined,
-        search: undefined
+        search: undefined,
       });
     });
 
@@ -176,7 +180,7 @@ describe('TicketService', () => {
       expect(Ticket.findAll).toHaveBeenCalledWith({
         status: undefined,
         priority: 'high',
-        search: undefined
+        search: undefined,
       });
     });
 
@@ -192,7 +196,7 @@ describe('TicketService', () => {
       expect(Ticket.findAll).toHaveBeenCalledWith({
         status: undefined,
         priority: undefined,
-        search: 'bug'
+        search: 'bug',
       });
     });
 
@@ -204,14 +208,14 @@ describe('TicketService', () => {
       await ticketService.getAllTickets({
         status: 'open',
         priority: undefined,
-        search: undefined
+        search: undefined,
       });
 
       // Assert
       expect(Ticket.findAll).toHaveBeenCalledWith({
         status: 'open',
         priority: undefined,
-        search: undefined
+        search: undefined,
       });
     });
 
@@ -226,7 +230,7 @@ describe('TicketService', () => {
       expect(Ticket.findAll).toHaveBeenCalledWith({
         status: undefined,
         priority: undefined,
-        search: undefined
+        search: undefined,
       });
     });
   });
@@ -239,7 +243,7 @@ describe('TicketService', () => {
         title: 'Test Ticket',
         status: 'closed',
         priority: 'medium',
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       Ticket.update.mockResolvedValue(mockUpdatedTicket);
 
@@ -257,7 +261,7 @@ describe('TicketService', () => {
         id: 2,
         title: 'Test Ticket',
         priority: 'critical',
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       Ticket.update.mockResolvedValue(mockUpdatedTicket);
 
@@ -275,7 +279,7 @@ describe('TicketService', () => {
       const mockUpdatedTicket = {
         id: 3,
         assigned_to: 5,
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       User.findById.mockResolvedValue(mockUser);
       Ticket.update.mockResolvedValue(mockUpdatedTicket);
@@ -294,7 +298,7 @@ describe('TicketService', () => {
       const mockUpdatedTicket = {
         id: 4,
         assigned_to: null,
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       Ticket.update.mockResolvedValue(mockUpdatedTicket);
 
@@ -312,7 +316,7 @@ describe('TicketService', () => {
       const mockUpdatedTicket = {
         id: 5,
         assigned_to: null,
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       Ticket.update.mockResolvedValue(mockUpdatedTicket);
 
@@ -330,8 +334,9 @@ describe('TicketService', () => {
       User.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(ticketService.updateTicket(6, { assigned_to: 999 }))
-        .rejects.toThrow('Cannot assign to inactive or non-existent user');
+      await expect(ticketService.updateTicket(6, { assigned_to: 999 })).rejects.toThrow(
+        'Cannot assign to inactive or non-existent user',
+      );
       expect(User.findById).toHaveBeenCalledWith(999);
       expect(Ticket.update).not.toHaveBeenCalled();
     });
@@ -342,8 +347,9 @@ describe('TicketService', () => {
       User.findById.mockResolvedValue(inactiveUser);
 
       // Act & Assert
-      await expect(ticketService.updateTicket(7, { assigned_to: 7 }))
-        .rejects.toThrow('Cannot assign to inactive or non-existent user');
+      await expect(ticketService.updateTicket(7, { assigned_to: 7 })).rejects.toThrow(
+        'Cannot assign to inactive or non-existent user',
+      );
       expect(User.findById).toHaveBeenCalledWith(7);
       expect(Ticket.update).not.toHaveBeenCalled();
     });
@@ -354,8 +360,9 @@ describe('TicketService', () => {
       User.findById.mockResolvedValue(deletedUser);
 
       // Act & Assert
-      await expect(ticketService.updateTicket(8, { assigned_to: 8 }))
-        .rejects.toThrow('Cannot assign to inactive or non-existent user');
+      await expect(ticketService.updateTicket(8, { assigned_to: 8 })).rejects.toThrow(
+        'Cannot assign to inactive or non-existent user',
+      );
       expect(User.findById).toHaveBeenCalledWith(8);
       expect(Ticket.update).not.toHaveBeenCalled();
     });
@@ -368,7 +375,7 @@ describe('TicketService', () => {
         status: 'in_progress',
         priority: 'high',
         assigned_to: 9,
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       User.findById.mockResolvedValue(mockUser);
       Ticket.update.mockResolvedValue(mockUpdatedTicket);
@@ -377,7 +384,7 @@ describe('TicketService', () => {
       const result = await ticketService.updateTicket(9, {
         status: 'in_progress',
         priority: 'high',
-        assigned_to: 9
+        assigned_to: 9,
       });
 
       // Assert
@@ -386,7 +393,7 @@ describe('TicketService', () => {
       expect(Ticket.update).toHaveBeenCalledWith(9, {
         status: 'in_progress',
         priority: 'high',
-        assigned_to: 9
+        assigned_to: 9,
       });
     });
 
@@ -411,8 +418,9 @@ describe('TicketService', () => {
       Ticket.update.mockRejectedValue(dbError);
 
       // Act & Assert
-      await expect(ticketService.updateTicket(11, { status: 'closed' }))
-        .rejects.toThrow('Database update failed');
+      await expect(ticketService.updateTicket(11, { status: 'closed' })).rejects.toThrow(
+        'Database update failed',
+      );
       expect(Ticket.update).toHaveBeenCalledWith(11, { status: 'closed' });
     });
 
@@ -422,21 +430,21 @@ describe('TicketService', () => {
         id: 12,
         status: 'closed',
         priority: 'low',
-        updated_at: new Date()
+        updated_at: new Date(),
       };
       Ticket.update.mockResolvedValue(mockUpdatedTicket);
 
       // Act
       await ticketService.updateTicket(12, {
         status: 'closed',
-        priority: 'low'
+        priority: 'low',
       });
 
       // Assert
       expect(User.findById).not.toHaveBeenCalled();
       expect(Ticket.update).toHaveBeenCalledWith(12, {
         status: 'closed',
-        priority: 'low'
+        priority: 'low',
       });
     });
   });

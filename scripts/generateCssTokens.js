@@ -17,7 +17,7 @@ const { DESIGN_TOKENS } = require('../constants/designTokens');
  * { colors: { blue: { 500: '#3b82f6' } } } → { '--color-blue-500': '#3b82f6' }
  */
 function flattenTokens(obj, prefix = '') {
-  let result = {};
+  const result = {};
 
   for (const [key, value] of Object.entries(obj)) {
     const varName = prefix ? `${prefix}-${key}` : key;
@@ -57,17 +57,21 @@ function generateCssVariables() {
   // Primitive colors
   output.push('  /* === PRIMITIVE COLORS === */');
   const colorVars = flattenTokens({ color: DESIGN_TOKENS.primitives.colors });
-  Object.entries(colorVars).sort().forEach(([name, value]) => {
-    output.push(`  ${name}: ${value};`);
-  });
+  Object.entries(colorVars)
+    .sort()
+    .forEach(([name, value]) => {
+      output.push(`  ${name}: ${value};`);
+    });
   output.push('');
 
   // Spacing
   output.push('  /* === SPACING === */');
   const spacingVars = flattenTokens({ spacing: DESIGN_TOKENS.primitives.spacing });
-  Object.entries(spacingVars).sort().forEach(([name, value]) => {
-    output.push(`  ${name}: ${value};`);
-  });
+  Object.entries(spacingVars)
+    .sort()
+    .forEach(([name, value]) => {
+      output.push(`  ${name}: ${value};`);
+    });
   output.push('');
 
   // Typography
@@ -82,17 +86,21 @@ function generateCssVariables() {
   // Border radius
   output.push('  /* === BORDER RADIUS === */');
   const radiusVars = flattenTokens({ radius: DESIGN_TOKENS.primitives.radius });
-  Object.entries(radiusVars).sort().forEach(([name, value]) => {
-    output.push(`  ${name}: ${value};`);
-  });
+  Object.entries(radiusVars)
+    .sort()
+    .forEach(([name, value]) => {
+      output.push(`  ${name}: ${value};`);
+    });
   output.push('');
 
   // Shadows
   output.push('  /* === SHADOWS === */');
   const shadowVars = flattenTokens({ shadow: DESIGN_TOKENS.primitives.shadows });
-  Object.entries(shadowVars).sort().forEach(([name, value]) => {
-    output.push(`  ${name}: ${value};`);
-  });
+  Object.entries(shadowVars)
+    .sort()
+    .forEach(([name, value]) => {
+      output.push(`  ${name}: ${value};`);
+    });
   output.push('');
 
   // === SEMANTIC TOKENS ===
@@ -169,7 +177,7 @@ function main() {
     fs.writeFileSync(outputPath, cssContent, 'utf8');
 
     // Calculate statistics
-    const variableCount = (cssContent.match(/^  --/gm) || []).length;
+    const variableCount = (cssContent.match(/^ {2}--/gm) || []).length;
     const fileSizeKb = (cssContent.length / 1024).toFixed(2);
 
     // Print success message
@@ -188,7 +196,6 @@ function main() {
     console.log('   background: var(--status-open-bg);');
     console.log('   color: var(--status-open-text);');
     console.log('');
-
   } catch (error) {
     console.error('❌ Error generating CSS tokens:');
     console.error(error.message);

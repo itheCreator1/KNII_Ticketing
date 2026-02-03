@@ -26,8 +26,8 @@ describe('Auth Validators', () => {
       const req = createMockRequest({
         body: {
           username: 'validuser',
-          password: 'ValidPass123!'
-        }
+          password: 'ValidPass123!',
+        },
       });
 
       // Act
@@ -41,8 +41,8 @@ describe('Auth Validators', () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          password: 'ValidPass123!'
-        }
+          password: 'ValidPass123!',
+        },
       });
 
       // Act
@@ -51,7 +51,7 @@ describe('Auth Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'username')).toBe(true);
+      expect(errors.some((e) => e.path === 'username')).toBe(true);
     });
 
     it('should fail when username is empty string', async () => {
@@ -59,8 +59,8 @@ describe('Auth Validators', () => {
       const req = createMockRequest({
         body: {
           username: '',
-          password: 'ValidPass123!'
-        }
+          password: 'ValidPass123!',
+        },
       });
 
       // Act
@@ -69,7 +69,7 @@ describe('Auth Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'username')).toBe(true);
+      expect(errors.some((e) => e.path === 'username')).toBe(true);
     });
 
     it('should fail when username is only whitespace', async () => {
@@ -77,8 +77,8 @@ describe('Auth Validators', () => {
       const req = createMockRequest({
         body: {
           username: '   ',
-          password: 'ValidPass123!'
-        }
+          password: 'ValidPass123!',
+        },
       });
 
       // Act
@@ -87,15 +87,15 @@ describe('Auth Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'username')).toBe(true);
+      expect(errors.some((e) => e.path === 'username')).toBe(true);
     });
 
     it('should fail when password is missing', async () => {
       // Arrange
       const req = createMockRequest({
         body: {
-          username: 'validuser'
-        }
+          username: 'validuser',
+        },
       });
 
       // Act
@@ -104,7 +104,7 @@ describe('Auth Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'password')).toBe(true);
+      expect(errors.some((e) => e.path === 'password')).toBe(true);
     });
 
     it('should fail when password is empty string', async () => {
@@ -112,8 +112,8 @@ describe('Auth Validators', () => {
       const req = createMockRequest({
         body: {
           username: 'validuser',
-          password: ''
-        }
+          password: '',
+        },
       });
 
       // Act
@@ -122,13 +122,13 @@ describe('Auth Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'password')).toBe(true);
+      expect(errors.some((e) => e.path === 'password')).toBe(true);
     });
 
     it('should fail when both username and password are missing', async () => {
       // Arrange
       const req = createMockRequest({
-        body: {}
+        body: {},
       });
 
       // Act
@@ -137,8 +137,8 @@ describe('Auth Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'username')).toBe(true);
-      expect(errors.some(e => e.path === 'password')).toBe(true);
+      expect(errors.some((e) => e.path === 'username')).toBe(true);
+      expect(errors.some((e) => e.path === 'password')).toBe(true);
     });
 
     it('should trim whitespace from username', async () => {
@@ -146,8 +146,8 @@ describe('Auth Validators', () => {
       const req = createMockRequest({
         body: {
           username: '  validuser  ',
-          password: 'ValidPass123!'
-        }
+          password: 'ValidPass123!',
+        },
       });
 
       // Act
@@ -163,8 +163,8 @@ describe('Auth Validators', () => {
       const req = createMockRequest({
         body: {
           username: 'validuser',
-          password: '  password  '
-        }
+          password: '  password  ',
+        },
       });
 
       // Act
@@ -180,8 +180,8 @@ describe('Auth Validators', () => {
       const req = createMockRequest({
         body: {
           username: 'validuser',
-          password: 'simple'
-        }
+          password: 'simple',
+        },
       });
 
       // Act
@@ -196,8 +196,8 @@ describe('Auth Validators', () => {
       const req = createMockRequest({
         body: {
           username: 'user_name123',
-          password: 'P@ssw0rd!#$%'
-        }
+          password: 'P@ssw0rd!#$%',
+        },
       });
 
       // Act

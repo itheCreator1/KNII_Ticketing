@@ -36,7 +36,7 @@ describe('AuditLog Model', () => {
         target_id: auditLogData.targetId,
         details: JSON.stringify(auditLogData.details),
         ip_address: auditLogData.ipAddress,
-        created_at: new Date()
+        created_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockAuditLog] });
 
@@ -53,8 +53,8 @@ describe('AuditLog Model', () => {
           auditLogData.targetType,
           auditLogData.targetId,
           JSON.stringify(auditLogData.details),
-          auditLogData.ipAddress
-        ])
+          auditLogData.ipAddress,
+        ]),
       );
     });
 
@@ -63,7 +63,7 @@ describe('AuditLog Model', () => {
       const detailsObject = {
         username: 'testuser',
         email: 'test@example.com',
-        role: 'admin'
+        role: 'admin',
       };
       const auditLogData = createAuditLogData({ details: detailsObject });
       const mockAuditLog = {
@@ -74,7 +74,7 @@ describe('AuditLog Model', () => {
         target_id: auditLogData.targetId,
         details: JSON.stringify(detailsObject),
         ip_address: auditLogData.ipAddress,
-        created_at: new Date()
+        created_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockAuditLog] });
 
@@ -84,9 +84,7 @@ describe('AuditLog Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.any(String),
-        expect.arrayContaining([
-          JSON.stringify(detailsObject)
-        ])
+        expect.arrayContaining([JSON.stringify(detailsObject)]),
       );
     });
 
@@ -101,7 +99,7 @@ describe('AuditLog Model', () => {
         target_id: auditLogData.targetId,
         details: JSON.stringify(auditLogData.details),
         ip_address: auditLogData.ipAddress,
-        created_at: new Date()
+        created_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockAuditLog] });
 
@@ -124,17 +122,17 @@ describe('AuditLog Model', () => {
       const complexDetails = {
         changes: {
           before: { status: 'active', role: 'admin' },
-          after: { status: 'inactive', role: 'admin' }
+          after: { status: 'inactive', role: 'admin' },
         },
         metadata: ['field1', 'field2'],
-        count: 42
+        count: 42,
       };
       const auditLogData = createAuditLogData({ details: complexDetails });
       const mockAuditLog = {
         id: 4,
         actor_id: auditLogData.actorId,
         details: JSON.stringify(complexDetails),
-        created_at: new Date()
+        created_at: new Date(),
       };
       pool.query.mockResolvedValue({ rows: [mockAuditLog] });
 
@@ -145,7 +143,7 @@ describe('AuditLog Model', () => {
       const expectedJSON = JSON.stringify(complexDetails);
       expect(pool.query).toHaveBeenCalledWith(
         expect.any(String),
-        expect.arrayContaining([expectedJSON])
+        expect.arrayContaining([expectedJSON]),
       );
     });
 
@@ -171,7 +169,7 @@ describe('AuditLog Model', () => {
           target_type: 'user',
           target_id: 10,
           details: '{"field":"value"}',
-          created_at: new Date('2024-01-02')
+          created_at: new Date('2024-01-02'),
         },
         {
           id: 2,
@@ -180,8 +178,8 @@ describe('AuditLog Model', () => {
           target_type: 'user',
           target_id: 10,
           details: '{"field":"value"}',
-          created_at: new Date('2024-01-01')
-        }
+          created_at: new Date('2024-01-01'),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockAuditLogs });
 
@@ -193,7 +191,7 @@ describe('AuditLog Model', () => {
       expect(result).toHaveLength(2);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('WHERE target_type = $1 AND target_id = $2'),
-        ['user', 10, 50]
+        ['user', 10, 50],
       );
     });
 
@@ -206,10 +204,11 @@ describe('AuditLog Model', () => {
       await AuditLog.findByTarget('ticket', 5);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('LIMIT $3'),
-        ['ticket', 5, 50]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('LIMIT $3'), [
+        'ticket',
+        5,
+        50,
+      ]);
     });
 
     it('should respect custom limit parameter', async () => {
@@ -221,17 +220,18 @@ describe('AuditLog Model', () => {
       await AuditLog.findByTarget('comment', 15, 10);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('LIMIT $3'),
-        ['comment', 15, 10]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('LIMIT $3'), [
+        'comment',
+        15,
+        10,
+      ]);
     });
 
     it('should order results by created_at DESC (most recent first)', async () => {
       // Arrange
       const mockAuditLogs = [
         { id: 2, created_at: new Date('2024-01-02') },
-        { id: 1, created_at: new Date('2024-01-01') }
+        { id: 1, created_at: new Date('2024-01-01') },
       ];
       pool.query.mockResolvedValue({ rows: mockAuditLogs });
 
@@ -241,7 +241,7 @@ describe('AuditLog Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY created_at DESC'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -265,7 +265,7 @@ describe('AuditLog Model', () => {
           action: 'CREATE_TICKET',
           target_type: 'ticket',
           target_id: 10,
-          created_at: new Date('2024-01-02')
+          created_at: new Date('2024-01-02'),
         },
         {
           id: 2,
@@ -273,8 +273,8 @@ describe('AuditLog Model', () => {
           action: 'UPDATE_TICKET',
           target_type: 'ticket',
           target_id: 10,
-          created_at: new Date('2024-01-01')
-        }
+          created_at: new Date('2024-01-01'),
+        },
       ];
       pool.query.mockResolvedValue({ rows: mockAuditLogs });
 
@@ -286,7 +286,7 @@ describe('AuditLog Model', () => {
       expect(result).toHaveLength(2);
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('WHERE actor_id = $1'),
-        [5, 50]
+        [5, 50],
       );
     });
 
@@ -299,10 +299,7 @@ describe('AuditLog Model', () => {
       await AuditLog.findByActor(3);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('LIMIT $2'),
-        [3, 50]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('LIMIT $2'), [3, 50]);
     });
 
     it('should respect custom limit parameter', async () => {
@@ -314,10 +311,7 @@ describe('AuditLog Model', () => {
       await AuditLog.findByActor(7, 20);
 
       // Assert
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('LIMIT $2'),
-        [7, 20]
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('LIMIT $2'), [7, 20]);
     });
 
     it('should order results by created_at DESC', async () => {
@@ -325,7 +319,7 @@ describe('AuditLog Model', () => {
       const mockAuditLogs = [
         { id: 3, created_at: new Date('2024-01-03') },
         { id: 2, created_at: new Date('2024-01-02') },
-        { id: 1, created_at: new Date('2024-01-01') }
+        { id: 1, created_at: new Date('2024-01-01') },
       ];
       pool.query.mockResolvedValue({ rows: mockAuditLogs });
 
@@ -335,7 +329,7 @@ describe('AuditLog Model', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY created_at DESC'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 

@@ -34,7 +34,7 @@ const readline = require('readline');
 function askConfirmation(question) {
   const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 
   return new Promise((resolve) => {
@@ -158,7 +158,7 @@ async function createFloors(floorsConfig) {
 
       const floor = await Floor.create({
         name: floorConfig.name,
-        sort_order: floorConfig.sort_order
+        sort_order: floorConfig.sort_order,
       });
 
       createdFloors.push(floor);
@@ -183,7 +183,9 @@ async function createSuperAdmin(superAdminConfig) {
     // Check if super admin already exists
     const existing = await User.findByUsername(superAdminConfig.username);
     if (existing) {
-      console.log(`   ⚠ Super admin "${superAdminConfig.username}" already exists, skipping creation`);
+      console.log(
+        `   ⚠ Super admin "${superAdminConfig.username}" already exists, skipping creation`,
+      );
       return existing;
     }
 
@@ -192,7 +194,7 @@ async function createSuperAdmin(superAdminConfig) {
       email: superAdminConfig.email,
       password: superAdminConfig.password,
       role: 'super_admin',
-      department: null
+      department: null,
     });
 
     console.log(`   ✓ Super admin created: ${superAdminConfig.username}\n`);
@@ -228,7 +230,7 @@ async function createDepartments(departmentsConfig) {
         name: deptConfig.name,
         description: deptConfig.description,
         floor: deptConfig.floor,
-        isSystem
+        isSystem,
       });
 
       createdDepartments.push(deptConfig);
@@ -268,7 +270,7 @@ async function createDepartmentUsers(departmentsConfig) {
         createdUsers.push({
           user: existing,
           deptName: deptConfig.name,
-          fullName: userConfig.full_name
+          fullName: userConfig.full_name,
         });
         continue;
       }
@@ -278,15 +280,17 @@ async function createDepartmentUsers(departmentsConfig) {
         email: userConfig.email,
         password: userConfig.password,
         role: 'department',
-        department: deptConfig.name
+        department: deptConfig.name,
       });
 
       createdUsers.push({
         user,
         deptName: deptConfig.name,
-        fullName: userConfig.full_name
+        fullName: userConfig.full_name,
       });
-      console.log(`   ✓ Created user: ${userConfig.username} (${userConfig.full_name} - ${deptConfig.name})`);
+      console.log(
+        `   ✓ Created user: ${userConfig.username} (${userConfig.full_name} - ${deptConfig.name})`,
+      );
     }
 
     console.log(`   ✓ Total: ${createdUsers.length} department users created\n`);
@@ -308,7 +312,7 @@ async function createAuditLog(superAdmin, stats) {
       targetType: 'system',
       targetId: null,
       details: stats,
-      ipAddress: '127.0.0.1'
+      ipAddress: '127.0.0.1',
     });
   } catch (error) {
     console.error('   ⚠ Warning: Could not create audit log:', error.message);
@@ -331,7 +335,7 @@ function displayCredentials(superAdmin, users) {
       console.log(`    ${deptName}:`);
       console.log(`      Name: ${fullName}`);
       console.log(`      Username: ${user.username}`);
-      console.log(`      Password: (from configuration)`);
+      console.log('      Password: (from configuration)');
       console.log('');
     }
   }
@@ -376,7 +380,7 @@ async function seedDatabase() {
       floors: floors.length,
       users: users.length + 1, // +1 for super admin
       departments: departments.length,
-      superAdmin: 1
+      superAdmin: 1,
     };
     await createAuditLog(superAdmin, stats);
 

@@ -8,12 +8,12 @@ function validateRequest(req, res, next) {
     logger.warn('Validation failed', {
       path: req.path,
       method: req.method,
-      errors: errors.array().map(e => ({ field: e.path, message: e.msg })),
-      body: Object.keys(req.body)
+      errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
+      body: Object.keys(req.body),
     });
 
     if (req.accepts('html')) {
-      errors.array().forEach(error => {
+      errors.array().forEach((error) => {
         req.flash('error_msg', error.msg);
       });
       // Use 'back' for redirect to return to previous page
@@ -45,5 +45,5 @@ function parseUserId(req, res, next) {
 
 module.exports = {
   validateRequest,
-  parseUserId
+  parseUserId,
 };

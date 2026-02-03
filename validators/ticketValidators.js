@@ -6,22 +6,28 @@ const Department = require('../models/Department');
 const validateTicketCreation = [
   body('title')
     .trim()
-    .notEmpty().withMessage(VALIDATION_MESSAGES.TITLE_REQUIRED)
-    .isLength({ max: MAX_LENGTHS.TICKET_TITLE }).withMessage(VALIDATION_MESSAGES.TITLE_TOO_LONG),
+    .notEmpty()
+    .withMessage(VALIDATION_MESSAGES.TITLE_REQUIRED)
+    .isLength({ max: MAX_LENGTHS.TICKET_TITLE })
+    .withMessage(VALIDATION_MESSAGES.TITLE_TOO_LONG),
   body('description')
     .trim()
-    .notEmpty().withMessage(VALIDATION_MESSAGES.DESCRIPTION_REQUIRED)
-    .isLength({ max: MAX_LENGTHS.TICKET_DESCRIPTION }).withMessage(VALIDATION_MESSAGES.DESCRIPTION_TOO_LONG),
+    .notEmpty()
+    .withMessage(VALIDATION_MESSAGES.DESCRIPTION_REQUIRED)
+    .isLength({ max: MAX_LENGTHS.TICKET_DESCRIPTION })
+    .withMessage(VALIDATION_MESSAGES.DESCRIPTION_TOO_LONG),
   body('reporter_name')
     .optional({ checkFalsy: true })
     .trim()
-    .isLength({ max: MAX_LENGTHS.NAME }).withMessage(VALIDATION_MESSAGES.NAME_TOO_LONG),
+    .isLength({ max: MAX_LENGTHS.NAME })
+    .withMessage(VALIDATION_MESSAGES.NAME_TOO_LONG),
   body('reporter_department')
     .trim()
-    .notEmpty().withMessage(VALIDATION_MESSAGES.DEPARTMENT_REQUIRED)
+    .notEmpty()
+    .withMessage(VALIDATION_MESSAGES.DEPARTMENT_REQUIRED)
     .custom(async (value) => {
       const departments = await Department.findAll(true); // Include system departments
-      const departmentNames = departments.map(d => d.name);
+      const departmentNames = departments.map((d) => d.name);
       if (!departmentNames.includes(value)) {
         throw new Error(VALIDATION_MESSAGES.DEPARTMENT_INVALID);
       }
@@ -30,20 +36,27 @@ const validateTicketCreation = [
   body('reporter_phone')
     .optional()
     .trim()
-    .isLength({ max: MAX_LENGTHS.PHONE_NUMBER }).withMessage(VALIDATION_MESSAGES.PHONE_TOO_LONG),
-  body('priority').optional().isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
+    .isLength({ max: MAX_LENGTHS.PHONE_NUMBER })
+    .withMessage(VALIDATION_MESSAGES.PHONE_TOO_LONG),
+  body('priority')
+    .optional()
+    .isIn(Object.values(TICKET_PRIORITY))
+    .withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID),
 ];
 
 const validateTicketUpdate = [
-  body('status').optional().isIn(Object.values(TICKET_STATUS)).withMessage(VALIDATION_MESSAGES.STATUS_INVALID),
-  body('priority').optional().isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
+  body('status')
+    .optional()
+    .isIn(Object.values(TICKET_STATUS))
+    .withMessage(VALIDATION_MESSAGES.STATUS_INVALID),
+  body('priority')
+    .optional()
+    .isIn(Object.values(TICKET_PRIORITY))
+    .withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID),
 ];
 
 const validateTicketId = [
-  param('id')
-    .isInt({ min: 1 })
-    .withMessage('Ticket ID must be a positive integer')
-    .toInt()
+  param('id').isInt({ min: 1 }).withMessage('Ticket ID must be a positive integer').toInt(),
 ];
 
 const validateTicketAssignment = [
@@ -51,28 +64,34 @@ const validateTicketAssignment = [
     .optional({ nullable: true })
     .custom((value) => {
       // Allow null or empty string (unassign)
-      if (value === null || value === '') return true;
+      if (value === null || value === '') {
+        return true;
+      }
       // Otherwise must be a positive integer
       const parsed = parseInt(value);
       if (isNaN(parsed) || parsed < 1) {
         throw new Error('Assigned user ID must be a positive integer or null');
       }
       return true;
-    })
+    }),
 ];
 
 const validateTicketStatusUpdate = [
   body('status')
     .trim()
-    .notEmpty().withMessage('Status is required')
-    .isIn(Object.values(TICKET_STATUS)).withMessage(VALIDATION_MESSAGES.STATUS_INVALID)
+    .notEmpty()
+    .withMessage('Status is required')
+    .isIn(Object.values(TICKET_STATUS))
+    .withMessage(VALIDATION_MESSAGES.STATUS_INVALID),
 ];
 
 const validateTicketPriorityUpdate = [
   body('priority')
     .trim()
-    .notEmpty().withMessage('Priority is required')
-    .isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
+    .notEmpty()
+    .withMessage('Priority is required')
+    .isIn(Object.values(TICKET_PRIORITY))
+    .withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID),
 ];
 
 module.exports = {
@@ -81,5 +100,5 @@ module.exports = {
   validateTicketId,
   validateTicketAssignment,
   validateTicketStatusUpdate,
-  validateTicketPriorityUpdate
+  validateTicketPriorityUpdate,
 };

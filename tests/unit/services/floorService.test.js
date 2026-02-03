@@ -33,7 +33,7 @@ describe('FloorService', () => {
       // Arrange
       const mockFloors = [
         { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true },
-        { id: 2, name: '1st Floor', sort_order: 1, is_system: false, active: true }
+        { id: 2, name: '1st Floor', sort_order: 1, is_system: false, active: true },
       ];
       Floor.findAll.mockResolvedValue(mockFloors);
 
@@ -82,7 +82,7 @@ describe('FloorService', () => {
       // Arrange
       const mockFloors = [
         { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true },
-        { id: 2, name: 'Old Floor', sort_order: 10, is_system: false, active: false }
+        { id: 2, name: 'Old Floor', sort_order: 10, is_system: false, active: false },
       ];
       Floor.findAllForAdmin.mockResolvedValue(mockFloors);
 
@@ -98,7 +98,7 @@ describe('FloorService', () => {
       // Arrange
       const mockFloors = [
         { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true },
-        { id: 2, name: 'System Floor', sort_order: 999, is_system: true, active: true }
+        { id: 2, name: 'System Floor', sort_order: 999, is_system: true, active: true },
       ];
       Floor.findAllForAdmin.mockResolvedValue(mockFloors);
 
@@ -106,7 +106,7 @@ describe('FloorService', () => {
       const result = await floorService.getAllFloors();
 
       // Assert
-      expect(result.some(f => f.is_system)).toBe(true);
+      expect(result.some((f) => f.is_system)).toBe(true);
     });
 
     it('should return empty array when no floors', async () => {
@@ -124,7 +124,13 @@ describe('FloorService', () => {
   describe('getFloorById', () => {
     it('should return floor when found', async () => {
       // Arrange
-      const mockFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
+      const mockFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: true,
+      };
       Floor.findById.mockResolvedValue(mockFloor);
 
       // Act
@@ -178,14 +184,20 @@ describe('FloorService', () => {
         targetType: 'floor',
         targetId: 2,
         details: { name: '2nd Floor', sort_order: 2 },
-        ipAddress
+        ipAddress,
       });
     });
 
     it('should trim whitespace from floor name', async () => {
       // Arrange
       const data = { name: '  Test Floor  ', sort_order: 1 };
-      const mockFloor = { id: 1, name: 'Test Floor', sort_order: 1, is_system: false, active: true };
+      const mockFloor = {
+        id: 1,
+        name: 'Test Floor',
+        sort_order: 1,
+        is_system: false,
+        active: true,
+      };
 
       Floor.findByName.mockResolvedValue(undefined);
       Floor.create.mockResolvedValue(mockFloor);
@@ -204,7 +216,9 @@ describe('FloorService', () => {
       const data = { name: '', sort_order: 1 };
 
       // Act & Assert
-      await expect(floorService.createFloor(1, data, '127.0.0.1')).rejects.toThrow('Floor name is required');
+      await expect(floorService.createFloor(1, data, '127.0.0.1')).rejects.toThrow(
+        'Floor name is required',
+      );
       expect(Floor.create).not.toHaveBeenCalled();
     });
 
@@ -213,19 +227,29 @@ describe('FloorService', () => {
       const data = { name: '   ', sort_order: 1 };
 
       // Act & Assert
-      await expect(floorService.createFloor(1, data, '127.0.0.1')).rejects.toThrow('Floor name is required');
+      await expect(floorService.createFloor(1, data, '127.0.0.1')).rejects.toThrow(
+        'Floor name is required',
+      );
       expect(Floor.create).not.toHaveBeenCalled();
     });
 
     it('should throw error when floor name already exists', async () => {
       // Arrange
       const data = { name: 'Ground Floor', sort_order: 0 };
-      const existingFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
+      const existingFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: true,
+      };
 
       Floor.findByName.mockResolvedValue(existingFloor);
 
       // Act & Assert
-      await expect(floorService.createFloor(1, data, '127.0.0.1')).rejects.toThrow('Floor name already exists');
+      await expect(floorService.createFloor(1, data, '127.0.0.1')).rejects.toThrow(
+        'Floor name already exists',
+      );
       expect(Floor.create).not.toHaveBeenCalled();
     });
 
@@ -250,14 +274,20 @@ describe('FloorService', () => {
         targetType: 'floor',
         targetId: 3,
         details: { name: '3rd Floor', sort_order: 3 },
-        ipAddress: '10.0.0.5'
+        ipAddress: '10.0.0.5',
       });
     });
 
     it('should use default sort_order when not provided', async () => {
       // Arrange
       const data = { name: 'Test Floor' };
-      const mockFloor = { id: 1, name: 'Test Floor', sort_order: 0, is_system: false, active: true };
+      const mockFloor = {
+        id: 1,
+        name: 'Test Floor',
+        sort_order: 0,
+        is_system: false,
+        active: true,
+      };
 
       Floor.findByName.mockResolvedValue(undefined);
       Floor.create.mockResolvedValue(mockFloor);
@@ -278,8 +308,20 @@ describe('FloorService', () => {
       const floorId = 1;
       const data = { name: 'Updated Floor', sort_order: 5 };
       const ipAddress = '192.168.1.100';
-      const currentFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
-      const updatedFloor = { id: 1, name: 'Updated Floor', sort_order: 5, is_system: false, active: true };
+      const currentFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: true,
+      };
+      const updatedFloor = {
+        id: 1,
+        name: 'Updated Floor',
+        sort_order: 5,
+        is_system: false,
+        active: true,
+      };
 
       Floor.findById.mockResolvedValue(currentFloor);
       Floor.findByName.mockResolvedValue(undefined);
@@ -296,12 +338,18 @@ describe('FloorService', () => {
 
     it('should prevent updating system floor', async () => {
       // Arrange
-      const systemFloor = { id: 999, name: 'System Floor', sort_order: 999, is_system: true, active: true };
+      const systemFloor = {
+        id: 999,
+        name: 'System Floor',
+        sort_order: 999,
+        is_system: true,
+        active: true,
+      };
       Floor.findById.mockResolvedValue(systemFloor);
 
       // Act & Assert
       await expect(
-        floorService.updateFloor(1, 999, { name: 'New Name' }, '127.0.0.1')
+        floorService.updateFloor(1, 999, { name: 'New Name' }, '127.0.0.1'),
       ).rejects.toThrow('Cannot edit system floor');
       expect(Floor.update).not.toHaveBeenCalled();
     });
@@ -312,36 +360,65 @@ describe('FloorService', () => {
 
       // Act & Assert
       await expect(
-        floorService.updateFloor(1, 999, { name: 'New Name' }, '127.0.0.1')
+        floorService.updateFloor(1, 999, { name: 'New Name' }, '127.0.0.1'),
       ).rejects.toThrow('Floor not found');
     });
 
     it('should check for duplicate names when changing name', async () => {
       // Arrange
-      const currentFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
-      const existingFloor = { id: 2, name: 'New Name', sort_order: 1, is_system: false, active: true };
+      const currentFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: true,
+      };
+      const existingFloor = {
+        id: 2,
+        name: 'New Name',
+        sort_order: 1,
+        is_system: false,
+        active: true,
+      };
 
       Floor.findById.mockResolvedValue(currentFloor);
       Floor.findByName.mockResolvedValue(existingFloor);
 
       // Act & Assert
       await expect(
-        floorService.updateFloor(1, 1, { name: 'New Name' }, '127.0.0.1')
+        floorService.updateFloor(1, 1, { name: 'New Name' }, '127.0.0.1'),
       ).rejects.toThrow('Floor name already exists');
       expect(Floor.update).not.toHaveBeenCalled();
     });
 
     it('should allow updating name to same value', async () => {
       // Arrange
-      const currentFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
-      const updatedFloor = { id: 1, name: 'Ground Floor', sort_order: 5, is_system: false, active: true };
+      const currentFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: true,
+      };
+      const updatedFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 5,
+        is_system: false,
+        active: true,
+      };
 
       Floor.findById.mockResolvedValue(currentFloor);
       Floor.update.mockResolvedValue(updatedFloor);
       AuditLog.create.mockResolvedValue({});
 
       // Act
-      const result = await floorService.updateFloor(1, 1, { name: 'Ground Floor', sort_order: 5 }, '127.0.0.1');
+      const result = await floorService.updateFloor(
+        1,
+        1,
+        { name: 'Ground Floor', sort_order: 5 },
+        '127.0.0.1',
+      );
 
       // Assert
       expect(result).toBeDefined();
@@ -354,8 +431,20 @@ describe('FloorService', () => {
       const floorId = 1;
       const data = { sort_order: 5 };
       const ipAddress = '10.0.0.5';
-      const currentFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
-      const updatedFloor = { id: 1, name: 'Ground Floor', sort_order: 5, is_system: false, active: true };
+      const currentFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: true,
+      };
+      const updatedFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 5,
+        is_system: false,
+        active: true,
+      };
 
       Floor.findById.mockResolvedValue(currentFloor);
       Floor.findByName.mockResolvedValue(undefined);
@@ -373,15 +462,21 @@ describe('FloorService', () => {
         targetId: 1,
         details: expect.objectContaining({
           old: expect.any(Object),
-          new: expect.any(Object)
+          new: expect.any(Object),
         }),
-        ipAddress: '10.0.0.5'
+        ipAddress: '10.0.0.5',
       });
     });
 
     it('should throw error when update fails', async () => {
       // Arrange
-      const currentFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
+      const currentFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: true,
+      };
 
       Floor.findById.mockResolvedValue(currentFloor);
       Floor.findByName.mockResolvedValue(undefined);
@@ -389,7 +484,7 @@ describe('FloorService', () => {
 
       // Act & Assert
       await expect(
-        floorService.updateFloor(1, 1, { name: 'New Name' }, '127.0.0.1')
+        floorService.updateFloor(1, 1, { name: 'New Name' }, '127.0.0.1'),
       ).rejects.toThrow('Failed to update floor');
     });
   });
@@ -401,7 +496,13 @@ describe('FloorService', () => {
       const floorId = 1;
       const ipAddress = '192.168.1.100';
       const floor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
-      const deactivatedFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: false };
+      const deactivatedFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: false,
+      };
 
       Floor.findById.mockResolvedValue(floor);
       Floor.countDepartments.mockResolvedValue(0);
@@ -418,13 +519,19 @@ describe('FloorService', () => {
 
     it('should prevent deactivating system floor', async () => {
       // Arrange
-      const systemFloor = { id: 999, name: 'System Floor', sort_order: 999, is_system: true, active: true };
+      const systemFloor = {
+        id: 999,
+        name: 'System Floor',
+        sort_order: 999,
+        is_system: true,
+        active: true,
+      };
       Floor.findById.mockResolvedValue(systemFloor);
 
       // Act & Assert
-      await expect(
-        floorService.deactivateFloor(1, 999, '127.0.0.1')
-      ).rejects.toThrow('Cannot deactivate system floor');
+      await expect(floorService.deactivateFloor(1, 999, '127.0.0.1')).rejects.toThrow(
+        'Cannot deactivate system floor',
+      );
       expect(Floor.deactivate).not.toHaveBeenCalled();
     });
 
@@ -433,9 +540,9 @@ describe('FloorService', () => {
       Floor.findById.mockResolvedValue(undefined);
 
       // Act & Assert
-      await expect(
-        floorService.deactivateFloor(1, 999, '127.0.0.1')
-      ).rejects.toThrow('Floor not found');
+      await expect(floorService.deactivateFloor(1, 999, '127.0.0.1')).rejects.toThrow(
+        'Floor not found',
+      );
     });
 
     it('should prevent deactivating floor with assigned departments', async () => {
@@ -445,16 +552,22 @@ describe('FloorService', () => {
       Floor.countDepartments.mockResolvedValue(3);
 
       // Act & Assert
-      await expect(
-        floorService.deactivateFloor(1, 1, '127.0.0.1')
-      ).rejects.toThrow('Cannot deactivate floor: 3 department(s) still assigned');
+      await expect(floorService.deactivateFloor(1, 1, '127.0.0.1')).rejects.toThrow(
+        'Cannot deactivate floor: 3 department(s) still assigned',
+      );
       expect(Floor.deactivate).not.toHaveBeenCalled();
     });
 
     it('should allow deactivating floor with no assigned departments', async () => {
       // Arrange
       const floor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
-      const deactivatedFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: false };
+      const deactivatedFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: false,
+      };
 
       Floor.findById.mockResolvedValue(floor);
       Floor.countDepartments.mockResolvedValue(0);
@@ -475,7 +588,13 @@ describe('FloorService', () => {
       const floorId = 1;
       const ipAddress = '10.0.0.5';
       const floor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
-      const deactivatedFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: false };
+      const deactivatedFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: false,
+      };
 
       Floor.findById.mockResolvedValue(floor);
       Floor.countDepartments.mockResolvedValue(0);
@@ -492,7 +611,7 @@ describe('FloorService', () => {
         targetType: 'floor',
         targetId: 1,
         details: { name: 'Ground Floor' },
-        ipAddress: '10.0.0.5'
+        ipAddress: '10.0.0.5',
       });
     });
 
@@ -505,9 +624,9 @@ describe('FloorService', () => {
       Floor.deactivate.mockResolvedValue(undefined);
 
       // Act & Assert
-      await expect(
-        floorService.deactivateFloor(1, 1, '127.0.0.1')
-      ).rejects.toThrow('Failed to deactivate floor');
+      await expect(floorService.deactivateFloor(1, 1, '127.0.0.1')).rejects.toThrow(
+        'Failed to deactivate floor',
+      );
     });
   });
 
@@ -518,7 +637,13 @@ describe('FloorService', () => {
       const floorId = 1;
       const ipAddress = '192.168.1.100';
       const floor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: false };
-      const reactivatedFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
+      const reactivatedFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: true,
+      };
 
       Floor.findById.mockResolvedValue(floor);
       Floor.reactivate.mockResolvedValue(reactivatedFloor);
@@ -537,9 +662,9 @@ describe('FloorService', () => {
       Floor.findById.mockResolvedValue(undefined);
 
       // Act & Assert
-      await expect(
-        floorService.reactivateFloor(1, 999, '127.0.0.1')
-      ).rejects.toThrow('Floor not found');
+      await expect(floorService.reactivateFloor(1, 999, '127.0.0.1')).rejects.toThrow(
+        'Floor not found',
+      );
     });
 
     it('should create audit log for reactivation', async () => {
@@ -548,7 +673,13 @@ describe('FloorService', () => {
       const floorId = 1;
       const ipAddress = '10.0.0.5';
       const floor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: false };
-      const reactivatedFloor = { id: 1, name: 'Ground Floor', sort_order: 0, is_system: false, active: true };
+      const reactivatedFloor = {
+        id: 1,
+        name: 'Ground Floor',
+        sort_order: 0,
+        is_system: false,
+        active: true,
+      };
 
       Floor.findById.mockResolvedValue(floor);
       Floor.reactivate.mockResolvedValue(reactivatedFloor);
@@ -564,14 +695,26 @@ describe('FloorService', () => {
         targetType: 'floor',
         targetId: 1,
         details: { name: 'Ground Floor' },
-        ipAddress: '10.0.0.5'
+        ipAddress: '10.0.0.5',
       });
     });
 
     it('should allow reactivating system floor', async () => {
       // Arrange
-      const systemFloor = { id: 999, name: 'System Floor', sort_order: 999, is_system: true, active: false };
-      const reactivatedFloor = { id: 999, name: 'System Floor', sort_order: 999, is_system: true, active: true };
+      const systemFloor = {
+        id: 999,
+        name: 'System Floor',
+        sort_order: 999,
+        is_system: true,
+        active: false,
+      };
+      const reactivatedFloor = {
+        id: 999,
+        name: 'System Floor',
+        sort_order: 999,
+        is_system: true,
+        active: true,
+      };
 
       Floor.findById.mockResolvedValue(systemFloor);
       Floor.reactivate.mockResolvedValue(reactivatedFloor);

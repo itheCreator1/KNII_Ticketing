@@ -34,12 +34,10 @@ describe('Authentication E2E Tests', () => {
 
       // Step 2: Attempt login with wrong password 5 times
       for (let i = 1; i <= 5; i++) {
-        const response = await request(app)
-          .post('/auth/login')
-          .send({
-            username: userData.username,
-            password: 'WrongPassword123!'
-          });
+        const response = await request(app).post('/auth/login').send({
+          username: userData.username,
+          password: 'WrongPassword123!',
+        });
 
         // Should redirect back to login
         expect(response.status).toBe(302);
@@ -55,12 +53,10 @@ describe('Authentication E2E Tests', () => {
       expect(lockedUser.login_attempts).toBe(5);
 
       // Step 4: Attempt login with CORRECT password (should fail - account locked)
-      const lockedLoginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const lockedLoginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       expect(lockedLoginResponse.status).toBe(302);
       expect(lockedLoginResponse.headers.location).toBe('/auth/login');
@@ -69,12 +65,10 @@ describe('Authentication E2E Tests', () => {
       await User.update(user.id, { login_attempts: 0 });
 
       // Step 6: Verify successful login works after unlock
-      const successResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const successResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       expect(successResponse.status).toBe(302);
       expect(successResponse.headers.location).toBe('/admin/dashboard');
@@ -86,7 +80,7 @@ describe('Authentication E2E Tests', () => {
 
       // Step 8: Verify audit log contains login event
       const auditLogs = await AuditLog.findByActor(user.id);
-      const loginLog = auditLogs.find(log => log.action === 'USER_LOGIN');
+      const loginLog = auditLogs.find((log) => log.action === 'USER_LOGIN');
       expect(loginLog).toBeDefined();
       expect(loginLog.details.success).toBe(true);
     });
@@ -98,12 +92,10 @@ describe('Authentication E2E Tests', () => {
 
       // Act & Assert - Test incremental locking
       for (let attempt = 1; attempt <= 5; attempt++) {
-        await request(app)
-          .post('/auth/login')
-          .send({
-            username: userData.username,
-            password: 'WrongPassword!'
-          });
+        await request(app).post('/auth/login').send({
+          username: userData.username,
+          password: 'WrongPassword!',
+        });
 
         const userCheck = await User.findByUsernameWithPassword(userData.username);
         expect(userCheck.login_attempts).toBe(attempt);
@@ -119,12 +111,10 @@ describe('Authentication E2E Tests', () => {
       await User.update(user.id, { login_attempts: 5 });
 
       // Act - Try to login with correct password
-      const response = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const response = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert - Should be rejected
       expect(response.status).toBe(302);
@@ -141,12 +131,10 @@ describe('Authentication E2E Tests', () => {
       await User.update(user.id, { login_attempts: 3 });
 
       // Act - Successful login
-      await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert
       const userAfter = await User.findByUsernameWithPassword(userData.username);
@@ -161,42 +149,32 @@ describe('Authentication E2E Tests', () => {
       const user = await User.create(userData);
 
       // Step 2: Login - Session created
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       expect(loginResponse.status).toBe(302);
       const cookies = loginResponse.headers['set-cookie'];
       expect(cookies).toBeDefined();
 
       // Step 3: Session persists across requests
-      const dashboardResponse1 = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const dashboardResponse1 = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       expect(dashboardResponse1.status).toBe(200);
 
-      const dashboardResponse2 = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const dashboardResponse2 = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       expect(dashboardResponse2.status).toBe(200);
 
       // Step 4: Logout - Session destroyed
-      const logoutResponse = await request(app)
-        .post('/auth/logout')
-        .set('Cookie', cookies);
+      const logoutResponse = await request(app).post('/auth/logout').set('Cookie', cookies);
 
       expect(logoutResponse.status).toBe(302);
       expect(logoutResponse.headers.location).toBe('/auth/login');
 
       // Step 5: Access protected route without session - Redirects to login
-      const afterLogoutResponse = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const afterLogoutResponse = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       expect(afterLogoutResponse.status).toBe(302);
       expect(afterLogoutResponse.headers.location).toBe('/auth/login');
@@ -207,12 +185,10 @@ describe('Authentication E2E Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
@@ -220,13 +196,11 @@ describe('Authentication E2E Tests', () => {
       const routes = [
         '/admin/dashboard',
         '/admin/dashboard?status=open',
-        '/admin/dashboard?priority=high'
+        '/admin/dashboard?priority=high',
       ];
 
       for (const route of routes) {
-        const response = await request(app)
-          .get(route)
-          .set('Cookie', cookies);
+        const response = await request(app).get(route).set('Cookie', cookies);
 
         // Assert - All should succeed
         expect(response.status).toBe(200);
@@ -238,24 +212,18 @@ describe('Authentication E2E Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act - Logout
-      await request(app)
-        .post('/auth/logout')
-        .set('Cookie', cookies);
+      await request(app).post('/auth/logout').set('Cookie', cookies);
 
       // Assert - Try to use old session
-      const response = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       expect(response.status).toBe(302);
       expect(response.headers.location).toBe('/auth/login');
@@ -266,19 +234,15 @@ describe('Authentication E2E Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Act - Try to access login page while authenticated
-      const response = await request(app)
-        .get('/auth/login')
-        .set('Cookie', cookies);
+      const response = await request(app).get('/auth/login').set('Cookie', cookies);
 
       // Assert - Should redirect to dashboard
       expect(response.status).toBe(302);
@@ -296,48 +260,36 @@ describe('Authentication E2E Tests', () => {
       const user2 = await User.create(user2Data);
 
       // Step 2: Login both users
-      const login1 = await request(app)
-        .post('/auth/login')
-        .send({
-          username: user1Data.username,
-          password: user1Data.password
-        });
+      const login1 = await request(app).post('/auth/login').send({
+        username: user1Data.username,
+        password: user1Data.password,
+      });
 
       const cookies1 = login1.headers['set-cookie'];
 
-      const login2 = await request(app)
-        .post('/auth/login')
-        .send({
-          username: user2Data.username,
-          password: user2Data.password
-        });
+      const login2 = await request(app).post('/auth/login').send({
+        username: user2Data.username,
+        password: user2Data.password,
+      });
 
       const cookies2 = login2.headers['set-cookie'];
 
       // Step 3: Both should access their respective routes
-      const user1Dashboard = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies1);
+      const user1Dashboard = await request(app).get('/admin/dashboard').set('Cookie', cookies1);
 
       expect(user1Dashboard.status).toBe(200);
 
-      const user2Dashboard = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies2);
+      const user2Dashboard = await request(app).get('/admin/dashboard').set('Cookie', cookies2);
 
       expect(user2Dashboard.status).toBe(200);
 
       // Step 4: User2 (super_admin) can access user management
-      const user2Management = await request(app)
-        .get('/admin/users')
-        .set('Cookie', cookies2);
+      const user2Management = await request(app).get('/admin/users').set('Cookie', cookies2);
 
       expect(user2Management.status).toBe(200);
 
       // Step 5: User1 (regular admin) cannot access user management
-      const user1Management = await request(app)
-        .get('/admin/users')
-        .set('Cookie', cookies1);
+      const user1Management = await request(app).get('/admin/users').set('Cookie', cookies1);
 
       expect(user1Management.status).toBe(302);
       expect(user1Management.headers.location).toBe('/admin/dashboard');
@@ -352,19 +304,15 @@ describe('Authentication E2E Tests', () => {
       await User.create(user2Data);
 
       // Act - Login both
-      const login1 = await request(app)
-        .post('/auth/login')
-        .send({
-          username: user1Data.username,
-          password: user1Data.password
-        });
+      const login1 = await request(app).post('/auth/login').send({
+        username: user1Data.username,
+        password: user1Data.password,
+      });
 
-      const login2 = await request(app)
-        .post('/auth/login')
-        .send({
-          username: user2Data.username,
-          password: user2Data.password
-        });
+      const login2 = await request(app).post('/auth/login').send({
+        username: user2Data.username,
+        password: user2Data.password,
+      });
 
       const cookies1 = login1.headers['set-cookie'];
       const cookies2 = login2.headers['set-cookie'];
@@ -373,13 +321,9 @@ describe('Authentication E2E Tests', () => {
       expect(cookies1).not.toEqual(cookies2);
 
       // Both should work independently
-      const dash1 = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies1);
+      const dash1 = await request(app).get('/admin/dashboard').set('Cookie', cookies1);
 
-      const dash2 = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies2);
+      const dash2 = await request(app).get('/admin/dashboard').set('Cookie', cookies2);
 
       expect(dash1.status).toBe(200);
       expect(dash2.status).toBe(200);
@@ -393,12 +337,10 @@ describe('Authentication E2E Tests', () => {
       await User.create(userData);
 
       // Step 2: Attempt login
-      const response = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const response = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Step 3: Verify rejection
       expect(response.status).toBe(302);
@@ -412,12 +354,10 @@ describe('Authentication E2E Tests', () => {
       await User.create(userData);
 
       // Act
-      const response = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const response = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert
       expect(response.status).toBe(302);
@@ -429,19 +369,15 @@ describe('Authentication E2E Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      const loginResponse = await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       const cookies = loginResponse.headers['set-cookie'];
 
       // Step 2: Verify access works
-      const beforeDeactivate = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const beforeDeactivate = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       expect(beforeDeactivate.status).toBe(200);
 
@@ -449,9 +385,7 @@ describe('Authentication E2E Tests', () => {
       await User.update(user.id, { status: 'inactive' });
 
       // Step 4: Try to access - should be redirected
-      const afterDeactivate = await request(app)
-        .get('/admin/dashboard')
-        .set('Cookie', cookies);
+      const afterDeactivate = await request(app).get('/admin/dashboard').set('Cookie', cookies);
 
       expect(afterDeactivate.status).toBe(302);
       expect(afterDeactivate.headers.location).toBe('/auth/login');
@@ -466,12 +400,10 @@ describe('Authentication E2E Tests', () => {
       expect(userBefore.last_login_at).toBeNull();
 
       // Act
-      await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: userData.password
-        });
+      await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: userData.password,
+      });
 
       // Assert
       const userAfter = await User.findById(user.id);
@@ -486,22 +418,18 @@ describe('Authentication E2E Tests', () => {
 
       // Act - Test timing for existing user
       const start1 = Date.now();
-      await request(app)
-        .post('/auth/login')
-        .send({
-          username: userData.username,
-          password: 'WrongPassword123!'
-        });
+      await request(app).post('/auth/login').send({
+        username: userData.username,
+        password: 'WrongPassword123!',
+      });
       const duration1 = Date.now() - start1;
 
       // Act - Test timing for non-existent user
       const start2 = Date.now();
-      await request(app)
-        .post('/auth/login')
-        .send({
-          username: 'nonexistentuser12345',
-          password: 'WrongPassword123!'
-        });
+      await request(app).post('/auth/login').send({
+        username: 'nonexistentuser12345',
+        password: 'WrongPassword123!',
+      });
       const duration2 = Date.now() - start2;
 
       // Assert - Timing should be similar (within 200ms)

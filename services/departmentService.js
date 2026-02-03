@@ -12,7 +12,7 @@ class DepartmentService {
    * @returns {Promise<Array>} Active departments
    */
   async getActiveDepartments(includeSystem = false) {
-    return await Department.findAll(includeSystem);
+    return Department.findAll(includeSystem);
   }
 
   /**
@@ -20,7 +20,7 @@ class DepartmentService {
    * @returns {Promise<Array>} All departments
    */
   async getAllDepartments() {
-    return await Department.findAllForAdmin();
+    return Department.findAllForAdmin();
   }
 
   /**
@@ -64,7 +64,7 @@ class DepartmentService {
     const department = await Department.create({
       name: name.trim(),
       description: description?.trim(),
-      floor: floor.trim()
+      floor: floor.trim(),
     });
 
     // Log action
@@ -73,8 +73,12 @@ class DepartmentService {
       action: 'CREATE_DEPARTMENT',
       targetType: 'department',
       targetId: department.id,
-      details: { name: department.name, description: department.description, floor: department.floor },
-      ipAddress
+      details: {
+        name: department.name,
+        description: department.description,
+        floor: department.floor,
+      },
+      ipAddress,
     });
 
     return department;
@@ -110,7 +114,7 @@ class DepartmentService {
       name: name?.trim(),
       description: description?.trim(),
       floor: floor?.trim(),
-      active
+      active,
     });
 
     if (!updated) {
@@ -124,10 +128,20 @@ class DepartmentService {
       targetType: 'department',
       targetId: id,
       details: {
-        old: { name: current.name, description: current.description, floor: current.floor, active: current.active },
-        new: { name: updated.name, description: updated.description, floor: updated.floor, active: updated.active }
+        old: {
+          name: current.name,
+          description: current.description,
+          floor: current.floor,
+          active: current.active,
+        },
+        new: {
+          name: updated.name,
+          description: updated.description,
+          floor: updated.floor,
+          active: updated.active,
+        },
       },
-      ipAddress
+      ipAddress,
     });
 
     return updated;
@@ -169,7 +183,7 @@ class DepartmentService {
       targetType: 'department',
       targetId: id,
       details: { name: department.name },
-      ipAddress
+      ipAddress,
     });
 
     return deactivated;
@@ -194,7 +208,7 @@ class DepartmentService {
       targetType: 'department',
       targetId: id,
       details: { name: department.name },
-      ipAddress
+      ipAddress,
     });
 
     return reactivated;
@@ -207,7 +221,7 @@ class DepartmentService {
    */
   async getDepartmentUsers(departmentId) {
     const department = await this.getDepartmentById(departmentId);
-    return await Department.getUsers(department.name);
+    return Department.getUsers(department.name);
   }
 
   /**
@@ -217,7 +231,7 @@ class DepartmentService {
    */
   async getAvailableUsers(departmentId) {
     const department = await this.getDepartmentById(departmentId);
-    return await Department.getAvailableUsers(department.name);
+    return Department.getAvailableUsers(department.name);
   }
 
   /**
@@ -260,9 +274,9 @@ class DepartmentService {
         username: user.username,
         departmentId,
         departmentName: department.name,
-        oldDepartment: user.department
+        oldDepartment: user.department,
       },
-      ipAddress
+      ipAddress,
     });
 
     return updated;
@@ -289,7 +303,9 @@ class DepartmentService {
     // Safety check: prevent removing user with active tickets
     const activeTickets = await User.countActiveTickets(userId);
     if (activeTickets > 0) {
-      throw new Error(`Cannot remove user: ${activeTickets} active ticket(s). Please close or reassign tickets first.`);
+      throw new Error(
+        `Cannot remove user: ${activeTickets} active ticket(s). Please close or reassign tickets first.`,
+      );
     }
 
     // Update user's department to null
@@ -305,9 +321,9 @@ class DepartmentService {
         userId,
         username: user.username,
         departmentId,
-        departmentName: department.name
+        departmentName: department.name,
       },
-      ipAddress
+      ipAddress,
     });
 
     return updated;

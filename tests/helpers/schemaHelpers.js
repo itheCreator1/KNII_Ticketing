@@ -16,7 +16,7 @@ async function getTableNames() {
     WHERE table_schema = 'public'
     ORDER BY table_name
   `);
-  return result.rows.map(r => r.table_name);
+  return result.rows.map((r) => r.table_name);
 }
 
 /**
@@ -25,13 +25,16 @@ async function getTableNames() {
  * @returns {Promise<Array>} Array of column objects with: column_name, data_type, character_maximum_length, is_nullable, column_default
  */
 async function getTableColumns(tableName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT column_name, data_type, character_maximum_length,
            is_nullable, column_default, ordinal_position
     FROM information_schema.columns
     WHERE table_name = $1 AND table_schema = 'public'
     ORDER BY ordinal_position
-  `, [tableName]);
+  `,
+    [tableName],
+  );
   return result.rows;
 }
 
@@ -42,11 +45,14 @@ async function getTableColumns(tableName) {
  * @returns {Promise<boolean>} True if column exists
  */
 async function columnExists(tableName, columnName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT column_name
     FROM information_schema.columns
     WHERE table_name = $1 AND column_name = $2 AND table_schema = 'public'
-  `, [tableName, columnName]);
+  `,
+    [tableName, columnName],
+  );
   return result.rows.length > 0;
 }
 
@@ -56,12 +62,15 @@ async function columnExists(tableName, columnName) {
  * @returns {Promise<Array>} Array of index objects with: indexname, indexdef
  */
 async function getTableIndexes(tableName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT indexname, indexdef
     FROM pg_indexes
     WHERE tablename = $1 AND schemaname = 'public'
     ORDER BY indexname
-  `, [tableName]);
+  `,
+    [tableName],
+  );
   return result.rows;
 }
 
@@ -71,12 +80,15 @@ async function getTableIndexes(tableName) {
  * @returns {Promise<Array>} Array of constraint names
  */
 async function getUniqueConstraints(tableName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT constraint_name
     FROM information_schema.table_constraints
     WHERE table_name = $1 AND constraint_type = 'UNIQUE' AND table_schema = 'public'
-  `, [tableName]);
-  return result.rows.map(r => r.constraint_name);
+  `,
+    [tableName],
+  );
+  return result.rows.map((r) => r.constraint_name);
 }
 
 /**
@@ -85,15 +97,18 @@ async function getUniqueConstraints(tableName) {
  * @returns {Promise<Array>} Array of column names in primary key
  */
 async function getPrimaryKeyColumns(tableName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT a.attname
     FROM pg_constraint c
     JOIN pg_class t ON c.conrelid = t.oid
     JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(c.conkey)
     WHERE t.relname = $1 AND c.contype = 'p'
     ORDER BY a.attnum
-  `, [tableName]);
-  return result.rows.map(r => r.attname);
+  `,
+    [tableName],
+  );
+  return result.rows.map((r) => r.attname);
 }
 
 /**
@@ -102,7 +117,8 @@ async function getPrimaryKeyColumns(tableName) {
  * @returns {Promise<Array>} Array of FK constraint objects
  */
 async function getForeignKeys(tableName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT
       rc.constraint_name,
       kcu.column_name,
@@ -128,7 +144,9 @@ async function getForeignKeys(tableName) {
       ON rc.unique_constraint_name = kcu2.constraint_name
       AND rc.constraint_schema = kcu2.table_schema
     WHERE kcu.table_name = $1 AND kcu.table_schema = 'public'
-  `, [tableName]);
+  `,
+    [tableName],
+  );
   return result.rows;
 }
 
@@ -138,13 +156,16 @@ async function getForeignKeys(tableName) {
  * @returns {Promise<Array>} Array of check constraints with: constraint_name, check_clause
  */
 async function getCheckConstraints(tableName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT cc.constraint_name, cc.check_clause
     FROM information_schema.check_constraints cc
     JOIN information_schema.table_constraints tc
       ON cc.constraint_name = tc.constraint_name
     WHERE tc.table_name = $1 AND tc.table_schema = 'public'
-  `, [tableName]);
+  `,
+    [tableName],
+  );
   return result.rows;
 }
 
@@ -157,8 +178,8 @@ async function getCheckConstraints(tableName) {
  */
 async function verifyCheckConstraint(tableName, columnName, allowedValues) {
   const constraints = await getCheckConstraints(tableName);
-  const checkConstraint = constraints.find(c =>
-    c.check_clause && c.check_clause.includes(columnName)
+  const checkConstraint = constraints.find(
+    (c) => c.check_clause && c.check_clause.includes(columnName),
   );
 
   if (!checkConstraint) {
@@ -166,9 +187,7 @@ async function verifyCheckConstraint(tableName, columnName, allowedValues) {
   }
 
   // Verify all allowed values are in the constraint
-  return allowedValues.every(val =>
-    checkConstraint.check_clause.includes(`'${val}'`)
-  );
+  return allowedValues.every((val) => checkConstraint.check_clause.includes(`'${val}'`));
 }
 
 /**
@@ -193,11 +212,14 @@ async function getTableRowCounts() {
  * @returns {Promise<string>} Data type (e.g., 'integer', 'character varying')
  */
 async function getColumnDataType(tableName, columnName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT data_type
     FROM information_schema.columns
     WHERE table_name = $1 AND column_name = $2 AND table_schema = 'public'
-  `, [tableName, columnName]);
+  `,
+    [tableName, columnName],
+  );
 
   if (result.rows.length === 0) {
     throw new Error(`Column ${columnName} not found in table ${tableName}`);
@@ -213,11 +235,14 @@ async function getColumnDataType(tableName, columnName) {
  * @returns {Promise<boolean>} True if column is nullable
  */
 async function isColumnNullable(tableName, columnName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT is_nullable
     FROM information_schema.columns
     WHERE table_name = $1 AND column_name = $2 AND table_schema = 'public'
-  `, [tableName, columnName]);
+  `,
+    [tableName, columnName],
+  );
 
   if (result.rows.length === 0) {
     throw new Error(`Column ${columnName} not found in table ${tableName}`);
@@ -233,11 +258,14 @@ async function isColumnNullable(tableName, columnName) {
  * @returns {Promise<number|null>} Maximum length or null if not applicable
  */
 async function getColumnMaxLength(tableName, columnName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT character_maximum_length
     FROM information_schema.columns
     WHERE table_name = $1 AND column_name = $2 AND table_schema = 'public'
-  `, [tableName, columnName]);
+  `,
+    [tableName, columnName],
+  );
 
   if (result.rows.length === 0) {
     throw new Error(`Column ${columnName} not found in table ${tableName}`);
@@ -253,11 +281,14 @@ async function getColumnMaxLength(tableName, columnName) {
  * @returns {Promise<string|null>} Default value or null
  */
 async function getColumnDefault(tableName, columnName) {
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT column_default
     FROM information_schema.columns
     WHERE table_name = $1 AND column_name = $2 AND table_schema = 'public'
-  `, [tableName, columnName]);
+  `,
+    [tableName, columnName],
+  );
 
   if (result.rows.length === 0) {
     throw new Error(`Column ${columnName} not found in table ${tableName}`);
@@ -274,11 +305,11 @@ async function getColumnDefault(tableName, columnName) {
  */
 async function verifyTableColumns(tableName, expectedColumns) {
   const actualColumns = await getTableColumns(tableName);
-  const actualNames = actualColumns.map(c => c.column_name);
+  const actualNames = actualColumns.map((c) => c.column_name);
 
   return {
-    missing: expectedColumns.filter(col => !actualNames.includes(col)),
-    extra: actualNames.filter(col => !expectedColumns.includes(col))
+    missing: expectedColumns.filter((col) => !actualNames.includes(col)),
+    extra: actualNames.filter((col) => !expectedColumns.includes(col)),
   };
 }
 
@@ -297,5 +328,5 @@ module.exports = {
   isColumnNullable,
   getColumnMaxLength,
   getColumnDefault,
-  verifyTableColumns
+  verifyTableColumns,
 };

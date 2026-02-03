@@ -8,8 +8,8 @@ class TicketService {
     try {
       logger.info('ticketService.createTicket: Creating new ticket', {
         reporterDepartment: ticketData.reporter_department,
-                priority: ticketData.priority,
-        titleLength: ticketData.title?.length
+        priority: ticketData.priority,
+        titleLength: ticketData.title?.length,
       });
 
       const ticket = await Ticket.create(ticketData);
@@ -18,9 +18,9 @@ class TicketService {
       logger.info('ticketService.createTicket: Ticket created successfully', {
         ticketId: ticket.id,
         reporterDepartment: ticketData.reporter_department,
-                priority: ticket.priority,
+        priority: ticket.priority,
         status: ticket.status,
-        duration
+        duration,
       });
 
       return ticket;
@@ -28,35 +28,38 @@ class TicketService {
       const duration = Date.now() - startTime;
       logger.error('ticketService.createTicket: Failed to create ticket', {
         reporterDepartment: ticketData.reporter_department,
-                priority: ticketData.priority,
+        priority: ticketData.priority,
         error: error.message,
         stack: error.stack,
-        duration
+        duration,
       });
       throw error;
     }
   }
 
   async getTicketById(id) {
-    return await Ticket.findById(id);
+    return Ticket.findById(id);
   }
 
   async getAllTickets(filters = {}) {
     const cleanFilters = {
       status: filters.status || undefined,
       priority: filters.priority || undefined,
-      search: filters.search || undefined
+      search: filters.search || undefined,
     };
 
-    return await Ticket.findAll(cleanFilters);
+    return Ticket.findAll(cleanFilters);
   }
 
   async updateTicket(id, updates) {
     const startTime = Date.now();
-    const changedFields = Object.keys(updates).filter(key => updates[key] !== undefined);
+    const changedFields = Object.keys(updates).filter((key) => updates[key] !== undefined);
 
     try {
-      logger.info('ticketService.updateTicket: Ticket update initiated', { ticketId: id, changedFields });
+      logger.info('ticketService.updateTicket: Ticket update initiated', {
+        ticketId: id,
+        changedFields,
+      });
 
       const allowedUpdates = {};
 
@@ -78,16 +81,23 @@ class TicketService {
           // Validate that the user exists and is active
           const assignedUser = await User.findById(updates.assigned_to);
           if (!assignedUser || assignedUser.status !== 'active') {
-            logger.warn('ticketService.updateTicket: Cannot assign to inactive or non-existent user', {
-              ticketId: id,
-              assignedUserId: updates.assigned_to,
-              userFound: !!assignedUser,
-              userStatus: assignedUser?.status
-            });
+            logger.warn(
+              'ticketService.updateTicket: Cannot assign to inactive or non-existent user',
+              {
+                ticketId: id,
+                assignedUserId: updates.assigned_to,
+                userFound: !!assignedUser,
+                userStatus: assignedUser?.status,
+              },
+            );
             throw new Error('Cannot assign to inactive or non-existent user');
           }
           allowedUpdates.assigned_to = updates.assigned_to;
-          logger.debug('ticketService.updateTicket: Ticket assigned', { ticketId: id, assignedToUserId: updates.assigned_to, assignedToUsername: assignedUser.username });
+          logger.debug('ticketService.updateTicket: Ticket assigned', {
+            ticketId: id,
+            assignedToUserId: updates.assigned_to,
+            assignedToUsername: assignedUser.username,
+          });
         }
       }
 
@@ -100,7 +110,7 @@ class TicketService {
         newStatus: updatedTicket.status,
         newPriority: updatedTicket.priority,
         assignedTo: updatedTicket.assigned_to,
-        duration
+        duration,
       });
 
       return updatedTicket;
@@ -111,7 +121,7 @@ class TicketService {
         changedFields,
         error: error.message,
         stack: error.stack,
-        duration
+        duration,
       });
       throw error;
     }

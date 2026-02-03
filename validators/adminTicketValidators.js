@@ -12,21 +12,26 @@ const Department = require('../models/Department');
 const validateAdminTicketCreation = [
   body('title')
     .trim()
-    .notEmpty().withMessage(VALIDATION_MESSAGES.TITLE_REQUIRED)
-    .isLength({ max: MAX_LENGTHS.TICKET_TITLE }).withMessage(VALIDATION_MESSAGES.TITLE_TOO_LONG),
+    .notEmpty()
+    .withMessage(VALIDATION_MESSAGES.TITLE_REQUIRED)
+    .isLength({ max: MAX_LENGTHS.TICKET_TITLE })
+    .withMessage(VALIDATION_MESSAGES.TITLE_TOO_LONG),
 
   body('description')
     .trim()
-    .notEmpty().withMessage(VALIDATION_MESSAGES.DESCRIPTION_REQUIRED)
-    .isLength({ max: MAX_LENGTHS.TICKET_DESCRIPTION }).withMessage(VALIDATION_MESSAGES.DESCRIPTION_TOO_LONG),
+    .notEmpty()
+    .withMessage(VALIDATION_MESSAGES.DESCRIPTION_REQUIRED)
+    .isLength({ max: MAX_LENGTHS.TICKET_DESCRIPTION })
+    .withMessage(VALIDATION_MESSAGES.DESCRIPTION_TOO_LONG),
 
   body('reporter_department')
     .trim()
-    .notEmpty().withMessage(VALIDATION_MESSAGES.DEPARTMENT_REQUIRED)
+    .notEmpty()
+    .withMessage(VALIDATION_MESSAGES.DEPARTMENT_REQUIRED)
     .custom(async (value) => {
       // Fetch all departments including system ('Internal')
       const validDepartments = await Department.findAll(true);
-      const validNames = validDepartments.map(d => d.name);
+      const validNames = validDepartments.map((d) => d.name);
 
       if (!validNames.includes(value)) {
         throw new Error(VALIDATION_MESSAGES.DEPARTMENT_INVALID);
@@ -37,17 +42,20 @@ const validateAdminTicketCreation = [
   body('reporter_phone')
     .optional({ checkFalsy: true })
     .trim()
-    .isLength({ max: MAX_LENGTHS.PHONE_NUMBER }).withMessage(VALIDATION_MESSAGES.PHONE_TOO_LONG),
+    .isLength({ max: MAX_LENGTHS.PHONE_NUMBER })
+    .withMessage(VALIDATION_MESSAGES.PHONE_TOO_LONG),
 
   // Admins can optionally set priority (defaults to 'unset' if not provided)
   body('priority')
     .optional()
-    .isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID),
+    .isIn(Object.values(TICKET_PRIORITY))
+    .withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID),
 
   // Status always defaults to 'open' for new tickets
   body('status')
     .optional()
-    .isIn(Object.values(TICKET_STATUS)).withMessage(VALIDATION_MESSAGES.STATUS_INVALID)
+    .isIn(Object.values(TICKET_STATUS))
+    .withMessage(VALIDATION_MESSAGES.STATUS_INVALID),
 ];
 
 /**
@@ -62,29 +70,38 @@ const validateAdminTicketCreation = [
 const validateDepartmentTicketCreation = [
   body('title')
     .trim()
-    .notEmpty().withMessage(VALIDATION_MESSAGES.TITLE_REQUIRED)
-    .isLength({ max: MAX_LENGTHS.TICKET_TITLE }).withMessage(VALIDATION_MESSAGES.TITLE_TOO_LONG),
+    .notEmpty()
+    .withMessage(VALIDATION_MESSAGES.TITLE_REQUIRED)
+    .isLength({ max: MAX_LENGTHS.TICKET_TITLE })
+    .withMessage(VALIDATION_MESSAGES.TITLE_TOO_LONG),
 
   body('description')
     .trim()
-    .notEmpty().withMessage(VALIDATION_MESSAGES.DESCRIPTION_REQUIRED)
-    .isLength({ max: MAX_LENGTHS.TICKET_DESCRIPTION }).withMessage(VALIDATION_MESSAGES.DESCRIPTION_TOO_LONG),
+    .notEmpty()
+    .withMessage(VALIDATION_MESSAGES.DESCRIPTION_REQUIRED)
+    .isLength({ max: MAX_LENGTHS.TICKET_DESCRIPTION })
+    .withMessage(VALIDATION_MESSAGES.DESCRIPTION_TOO_LONG),
 
   body('reporter_name')
     .trim()
-    .notEmpty().withMessage(VALIDATION_MESSAGES.NAME_REQUIRED)
-    .isLength({ max: MAX_LENGTHS.NAME }).withMessage(VALIDATION_MESSAGES.NAME_TOO_LONG),
+    .notEmpty()
+    .withMessage(VALIDATION_MESSAGES.NAME_REQUIRED)
+    .isLength({ max: MAX_LENGTHS.NAME })
+    .withMessage(VALIDATION_MESSAGES.NAME_TOO_LONG),
 
   body('reporter_department')
     .trim()
-    .notEmpty().withMessage(VALIDATION_MESSAGES.DEPARTMENT_REQUIRED)
+    .notEmpty()
+    .withMessage(VALIDATION_MESSAGES.DEPARTMENT_REQUIRED)
     .custom(async (value) => {
       // Fetch all departments EXCLUDING system ('Internal')
       const validDepartments = await Department.findAll(false);
-      const validNames = validDepartments.map(d => d.name);
+      const validNames = validDepartments.map((d) => d.name);
 
       if (!validNames.includes(value)) {
-        throw new Error('Invalid department. Cannot create department tickets for Internal department.');
+        throw new Error(
+          'Invalid department. Cannot create department tickets for Internal department.',
+        );
       }
       return true;
     }),
@@ -92,15 +109,17 @@ const validateDepartmentTicketCreation = [
   body('reporter_phone')
     .optional({ checkFalsy: true })
     .trim()
-    .isLength({ max: MAX_LENGTHS.PHONE_NUMBER }).withMessage(VALIDATION_MESSAGES.PHONE_TOO_LONG),
+    .isLength({ max: MAX_LENGTHS.PHONE_NUMBER })
+    .withMessage(VALIDATION_MESSAGES.PHONE_TOO_LONG),
 
   // Admins can optionally set priority (defaults to 'unset' if not provided)
   body('priority')
     .optional()
-    .isIn(Object.values(TICKET_PRIORITY)).withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID)
+    .isIn(Object.values(TICKET_PRIORITY))
+    .withMessage(VALIDATION_MESSAGES.PRIORITY_INVALID),
 ];
 
 module.exports = {
   validateAdminTicketCreation,
-  validateDepartmentTicketCreation
+  validateDepartmentTicketCreation,
 };

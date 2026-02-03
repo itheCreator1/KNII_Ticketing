@@ -26,7 +26,7 @@ router.post('/change', (req, res) => {
   logger.info('Language changed', {
     lang,
     userId: req.session?.user?.id || 'anonymous',
-    ip: req.ip
+    ip: req.ip,
   });
 
   // Redirect back to previous page or home
@@ -64,7 +64,7 @@ router.get('/:lang', (req, res) => {
   logger.info('Language changed via GET', {
     lang,
     userId: req.session?.user?.id || 'anonymous',
-    ip: req.ip
+    ip: req.ip,
   });
 
   // Redirect back to previous page or home

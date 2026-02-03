@@ -19,7 +19,13 @@ async function resetPasswords() {
     }
 
     // Reset department user passwords
-    const departments = ['it.support', 'finance', 'general.support', 'human.resources', 'facilities'];
+    const departments = [
+      'it.support',
+      'finance',
+      'general.support',
+      'human.resources',
+      'facilities',
+    ];
 
     for (const username of departments) {
       const user = await User.findByUsername(username);

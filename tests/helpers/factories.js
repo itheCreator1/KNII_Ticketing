@@ -33,12 +33,18 @@ function createUserData(overrides = {}) {
     password: 'ValidPass123!',
     role: 'admin',
     status: 'active',
-    ...overrides
+    ...overrides,
   };
 
   // Auto-add department for department role users if not explicitly set
   if (baseData.role === 'department' && !baseData.department) {
-    const departments = ['Emergency Department', 'Cardiology', 'Radiology', 'Pharmacy', 'Laboratory'];
+    const departments = [
+      'Emergency Department',
+      'Cardiology',
+      'Radiology',
+      'Pharmacy',
+      'Laboratory',
+    ];
     baseData.department = departments[Math.floor(Math.random() * departments.length)];
   }
 
@@ -63,9 +69,9 @@ function createTicketData(overrides = {}) {
     description: 'This is a test ticket description with enough detail to be meaningful.',
     reporter_department: departments[Math.floor(Math.random() * departments.length)],
     reporter_phone: '+1234567890',
-    priority: 'unset',  // Default to 'unset' (department users cannot set priority)
+    priority: 'unset', // Default to 'unset' (department users cannot set priority)
     status: 'open',
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -79,7 +85,7 @@ function createCommentData(overrides = {}) {
     ticket_id: 1,
     user_id: 1,
     content: 'This is a test comment with meaningful content.',
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -96,7 +102,7 @@ function createAuditLogData(overrides = {}) {
     target_id: 1,
     details: { test: true },
     ip_address: '127.0.0.1',
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -106,5 +112,5 @@ module.exports = {
   createUserData,
   createTicketData,
   createCommentData,
-  createAuditLogData
+  createAuditLogData,
 };

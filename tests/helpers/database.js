@@ -39,7 +39,7 @@ async function setupTestDatabase() {
     { name: '3rd Floor', sort_order: 4 },
     { name: '4th Floor', sort_order: 5 },
     { name: '5th Floor', sort_order: 6 },
-    { name: '6th Floor', sort_order: 7 }
+    { name: '6th Floor', sort_order: 7 },
   ];
 
   for (const floor of testFloors) {
@@ -47,22 +47,47 @@ async function setupTestDatabase() {
       `INSERT INTO floors (name, sort_order, is_system, active)
        VALUES ($1, $2, false, true)
        ON CONFLICT (name) DO NOTHING`,
-      [floor.name, floor.sort_order]
+      [floor.name, floor.sort_order],
     );
   }
 
   // Seed required test departments for ticket creation tests
   // These departments match what createTicketData() factory uses
   const testDepartments = [
-    { name: 'Emergency Department', description: 'Emergency and urgent care services', floor: 'Ground Floor' },
-    { name: 'Cardiology', description: 'Cardiovascular and heart care services', floor: '2nd Floor' },
-    { name: 'Radiology', description: 'Medical imaging and diagnostic radiology', floor: '3rd Floor' },
-    { name: 'Pharmacy', description: 'Pharmaceutical services and medication management', floor: '1st Floor' },
-    { name: 'Laboratory', description: 'Clinical laboratory and pathology services', floor: 'Ground Floor' },
+    {
+      name: 'Emergency Department',
+      description: 'Emergency and urgent care services',
+      floor: 'Ground Floor',
+    },
+    {
+      name: 'Cardiology',
+      description: 'Cardiovascular and heart care services',
+      floor: '2nd Floor',
+    },
+    {
+      name: 'Radiology',
+      description: 'Medical imaging and diagnostic radiology',
+      floor: '3rd Floor',
+    },
+    {
+      name: 'Pharmacy',
+      description: 'Pharmaceutical services and medication management',
+      floor: '1st Floor',
+    },
+    {
+      name: 'Laboratory',
+      description: 'Clinical laboratory and pathology services',
+      floor: 'Ground Floor',
+    },
     { name: 'IT Support', description: 'IT Support Services', floor: 'Ground Floor' },
     { name: 'Finance', description: 'Finance Department', floor: 'Ground Floor' },
     { name: 'Facilities', description: 'Facilities Management', floor: '1st Floor' },
-    { name: 'Internal', description: 'Internal admin-only department', floor: 'Ground Floor', is_system: true }
+    {
+      name: 'Internal',
+      description: 'Internal admin-only department',
+      floor: 'Ground Floor',
+      is_system: true,
+    },
   ];
 
   for (const dept of testDepartments) {
@@ -70,7 +95,7 @@ async function setupTestDatabase() {
       `INSERT INTO departments (name, description, floor, is_system, active)
        VALUES ($1, $2, $3, $4, true)
        ON CONFLICT (name) DO NOTHING`,
-      [dept.name, dept.description, dept.floor, dept.is_system || false]
+      [dept.name, dept.description, dept.floor, dept.is_system || false],
     );
   }
 }
@@ -142,8 +167,8 @@ function getTestClient() {
   if (!testClient) {
     throw new Error(
       'getTestClient() called outside test transaction. ' +
-      'Did you forget to call setupTestDatabase() in beforeEach()? ' +
-      'All database operations in tests must use getTestClient() to maintain transaction isolation.'
+        'Did you forget to call setupTestDatabase() in beforeEach()? ' +
+        'All database operations in tests must use getTestClient() to maintain transaction isolation.',
     );
   }
   return testClient;
@@ -175,7 +200,7 @@ async function setupIntegrationTest() {
     { name: '3rd Floor', sort_order: 4 },
     { name: '4th Floor', sort_order: 5 },
     { name: '5th Floor', sort_order: 6 },
-    { name: '6th Floor', sort_order: 7 }
+    { name: '6th Floor', sort_order: 7 },
   ];
 
   for (const floor of testFloors) {
@@ -183,21 +208,46 @@ async function setupIntegrationTest() {
       `INSERT INTO floors (name, sort_order, is_system, active)
        VALUES ($1, $2, false, true)
        ON CONFLICT (name) DO NOTHING`,
-      [floor.name, floor.sort_order]
+      [floor.name, floor.sort_order],
     );
   }
 
   // Seed required test departments
   const testDepartments = [
-    { name: 'Emergency Department', description: 'Emergency and urgent care services', floor: 'Ground Floor' },
-    { name: 'Cardiology', description: 'Cardiovascular and heart care services', floor: '2nd Floor' },
-    { name: 'Radiology', description: 'Medical imaging and diagnostic radiology', floor: '3rd Floor' },
-    { name: 'Pharmacy', description: 'Pharmaceutical services and medication management', floor: '1st Floor' },
-    { name: 'Laboratory', description: 'Clinical laboratory and pathology services', floor: 'Ground Floor' },
+    {
+      name: 'Emergency Department',
+      description: 'Emergency and urgent care services',
+      floor: 'Ground Floor',
+    },
+    {
+      name: 'Cardiology',
+      description: 'Cardiovascular and heart care services',
+      floor: '2nd Floor',
+    },
+    {
+      name: 'Radiology',
+      description: 'Medical imaging and diagnostic radiology',
+      floor: '3rd Floor',
+    },
+    {
+      name: 'Pharmacy',
+      description: 'Pharmaceutical services and medication management',
+      floor: '1st Floor',
+    },
+    {
+      name: 'Laboratory',
+      description: 'Clinical laboratory and pathology services',
+      floor: 'Ground Floor',
+    },
     { name: 'IT Support', description: 'IT Support Services', floor: 'Ground Floor' },
     { name: 'Finance', description: 'Finance Department', floor: 'Ground Floor' },
     { name: 'Facilities', description: 'Facilities Management', floor: '1st Floor' },
-    { name: 'Internal', description: 'Internal admin-only department', floor: 'Ground Floor', is_system: true }
+    {
+      name: 'Internal',
+      description: 'Internal admin-only department',
+      floor: 'Ground Floor',
+      is_system: true,
+    },
   ];
 
   for (const dept of testDepartments) {
@@ -205,7 +255,7 @@ async function setupIntegrationTest() {
       `INSERT INTO departments (name, description, floor, is_system, active)
        VALUES ($1, $2, $3, $4, true)
        ON CONFLICT (name) DO NOTHING`,
-      [dept.name, dept.description, dept.floor, dept.is_system || false]
+      [dept.name, dept.description, dept.floor, dept.is_system || false],
     );
   }
 }
@@ -226,5 +276,5 @@ module.exports = {
   getTestClient,
   cleanTable,
   cleanAllTables,
-  resetSequences
+  resetSequences,
 };

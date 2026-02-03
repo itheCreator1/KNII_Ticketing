@@ -101,7 +101,7 @@ describe('UserService', () => {
       // Arrange
       const mockUsers = [
         { id: 1, username: 'user1', status: 'active' },
-        { id: 2, username: 'user2', status: 'active' }
+        { id: 2, username: 'user2', status: 'active' },
       ];
       User.findAllActive.mockResolvedValue(mockUsers);
 
@@ -161,12 +161,14 @@ describe('UserService', () => {
         username: 'testuser',
         email: 'test@example.com',
         password: 'ValidPass123!',
-        role: 'department'
+        role: 'department',
         // Deliberately omit department field
       };
 
       // Act & Assert
-      await expect(userService.createUser(userData)).rejects.toThrow('Department is required for department role users');
+      await expect(userService.createUser(userData)).rejects.toThrow(
+        'Department is required for department role users',
+      );
       expect(User.create).not.toHaveBeenCalled();
     });
 
@@ -175,7 +177,9 @@ describe('UserService', () => {
       const userData = createUserData({ role: 'admin', department: 'IT Support' });
 
       // Act & Assert
-      await expect(userService.createUser(userData)).rejects.toThrow('Department can only be set for department role users');
+      await expect(userService.createUser(userData)).rejects.toThrow(
+        'Department can only be set for department role users',
+      );
       expect(User.create).not.toHaveBeenCalled();
     });
 
@@ -199,7 +203,7 @@ describe('UserService', () => {
       const mockUser = {
         id: userId,
         username: 'testuser',
-        password_hash: 'hashed_old_password'
+        password_hash: 'hashed_old_password',
       };
 
       User.findById.mockResolvedValue({ username: 'testuser' });
@@ -224,9 +228,9 @@ describe('UserService', () => {
       User.findByUsername.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(
-        userService.changePassword(999, 'OldPass123!', 'NewPass456!')
-      ).rejects.toThrow('User not found');
+      await expect(userService.changePassword(999, 'OldPass123!', 'NewPass456!')).rejects.toThrow(
+        'User not found',
+      );
     });
 
     it('should throw error when current password is incorrect', async () => {
@@ -234,7 +238,7 @@ describe('UserService', () => {
       const mockUser = {
         id: 1,
         username: 'testuser',
-        password_hash: 'hashed_password'
+        password_hash: 'hashed_password',
       };
 
       User.findById.mockResolvedValue({ username: 'testuser' });
@@ -243,7 +247,7 @@ describe('UserService', () => {
 
       // Act & Assert
       await expect(
-        userService.changePassword(1, 'WrongPassword123!', 'NewPassword456!')
+        userService.changePassword(1, 'WrongPassword123!', 'NewPassword456!'),
       ).rejects.toThrow('Current password is incorrect');
       expect(User.updatePassword).not.toHaveBeenCalled();
     });
@@ -253,7 +257,7 @@ describe('UserService', () => {
       const mockUser = {
         id: 1,
         username: 'testuser',
-        password_hash: 'hashed_password'
+        password_hash: 'hashed_password',
       };
 
       User.findById.mockResolvedValue({ username: 'testuser' });
@@ -261,13 +265,13 @@ describe('UserService', () => {
       bcrypt.compare.mockResolvedValue(true);
       validatePassword.mockReturnValue({
         isValid: false,
-        errors: ['Password must be at least 8 characters']
+        errors: ['Password must be at least 8 characters'],
       });
 
       // Act & Assert
-      await expect(
-        userService.changePassword(1, 'OldPass123!', 'short')
-      ).rejects.toThrow('Password must be at least 8 characters');
+      await expect(userService.changePassword(1, 'OldPass123!', 'short')).rejects.toThrow(
+        'Password must be at least 8 characters',
+      );
       expect(User.updatePassword).not.toHaveBeenCalled();
     });
 
@@ -276,7 +280,7 @@ describe('UserService', () => {
       const mockUser = {
         id: 1,
         username: 'testuser',
-        password_hash: 'hashed_password'
+        password_hash: 'hashed_password',
       };
 
       User.findById.mockResolvedValue({ username: 'testuser' });
@@ -284,13 +288,16 @@ describe('UserService', () => {
       bcrypt.compare.mockResolvedValue(true);
       validatePassword.mockReturnValue({
         isValid: false,
-        errors: ['Password must contain uppercase letter', 'Password must contain special character']
+        errors: [
+          'Password must contain uppercase letter',
+          'Password must contain special character',
+        ],
       });
 
       // Act & Assert
-      await expect(
-        userService.changePassword(1, 'OldPass123!', 'lowercase123')
-      ).rejects.toThrow('Password must contain uppercase letter, Password must contain special character');
+      await expect(userService.changePassword(1, 'OldPass123!', 'lowercase123')).rejects.toThrow(
+        'Password must contain uppercase letter, Password must contain special character',
+      );
     });
   });
 
@@ -321,7 +328,7 @@ describe('UserService', () => {
         targetType: 'user',
         targetId,
         details: { changes: updates },
-        ipAddress
+        ipAddress,
       });
     });
 
@@ -331,21 +338,26 @@ describe('UserService', () => {
 
       // Act & Assert
       await expect(
-        userService.updateUser(1, 999, { email: 'new@test.com' }, '127.0.0.1')
+        userService.updateUser(1, 999, { email: 'new@test.com' }, '127.0.0.1'),
       ).rejects.toThrow('User not found');
       expect(User.update).not.toHaveBeenCalled();
     });
 
     it('should prevent downgrading last super_admin', async () => {
       // Arrange
-      const mockSuperAdmin = { id: 1, username: 'lastadmin', role: 'super_admin', status: 'active' };
+      const mockSuperAdmin = {
+        id: 1,
+        username: 'lastadmin',
+        role: 'super_admin',
+        status: 'active',
+      };
       User.findById.mockResolvedValue(mockSuperAdmin);
       User.countActiveSuperAdmins.mockResolvedValue(1);
 
       // Act & Assert
-      await expect(
-        userService.updateUser(2, 1, { role: 'admin' }, '127.0.0.1')
-      ).rejects.toThrow('Cannot downgrade the last super admin');
+      await expect(userService.updateUser(2, 1, { role: 'admin' }, '127.0.0.1')).rejects.toThrow(
+        'Cannot downgrade the last super admin',
+      );
       expect(User.update).not.toHaveBeenCalled();
     });
 
@@ -369,13 +381,18 @@ describe('UserService', () => {
 
     it('should prevent deactivating last super_admin', async () => {
       // Arrange
-      const mockSuperAdmin = { id: 1, username: 'lastadmin', role: 'super_admin', status: 'active' };
+      const mockSuperAdmin = {
+        id: 1,
+        username: 'lastadmin',
+        role: 'super_admin',
+        status: 'active',
+      };
       User.findById.mockResolvedValue(mockSuperAdmin);
       User.countActiveSuperAdmins.mockResolvedValue(1);
 
       // Act & Assert
       await expect(
-        userService.updateUser(2, 1, { status: 'inactive' }, '127.0.0.1')
+        userService.updateUser(2, 1, { status: 'inactive' }, '127.0.0.1'),
       ).rejects.toThrow('Cannot deactivate the last super admin');
     });
 
@@ -486,25 +503,37 @@ describe('UserService', () => {
         targetType: 'user',
         targetId: 10,
         details: { changes: updates },
-        ipAddress: '10.0.0.5'
+        ipAddress: '10.0.0.5',
       });
     });
 
     it('should throw error when changing to department role without department', async () => {
       // Arrange
-      const mockUser = { id: 5, username: 'user5', role: 'admin', status: 'active', department: null };
+      const mockUser = {
+        id: 5,
+        username: 'user5',
+        role: 'admin',
+        status: 'active',
+        department: null,
+      };
       User.findById.mockResolvedValue(mockUser);
 
       // Act & Assert
       await expect(
-        userService.updateUser(1, 5, { role: 'department' }, '127.0.0.1')
+        userService.updateUser(1, 5, { role: 'department' }, '127.0.0.1'),
       ).rejects.toThrow('Department is required for department role users');
       expect(User.update).not.toHaveBeenCalled();
     });
 
     it('should allow changing to department role with department provided', async () => {
       // Arrange
-      const mockUser = { id: 5, username: 'user5', role: 'admin', status: 'active', department: null };
+      const mockUser = {
+        id: 5,
+        username: 'user5',
+        role: 'admin',
+        status: 'active',
+        department: null,
+      };
       const mockUpdatedUser = { ...mockUser, role: 'department', department: 'IT Support' };
 
       User.findById.mockResolvedValue(mockUser);
@@ -512,7 +541,12 @@ describe('UserService', () => {
       AuditLog.create.mockResolvedValue({});
 
       // Act
-      const result = await userService.updateUser(1, 5, { role: 'department', department: 'IT Support' }, '127.0.0.1');
+      const result = await userService.updateUser(
+        1,
+        5,
+        { role: 'department', department: 'IT Support' },
+        '127.0.0.1',
+      );
 
       // Assert
       expect(result.role).toBe('department');
@@ -522,7 +556,13 @@ describe('UserService', () => {
 
     it('should auto-clear department when changing from department to admin role', async () => {
       // Arrange
-      const mockUser = { id: 5, username: 'user5', role: 'department', status: 'active', department: 'IT Support' };
+      const mockUser = {
+        id: 5,
+        username: 'user5',
+        role: 'department',
+        status: 'active',
+        department: 'IT Support',
+      };
       const mockUpdatedUser = { ...mockUser, role: 'admin', department: null };
 
       User.findById.mockResolvedValue(mockUser);
@@ -563,7 +603,7 @@ describe('UserService', () => {
         targetType: 'user',
         targetId,
         details: { deletedUser: { username: 'victim', email: 'victim@test.com', role: 'admin' } },
-        ipAddress
+        ipAddress,
       });
     });
 
@@ -572,9 +612,7 @@ describe('UserService', () => {
       User.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(
-        userService.deleteUser(1, 999, '127.0.0.1')
-      ).rejects.toThrow('User not found');
+      await expect(userService.deleteUser(1, 999, '127.0.0.1')).rejects.toThrow('User not found');
       expect(User.softDelete).not.toHaveBeenCalled();
     });
 
@@ -587,9 +625,9 @@ describe('UserService', () => {
       User.findById.mockResolvedValue(mockUser);
 
       // Act & Assert
-      await expect(
-        userService.deleteUser(actorId, targetId, '127.0.0.1')
-      ).rejects.toThrow('Cannot delete yourself');
+      await expect(userService.deleteUser(actorId, targetId, '127.0.0.1')).rejects.toThrow(
+        'Cannot delete yourself',
+      );
       expect(User.softDelete).not.toHaveBeenCalled();
     });
 
@@ -601,15 +639,20 @@ describe('UserService', () => {
       User.countActiveSuperAdmins.mockResolvedValue(1);
 
       // Act & Assert
-      await expect(
-        userService.deleteUser(2, 1, '127.0.0.1')
-      ).rejects.toThrow('Cannot delete the last super admin');
+      await expect(userService.deleteUser(2, 1, '127.0.0.1')).rejects.toThrow(
+        'Cannot delete the last super admin',
+      );
       expect(User.softDelete).not.toHaveBeenCalled();
     });
 
     it('should allow deleting super_admin when multiple exist', async () => {
       // Arrange
-      const mockSuperAdmin = { id: 1, username: 'admin1', email: 'admin1@test.com', role: 'super_admin' };
+      const mockSuperAdmin = {
+        id: 1,
+        username: 'admin1',
+        email: 'admin1@test.com',
+        role: 'super_admin',
+      };
 
       User.findById.mockResolvedValue(mockSuperAdmin);
       User.countActiveSuperAdmins.mockResolvedValue(3);
@@ -669,7 +712,7 @@ describe('UserService', () => {
         targetType: 'user',
         targetId,
         details: { resetBy: 'admin' },
-        ipAddress
+        ipAddress,
       });
     });
 
@@ -679,7 +722,7 @@ describe('UserService', () => {
 
       // Act & Assert
       await expect(
-        userService.resetUserPassword(1, 999, 'NewPass123!', '127.0.0.1')
+        userService.resetUserPassword(1, 999, 'NewPass123!', '127.0.0.1'),
       ).rejects.toThrow('User not found');
       expect(User.updatePassword).not.toHaveBeenCalled();
     });
@@ -691,13 +734,16 @@ describe('UserService', () => {
       User.findById.mockResolvedValue(mockTarget);
       validatePassword.mockReturnValue({
         isValid: false,
-        errors: ['Password must be at least 8 characters', 'Password must contain special character']
+        errors: [
+          'Password must be at least 8 characters',
+          'Password must contain special character',
+        ],
       });
 
       // Act & Assert
-      await expect(
-        userService.resetUserPassword(1, 5, 'weak', '127.0.0.1')
-      ).rejects.toThrow('Password must be at least 8 characters, Password must contain special character');
+      await expect(userService.resetUserPassword(1, 5, 'weak', '127.0.0.1')).rejects.toThrow(
+        'Password must be at least 8 characters, Password must contain special character',
+      );
       expect(User.updatePassword).not.toHaveBeenCalled();
     });
   });
@@ -724,12 +770,14 @@ describe('UserService', () => {
       // Assert
       expect(result).toEqual(mockUpdatedUser);
       expect(User.update).toHaveBeenCalledWith(targetId, { status: newStatus });
-      expect(AuditLog.create).toHaveBeenCalledWith(expect.objectContaining({
-        actorId,
-        targetId,
-        action: 'USER_UPDATED',
-        details: { changes: { status: newStatus } }
-      }));
+      expect(AuditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actorId,
+          targetId,
+          action: 'USER_UPDATED',
+          details: { changes: { status: newStatus } },
+        }),
+      );
     });
 
     it('should pass all parameters correctly to updateUser', async () => {

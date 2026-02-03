@@ -12,7 +12,6 @@
  *   }
  */
 
-const { MAX_LENGTHS, VALIDATION_MESSAGES } = require('../constants/validation');
 
 /**
  * Validates floor configuration
@@ -101,7 +100,7 @@ function validateDepartments(departments, floors) {
     return errors;
   }
 
-  const floorNames = floors.map(f => f.name);
+  const floorNames = floors.map((f) => f.name);
   const seenNames = new Set();
   const seenUsernames = new Set();
   const seenEmails = new Set();
@@ -195,7 +194,9 @@ function validateDepartmentUser(user, deptIndex, errors, seenUsernames, seenEmai
 
     // Username format validation (alphanumeric, dots, underscores, hyphens)
     if (!/^[a-zA-Z0-9._-]+$/.test(user.username)) {
-      errors.push(`${prefix}.username: Only alphanumeric characters, dots, underscores, and hyphens allowed`);
+      errors.push(
+        `${prefix}.username: Only alphanumeric characters, dots, underscores, and hyphens allowed`,
+      );
     }
 
     // Duplicate username detection
@@ -338,7 +339,7 @@ function validateConfig(floorsData, departmentsData) {
 
   return {
     valid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -352,11 +353,9 @@ function formatErrors(errors) {
     return '';
   }
 
-  const lines = [
-    '❌ Configuration validation failed:\n'
-  ];
+  const lines = ['❌ Configuration validation failed:\n'];
 
-  errors.forEach(error => {
+  errors.forEach((error) => {
     lines.push(`  - ${error}`);
   });
 
@@ -369,5 +368,5 @@ module.exports = {
   validateFloors,
   validateDepartments,
   validateSuperAdmin,
-  formatErrors
+  formatErrors,
 };

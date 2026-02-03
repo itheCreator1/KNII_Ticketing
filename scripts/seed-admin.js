@@ -5,24 +5,56 @@ const pool = require('../config/database');
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
 function question(query) {
-  return new Promise(resolve => rl.question(query, resolve));
+  return new Promise((resolve) => rl.question(query, resolve));
 }
 
 // Greek names for auto-generation
 const greekFirstNames = [
-  'Γιώργος', 'Μαρία', 'Νίκος', 'Ελένη', 'Δημήτρης', 'Αικατερίνη', 'Κώστας', 'Σοφία',
-  'Παναγιώτης', 'Αναστασία', 'Ιωάννης', 'Χριστίνα', 'Αντώνης', 'Βασιλική', 'Μιχάλης',
-  'Ευαγγελία', 'Σπύρος', 'Δέσποινα', 'Αλέξανδρος', 'Παρασκευή'
+  'Γιώργος',
+  'Μαρία',
+  'Νίκος',
+  'Ελένη',
+  'Δημήτρης',
+  'Αικατερίνη',
+  'Κώστας',
+  'Σοφία',
+  'Παναγιώτης',
+  'Αναστασία',
+  'Ιωάννης',
+  'Χριστίνα',
+  'Αντώνης',
+  'Βασιλική',
+  'Μιχάλης',
+  'Ευαγγελία',
+  'Σπύρος',
+  'Δέσποινα',
+  'Αλέξανδρος',
+  'Παρασκευή',
 ];
 
 const greekLastNames = [
-  'Παπαδόπουλος', 'Παπανικολάου', 'Οικονόμου', 'Γεωργίου', 'Αντωνίου', 'Νικολάου',
-  'Κωνσταντίνου', 'Δημητρίου', 'Βασιλείου', 'Αθανασίου', 'Ιωάννου', 'Χριστοδούλου',
-  'Παππάς', 'Σταματίου', 'Καραγιάννης', 'Μακρής', 'Αλεξίου', 'Πετρίδης'
+  'Παπαδόπουλος',
+  'Παπανικολάου',
+  'Οικονόμου',
+  'Γεωργίου',
+  'Αντωνίου',
+  'Νικολάου',
+  'Κωνσταντίνου',
+  'Δημητρίου',
+  'Βασιλείου',
+  'Αθανασίου',
+  'Ιωάννου',
+  'Χριστοδούλου',
+  'Παππάς',
+  'Σταματίου',
+  'Καραγιάννης',
+  'Μακρής',
+  'Αλεξίου',
+  'Πετρίδης',
 ];
 
 const departments = ['Emergency Department', 'Cardiology', 'Radiology', 'Pharmacy', 'Laboratory'];
@@ -30,16 +62,76 @@ const departments = ['Emergency Department', 'Cardiology', 'Radiology', 'Pharmac
 // Convert Greek name to Latin for username/email
 function greekToLatin(text) {
   const map = {
-    'Α': 'A', 'Β': 'V', 'Γ': 'G', 'Δ': 'D', 'Ε': 'E', 'Ζ': 'Z', 'Η': 'I', 'Θ': 'Th',
-    'Ι': 'I', 'Κ': 'K', 'Λ': 'L', 'Μ': 'M', 'Ν': 'N', 'Ξ': 'X', 'Ο': 'O', 'Π': 'P',
-    'Ρ': 'R', 'Σ': 'S', 'Τ': 'T', 'Υ': 'Y', 'Φ': 'F', 'Χ': 'Ch', 'Ψ': 'Ps', 'Ω': 'O',
-    'α': 'a', 'β': 'v', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'ζ': 'z', 'η': 'i', 'θ': 'th',
-    'ι': 'i', 'κ': 'k', 'λ': 'l', 'μ': 'm', 'ν': 'n', 'ξ': 'x', 'ο': 'o', 'π': 'p',
-    'ρ': 'r', 'σ': 's', 'ς': 's', 'τ': 't', 'υ': 'y', 'φ': 'f', 'χ': 'ch', 'ψ': 'ps', 'ω': 'o',
-    'ά': 'a', 'έ': 'e', 'ή': 'i', 'ί': 'i', 'ό': 'o', 'ύ': 'y', 'ώ': 'o', 'ϊ': 'i', 'ϋ': 'y',
-    'Ά': 'A', 'Έ': 'E', 'Ή': 'I', 'Ί': 'I', 'Ό': 'O', 'Ύ': 'Y', 'Ώ': 'O'
+    Α: 'A',
+    Β: 'V',
+    Γ: 'G',
+    Δ: 'D',
+    Ε: 'E',
+    Ζ: 'Z',
+    Η: 'I',
+    Θ: 'Th',
+    Ι: 'I',
+    Κ: 'K',
+    Λ: 'L',
+    Μ: 'M',
+    Ν: 'N',
+    Ξ: 'X',
+    Ο: 'O',
+    Π: 'P',
+    Ρ: 'R',
+    Σ: 'S',
+    Τ: 'T',
+    Υ: 'Y',
+    Φ: 'F',
+    Χ: 'Ch',
+    Ψ: 'Ps',
+    Ω: 'O',
+    α: 'a',
+    β: 'v',
+    γ: 'g',
+    δ: 'd',
+    ε: 'e',
+    ζ: 'z',
+    η: 'i',
+    θ: 'th',
+    ι: 'i',
+    κ: 'k',
+    λ: 'l',
+    μ: 'm',
+    ν: 'n',
+    ξ: 'x',
+    ο: 'o',
+    π: 'p',
+    ρ: 'r',
+    σ: 's',
+    ς: 's',
+    τ: 't',
+    υ: 'y',
+    φ: 'f',
+    χ: 'ch',
+    ψ: 'ps',
+    ω: 'o',
+    ά: 'a',
+    έ: 'e',
+    ή: 'i',
+    ί: 'i',
+    ό: 'o',
+    ύ: 'y',
+    ώ: 'o',
+    ϊ: 'i',
+    ϋ: 'y',
+    Ά: 'A',
+    Έ: 'E',
+    Ή: 'I',
+    Ί: 'I',
+    Ό: 'O',
+    Ύ: 'Y',
+    Ώ: 'O',
   };
-  return text.split('').map(char => map[char] || char).join('');
+  return text
+    .split('')
+    .map((char) => map[char] || char)
+    .join('');
 }
 
 function getRandomElement(arr) {
@@ -65,7 +157,7 @@ async function seedAdmin() {
 
     const result = await pool.query(
       'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, username, email, role',
-      [username, email, password_hash, 'admin']
+      [username, email, password_hash, 'admin'],
     );
 
     const user = result.rows[0];
@@ -100,9 +192,18 @@ async function seedDemoUsers() {
     const superAdminUsername = greekToLatin(superAdminFirst).toLowerCase() + '_admin';
     const superAdminResult = await pool.query(
       'INSERT INTO users (username, email, password_hash, role, department) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role, department',
-      [superAdminUsername, `${superAdminUsername}@example.com`, defaultPassword, 'super_admin', 'Internal']
+      [
+        superAdminUsername,
+        `${superAdminUsername}@example.com`,
+        defaultPassword,
+        'super_admin',
+        'Internal',
+      ],
     );
-    createdUsers.push({ ...superAdminResult.rows[0], greekName: `${superAdminFirst} ${superAdminLast}` });
+    createdUsers.push({
+      ...superAdminResult.rows[0],
+      greekName: `${superAdminFirst} ${superAdminLast}`,
+    });
 
     // Create 2 admins (with Internal department)
     for (let i = 0; i < 2; i++) {
@@ -111,7 +212,7 @@ async function seedDemoUsers() {
       const username = greekToLatin(firstName).toLowerCase() + (i + 1);
       const result = await pool.query(
         'INSERT INTO users (username, email, password_hash, role, department) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role, department',
-        [username, `${username}@example.com`, defaultPassword, 'admin', 'Internal']
+        [username, `${username}@example.com`, defaultPassword, 'admin', 'Internal'],
       );
       createdUsers.push({ ...result.rows[0], greekName: `${firstName} ${lastName}` });
     }
@@ -124,7 +225,7 @@ async function seedDemoUsers() {
       const username = greekToLatin(firstName).toLowerCase() + '_dept' + (i + 1);
       const result = await pool.query(
         'INSERT INTO users (username, email, password_hash, role, department) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role, department',
-        [username, `${username}@example.com`, defaultPassword, 'department', department]
+        [username, `${username}@example.com`, defaultPassword, 'department', department],
       );
       createdUsers.push({ ...result.rows[0], greekName: `${firstName} ${lastName}` });
     }
@@ -134,7 +235,7 @@ async function seedDemoUsers() {
     console.log('ID\tΡόλος\t\t\tΌνομα χρήστη\t\tΕλληνικό Όνομα\t\tΤμήμα');
     console.log('═'.repeat(80));
 
-    createdUsers.forEach(user => {
+    createdUsers.forEach((user) => {
       const role = user.role.padEnd(12);
       const username = user.username.padEnd(20);
       const greekName = (user.greekName || '').padEnd(20);

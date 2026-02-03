@@ -19,7 +19,7 @@ const {
   seedBenchmarkData,
   cleanupBenchmarkData,
   formatLatency,
-  meetsLodgingSLA
+  meetsLodgingSLA,
 } = require('./helpers/benchmarkRunner');
 
 let server;
@@ -33,16 +33,18 @@ async function startServer() {
 
   const sessionStore = new (connectPgSimple(session))({
     pool: pool,
-    tableName: 'session'
+    tableName: 'session',
   });
 
-  app.use(session({
-    store: sessionStore,
-    secret: process.env.SESSION_SECRET || 'benchmark-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
-  }));
+  app.use(
+    session({
+      store: sessionStore,
+      secret: process.env.SESSION_SECRET || 'benchmark-secret-key',
+      resave: false,
+      saveUninitialized: false,
+      cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
+    }),
+  );
 
   app.use(express.urlencoded({ extended: true }));
 
@@ -55,7 +57,7 @@ async function startServer() {
       req.session.user = {
         id: 1,
         username: username,
-        role: 'admin'
+        role: 'admin',
       };
       res.redirect('/admin/dashboard');
     } else {
@@ -118,7 +120,7 @@ async function runAllBenchmarks() {
       url: 'http://localhost:3001/health',
       connections: 1,
       duration: 2,
-      pipelining: 1
+      pipelining: 1,
     });
 
     // Benchmark 1: Login endpoint
@@ -127,12 +129,12 @@ async function runAllBenchmarks() {
       url: 'http://localhost:3001/auth/login',
       method: 'POST',
       headers: {
-        'content-type': 'application/x-www-form-urlencoded'
+        'content-type': 'application/x-www-form-urlencoded',
       },
       body: `username=${testUser.username}&password=ValidPass123!`,
       connections: 5,
       duration: 10,
-      pipelining: 1
+      pipelining: 1,
     });
     printResults(loginResult, 'POST /auth/login');
     console.log(`  P95 Latency: ${formatLatency(loginResult.latency.p95, 300)}`);
@@ -146,7 +148,7 @@ async function runAllBenchmarks() {
       connections: 10,
       duration: 10,
       pipelining: 1,
-      cookies: [{ name: 'sessionid', value: 'benchmark-session' }]
+      cookies: [{ name: 'sessionid', value: 'benchmark-session' }],
     });
     printResults(dashboardResult, 'GET /admin/dashboard');
     console.log(`  P95 Latency: ${formatLatency(dashboardResult.latency.p95, 200)}`);

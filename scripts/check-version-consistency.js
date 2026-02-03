@@ -50,7 +50,6 @@ try {
 
   console.log(`✅ Version consistency check passed: ${packageVersion}`);
   process.exit(0);
-
 } catch (error) {
   console.error('❌ Error running version consistency check:');
   console.error(`   ${error.message}`);

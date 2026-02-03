@@ -10,7 +10,7 @@ const { validationResult } = require('express-validator');
 const {
   validateUserCreate,
   validateUserUpdate,
-  validatePasswordReset
+  validatePasswordReset,
 } = require('../../../validators/userValidators');
 const User = require('../../../models/User');
 const Department = require('../../../models/Department');
@@ -41,7 +41,7 @@ describe('User Validators', () => {
       { id: 2, name: 'General Support', active: true, is_system: false },
       { id: 3, name: 'Human Resources', active: true, is_system: false },
       { id: 4, name: 'Finance', active: true, is_system: false },
-      { id: 5, name: 'Facilities', active: true, is_system: false }
+      { id: 5, name: 'Facilities', active: true, is_system: false },
     ]);
   });
 
@@ -56,8 +56,8 @@ describe('User Validators', () => {
           username: 'newuser123',
           email: 'newuser@example.com',
           password: 'ValidPass123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -79,8 +79,8 @@ describe('User Validators', () => {
           username: 'superadmin',
           email: 'super@example.com',
           password: 'SuperPass123!',
-          role: 'super_admin'
-        }
+          role: 'super_admin',
+        },
       });
 
       // Act
@@ -100,8 +100,8 @@ describe('User Validators', () => {
           username: 'ab',
           email: 'test@example.com',
           password: 'ValidPass123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -110,7 +110,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'username')).toBe(true);
+      expect(errors.some((e) => e.path === 'username')).toBe(true);
     });
 
     it('should fail when username exceeds 50 characters', async () => {
@@ -124,8 +124,8 @@ describe('User Validators', () => {
           username: longUsername,
           email: 'test@example.com',
           password: 'ValidPass123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -134,7 +134,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'username')).toBe(true);
+      expect(errors.some((e) => e.path === 'username')).toBe(true);
     });
 
     it('should fail when username contains invalid characters', async () => {
@@ -147,8 +147,8 @@ describe('User Validators', () => {
           username: 'invalid-user!@#',
           email: 'test@example.com',
           password: 'ValidPass123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -157,7 +157,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'username')).toBe(true);
+      expect(errors.some((e) => e.path === 'username')).toBe(true);
     });
 
     it('should accept username with alphanumeric and underscores only', async () => {
@@ -170,8 +170,8 @@ describe('User Validators', () => {
           username: 'valid_User_123',
           email: 'test@example.com',
           password: 'ValidPass123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -191,8 +191,8 @@ describe('User Validators', () => {
           username: 'existinguser',
           email: 'test@example.com',
           password: 'ValidPass123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -201,7 +201,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'username')).toBe(true);
+      expect(errors.some((e) => e.path === 'username')).toBe(true);
       expect(User.findByUsername).toHaveBeenCalledWith('existinguser');
     });
 
@@ -214,8 +214,8 @@ describe('User Validators', () => {
           username: 'validuser',
           email: 'invalid-email',
           password: 'ValidPass123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -224,7 +224,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'email')).toBe(true);
+      expect(errors.some((e) => e.path === 'email')).toBe(true);
     });
 
     it('should fail when email already exists', async () => {
@@ -237,8 +237,8 @@ describe('User Validators', () => {
           username: 'newuser',
           email: 'existing@example.com',
           password: 'ValidPass123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -247,7 +247,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'email')).toBe(true);
+      expect(errors.some((e) => e.path === 'email')).toBe(true);
       expect(User.findByEmail).toHaveBeenCalled();
     });
 
@@ -261,8 +261,8 @@ describe('User Validators', () => {
           username: 'testuser',
           email: 'Test.User+Tag@Example.COM',
           password: 'ValidPass123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -284,8 +284,8 @@ describe('User Validators', () => {
           username: 'testuser',
           email: 'test@example.com',
           password: 'Short1!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -294,7 +294,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'password')).toBe(true);
+      expect(errors.some((e) => e.path === 'password')).toBe(true);
     });
 
     it('should fail when password lacks uppercase letter', async () => {
@@ -307,8 +307,8 @@ describe('User Validators', () => {
           username: 'testuser',
           email: 'test@example.com',
           password: 'lowercase123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -317,7 +317,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'password')).toBe(true);
+      expect(errors.some((e) => e.path === 'password')).toBe(true);
     });
 
     it('should fail when password lacks lowercase letter', async () => {
@@ -330,8 +330,8 @@ describe('User Validators', () => {
           username: 'testuser',
           email: 'test@example.com',
           password: 'UPPERCASE123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -340,7 +340,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'password')).toBe(true);
+      expect(errors.some((e) => e.path === 'password')).toBe(true);
     });
 
     it('should fail when password lacks number', async () => {
@@ -353,8 +353,8 @@ describe('User Validators', () => {
           username: 'testuser',
           email: 'test@example.com',
           password: 'NoNumbers!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -363,7 +363,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'password')).toBe(true);
+      expect(errors.some((e) => e.path === 'password')).toBe(true);
     });
 
     it('should fail when password lacks special character', async () => {
@@ -376,8 +376,8 @@ describe('User Validators', () => {
           username: 'testuser',
           email: 'test@example.com',
           password: 'NoSpecial123',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -386,7 +386,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'password')).toBe(true);
+      expect(errors.some((e) => e.path === 'password')).toBe(true);
     });
 
     it('should fail when role is invalid', async () => {
@@ -399,8 +399,8 @@ describe('User Validators', () => {
           username: 'testuser',
           email: 'test@example.com',
           password: 'ValidPass123!',
-          role: 'invalid_role'
-        }
+          role: 'invalid_role',
+        },
       });
 
       // Act
@@ -409,7 +409,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'role')).toBe(true);
+      expect(errors.some((e) => e.path === 'role')).toBe(true);
     });
 
     it('should trim whitespace from username and email', async () => {
@@ -422,8 +422,8 @@ describe('User Validators', () => {
           username: '  testuser  ',
           email: '  test@example.com  ',
           password: 'ValidPass123!',
-          role: 'admin'
-        }
+          role: 'admin',
+        },
       });
 
       // Act
@@ -448,8 +448,8 @@ describe('User Validators', () => {
             email: 'admin@example.com',
             password: 'ValidPass123!',
             role: 'admin',
-            department: ''
-          }
+            department: '',
+          },
         });
 
         // Act
@@ -470,8 +470,8 @@ describe('User Validators', () => {
             email: 'super@example.com',
             password: 'ValidPass123!',
             role: 'super_admin',
-            department: ''
-          }
+            department: '',
+          },
         });
 
         // Act
@@ -492,8 +492,8 @@ describe('User Validators', () => {
             email: 'dept@example.com',
             password: 'ValidPass123!',
             role: 'department',
-            department: ''
-          }
+            department: '',
+          },
         });
 
         // Act
@@ -502,7 +502,9 @@ describe('User Validators', () => {
         // Assert
         expect(result.isEmpty()).toBe(false);
         const errors = result.array();
-        expect(errors.some(e => e.path === 'department' && e.msg.includes('required'))).toBe(true);
+        expect(errors.some((e) => e.path === 'department' && e.msg.includes('required'))).toBe(
+          true,
+        );
       });
 
       it('should fail validation for department role with whitespace-only department', async () => {
@@ -516,8 +518,8 @@ describe('User Validators', () => {
             email: 'dept@example.com',
             password: 'ValidPass123!',
             role: 'department',
-            department: '   '
-          }
+            department: '   ',
+          },
         });
 
         // Act
@@ -526,7 +528,9 @@ describe('User Validators', () => {
         // Assert
         expect(result.isEmpty()).toBe(false);
         const errors = result.array();
-        expect(errors.some(e => e.path === 'department' && e.msg.includes('required'))).toBe(true);
+        expect(errors.some((e) => e.path === 'department' && e.msg.includes('required'))).toBe(
+          true,
+        );
       });
 
       it('should pass validation for department role with valid department', async () => {
@@ -540,8 +544,8 @@ describe('User Validators', () => {
             email: 'dept@example.com',
             password: 'ValidPass123!',
             role: 'department',
-            department: 'IT Support'
-          }
+            department: 'IT Support',
+          },
         });
 
         // Act
@@ -557,7 +561,7 @@ describe('User Validators', () => {
           'General Support',
           'Human Resources',
           'Finance',
-          'Facilities'
+          'Facilities',
         ];
 
         for (const department of validDepartments) {
@@ -570,8 +574,8 @@ describe('User Validators', () => {
               email: 'dept@example.com',
               password: 'ValidPass123!',
               role: 'department',
-              department
-            }
+              department,
+            },
           });
 
           const result = await runValidators(validateUserCreate, req);
@@ -590,8 +594,8 @@ describe('User Validators', () => {
             email: 'dept@example.com',
             password: 'ValidPass123!',
             role: 'department',
-            department: 'Invalid Department'
-          }
+            department: 'Invalid Department',
+          },
         });
 
         // Act
@@ -600,7 +604,7 @@ describe('User Validators', () => {
         // Assert
         expect(result.isEmpty()).toBe(false);
         const errors = result.array();
-        expect(errors.some(e => e.path === 'department' && e.msg.includes('Invalid'))).toBe(true);
+        expect(errors.some((e) => e.path === 'department' && e.msg.includes('Invalid'))).toBe(true);
       });
 
       it('should fail validation for admin role with department set', async () => {
@@ -614,8 +618,8 @@ describe('User Validators', () => {
             email: 'admin@example.com',
             password: 'ValidPass123!',
             role: 'admin',
-            department: 'IT Support'
-          }
+            department: 'IT Support',
+          },
         });
 
         // Act
@@ -624,7 +628,7 @@ describe('User Validators', () => {
         // Assert
         expect(result.isEmpty()).toBe(false);
         const errors = result.array();
-        expect(errors.some(e => e.path === 'department' && e.msg.includes('only'))).toBe(true);
+        expect(errors.some((e) => e.path === 'department' && e.msg.includes('only'))).toBe(true);
       });
 
       it('should fail validation for super_admin role with department set', async () => {
@@ -638,8 +642,8 @@ describe('User Validators', () => {
             email: 'super@example.com',
             password: 'ValidPass123!',
             role: 'super_admin',
-            department: 'Finance'
-          }
+            department: 'Finance',
+          },
         });
 
         // Act
@@ -648,7 +652,7 @@ describe('User Validators', () => {
         // Assert
         expect(result.isEmpty()).toBe(false);
         const errors = result.array();
-        expect(errors.some(e => e.path === 'department' && e.msg.includes('only'))).toBe(true);
+        expect(errors.some((e) => e.path === 'department' && e.msg.includes('only'))).toBe(true);
       });
     });
   });
@@ -658,7 +662,7 @@ describe('User Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: { username: 'newusername' }
+        body: { username: 'newusername' },
       });
 
       // Act
@@ -672,7 +676,7 @@ describe('User Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '10' },
-        body: { email: 'newemail@example.com' }
+        body: { email: 'newemail@example.com' },
       });
 
       // Act
@@ -686,7 +690,7 @@ describe('User Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '3' },
-        body: { role: 'super_admin' }
+        body: { role: 'super_admin' },
       });
 
       // Act
@@ -700,7 +704,7 @@ describe('User Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '7' },
-        body: { status: 'inactive' }
+        body: { status: 'inactive' },
       });
 
       // Act
@@ -718,8 +722,8 @@ describe('User Validators', () => {
           username: 'updateduser',
           email: 'updated@example.com',
           role: 'admin',
-          status: 'active'
-        }
+          status: 'active',
+        },
       });
 
       // Act
@@ -733,7 +737,7 @@ describe('User Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '12' },
-        body: {}
+        body: {},
       });
 
       // Act
@@ -747,7 +751,7 @@ describe('User Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: 'invalid' },
-        body: { username: 'newusername' }
+        body: { username: 'newusername' },
       });
 
       // Act
@@ -756,14 +760,14 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'id')).toBe(true);
+      expect(errors.some((e) => e.path === 'id')).toBe(true);
     });
 
     it('should fail when username is too short', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: { username: 'ab' }
+        body: { username: 'ab' },
       });
 
       // Act
@@ -772,14 +776,14 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'username')).toBe(true);
+      expect(errors.some((e) => e.path === 'username')).toBe(true);
     });
 
     it('should fail when username contains invalid characters', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: { username: 'invalid@user!' }
+        body: { username: 'invalid@user!' },
       });
 
       // Act
@@ -788,14 +792,14 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'username')).toBe(true);
+      expect(errors.some((e) => e.path === 'username')).toBe(true);
     });
 
     it('should fail when email is invalid', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: { email: 'not-an-email' }
+        body: { email: 'not-an-email' },
       });
 
       // Act
@@ -804,14 +808,14 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'email')).toBe(true);
+      expect(errors.some((e) => e.path === 'email')).toBe(true);
     });
 
     it('should fail when role is invalid', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: { role: 'invalid_role' }
+        body: { role: 'invalid_role' },
       });
 
       // Act
@@ -820,14 +824,14 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'role')).toBe(true);
+      expect(errors.some((e) => e.path === 'role')).toBe(true);
     });
 
     it('should fail when status is invalid', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: { status: 'invalid_status' }
+        body: { status: 'invalid_status' },
       });
 
       // Act
@@ -836,14 +840,14 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'status')).toBe(true);
+      expect(errors.some((e) => e.path === 'status')).toBe(true);
     });
 
     it('should accept both valid status values (active and inactive)', async () => {
       // Test active
       let req = createMockRequest({
         params: { id: '5' },
-        body: { status: 'active' }
+        body: { status: 'active' },
       });
       let result = await runValidators(validateUserUpdate, req);
       expect(result.isEmpty()).toBe(true);
@@ -851,7 +855,7 @@ describe('User Validators', () => {
       // Test inactive
       req = createMockRequest({
         params: { id: '6' },
-        body: { status: 'inactive' }
+        body: { status: 'inactive' },
       });
       result = await runValidators(validateUserUpdate, req);
       expect(result.isEmpty()).toBe(true);
@@ -861,7 +865,7 @@ describe('User Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: { email: 'Test.Email@Example.COM' }
+        body: { email: 'Test.Email@Example.COM' },
       });
 
       // Act
@@ -878,7 +882,7 @@ describe('User Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: { password: 'NewValidPass123!' }
+        body: { password: 'NewValidPass123!' },
       });
 
       // Act
@@ -892,7 +896,7 @@ describe('User Validators', () => {
       // Arrange
       const req = createMockRequest({
         params: { id: 'notanumber' },
-        body: { password: 'NewValidPass123!' }
+        body: { password: 'NewValidPass123!' },
       });
 
       // Act
@@ -901,14 +905,14 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'id')).toBe(true);
+      expect(errors.some((e) => e.path === 'id')).toBe(true);
     });
 
     it('should fail when password is too short', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: { password: 'Short1!' }
+        body: { password: 'Short1!' },
       });
 
       // Act
@@ -917,14 +921,14 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'password')).toBe(true);
+      expect(errors.some((e) => e.path === 'password')).toBe(true);
     });
 
     it('should fail when password lacks complexity requirements', async () => {
       // Arrange
       const req = createMockRequest({
         params: { id: '5' },
-        body: { password: 'nocomplexity' }
+        body: { password: 'nocomplexity' },
       });
 
       // Act
@@ -933,7 +937,7 @@ describe('User Validators', () => {
       // Assert
       expect(result.isEmpty()).toBe(false);
       const errors = result.array();
-      expect(errors.some(e => e.path === 'password')).toBe(true);
+      expect(errors.some((e) => e.path === 'password')).toBe(true);
     });
 
     it('should accept strong passwords with all requirements', async () => {
@@ -941,13 +945,13 @@ describe('User Validators', () => {
         'StrongPass123!',
         'Complex@Password1',
         'Secure#123Pass',
-        'Valid$Password9'
+        'Valid$Password9',
       ];
 
       for (const password of strongPasswords) {
         const req = createMockRequest({
           params: { id: '5' },
-          body: { password }
+          body: { password },
         });
         const result = await runValidators(validatePasswordReset, req);
         expect(result.isEmpty()).toBe(true);
