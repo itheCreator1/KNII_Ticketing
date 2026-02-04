@@ -12,9 +12,8 @@ RUN apt-get update && \
 # Create app directory
 WORKDIR /usr/src/app
 
-# Configure npm to use HTTP registry (TLS issues in this environment)
-RUN npm config set registry http://registry.npmjs.org/ && \
-    npm config set strict-ssl false
+# Use secure HTTPS registry (SSL verification enabled by default)
+RUN npm config set registry https://registry.npmjs.org/
 
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
