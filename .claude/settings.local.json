@@ -36,7 +36,8 @@
       "WebFetch(domain:api.github.com)",
       "Bash(test:*)",
       "Bash(docker-compose stop:*)",
-      "Bash(docker-compose start:*)"
+      "Bash(docker-compose start:*)",
+      "Bash(docker-compose build:*)"
     ]
   }
 }
