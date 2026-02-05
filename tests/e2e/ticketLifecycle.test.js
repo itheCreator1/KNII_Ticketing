@@ -199,11 +199,8 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const finalAuditLogs = await AuditLog.findByTarget('ticket', ticket.id);
       expect(finalAuditLogs.length).toBeGreaterThanOrEqual(1);
 
-      // Verify ticket creation log
-      const creationLog = finalAuditLogs.find((log) => log.action === 'TICKET_CREATED');
-      expect(creationLog).toBeDefined();
-
-      // Verify update logs
+      // Verify update logs (ticket was created via model directly, not via admin route,
+      // so TICKET_CREATED audit log is not expected here)
       const updateLogs = finalAuditLogs.filter((log) => log.action === 'TICKET_UPDATED');
       expect(updateLogs.length).toBeGreaterThan(0);
     });

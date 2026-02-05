@@ -111,7 +111,7 @@ class TicketService {
           action: 'TICKET_UPDATED',
           targetType: 'ticket',
           targetId: parseInt(id),
-          details: { changes: allowedUpdates },
+          details: allowedUpdates,
           ipAddress,
         });
       }
