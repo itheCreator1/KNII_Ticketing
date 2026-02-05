@@ -278,9 +278,9 @@ describe('Admin Routes Integration Tests', () => {
         .set('Cookie', deptCookies)
         .send({ status: 'in_progress' });
 
-      // Assert - Department user should be denied access
+      // Assert - Department user should be denied access (requireAdmin redirects to dashboard)
       expect(response.status).toBe(302);
-      expect(response.headers.location).toBe('/auth/login');
+      expect(response.headers.location).toBe('/admin/dashboard');
     });
 
     it('should update ticket status', async () => {
