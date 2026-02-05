@@ -17,7 +17,7 @@ class UserService {
     return User.findAllActive();
   }
 
-  async createUser(userData) {
+  async createUser(userData, actorId = null, ipAddress = null) {
     const startTime = Date.now();
     const { username, email, role, department } = userData;
 
@@ -49,6 +49,19 @@ class UserService {
       }
 
       const user = await User.create(userData);
+
+      // Audit log
+      if (actorId) {
+        await AuditLog.create({
+          actorId,
+          action: 'USER_CREATED',
+          targetType: 'user',
+          targetId: user.id,
+          details: { username: user.username, email: user.email, role: user.role },
+          ipAddress,
+        });
+      }
+
       const duration = Date.now() - startTime;
       logger.info('userService.createUser: User created successfully', {
         userId: user.id,

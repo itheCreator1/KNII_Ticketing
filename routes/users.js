@@ -57,13 +57,17 @@ router.post(
       // Convert empty string to null for database constraint
       const cleanDepartment = department && department.trim() !== '' ? department : null;
 
-      await userService.createUser({
-        username,
-        email,
-        password,
-        role,
-        department: cleanDepartment,
-      });
+      await userService.createUser(
+        {
+          username,
+          email,
+          password,
+          role,
+          department: cleanDepartment,
+        },
+        req.session.user.id,
+        req.ip,
+      );
 
       return successRedirect(req, res, 'User created successfully', '/admin/users');
     } catch (error) {
