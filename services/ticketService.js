@@ -1,5 +1,6 @@
 const Ticket = require('../models/Ticket');
 const User = require('../models/User');
+const AuditLog = require('../models/AuditLog');
 const logger = require('../utils/logger');
 
 class TicketService {
@@ -51,7 +52,7 @@ class TicketService {
     return Ticket.findAll(cleanFilters);
   }
 
-  async updateTicket(id, updates) {
+  async updateTicket(id, updates, actorId = null, ipAddress = null) {
     const startTime = Date.now();
     const changedFields = Object.keys(updates).filter((key) => updates[key] !== undefined);
 
@@ -102,6 +103,19 @@ class TicketService {
       }
 
       const updatedTicket = await Ticket.update(id, allowedUpdates);
+
+      // Audit log
+      if (actorId) {
+        await AuditLog.create({
+          actorId,
+          action: 'TICKET_UPDATED',
+          targetType: 'ticket',
+          targetId: parseInt(id),
+          details: { changes: allowedUpdates },
+          ipAddress,
+        });
+      }
+
       const duration = Date.now() - startTime;
 
       logger.info('ticketService.updateTicket: Ticket updated successfully', {

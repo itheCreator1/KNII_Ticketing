@@ -96,7 +96,7 @@ router.post(
   validateRequest,
   async (req, res, next) => {
     try {
-      await ticketService.updateTicket(req.params.id, req.body);
+      await ticketService.updateTicket(req.params.id, req.body, req.session.user.id, req.ip);
       successRedirect(req, res, TICKET_MESSAGES.UPDATED, `/admin/tickets/${req.params.id}`);
     } catch (error) {
       next(error);
@@ -114,7 +114,7 @@ router.post(
   validateRequest,
   async (req, res, next) => {
     try {
-      await ticketService.updateTicket(req.params.id, { status: req.body.status });
+      await ticketService.updateTicket(req.params.id, { status: req.body.status }, req.session.user.id, req.ip);
       successRedirect(req, res, 'Status updated successfully', `/admin/tickets/${req.params.id}`);
     } catch (error) {
       logger.error('Status update error', { ticketId: req.params.id, error: error.message });
@@ -133,7 +133,7 @@ router.post(
   validateRequest,
   async (req, res, next) => {
     try {
-      await ticketService.updateTicket(req.params.id, { priority: req.body.priority });
+      await ticketService.updateTicket(req.params.id, { priority: req.body.priority }, req.session.user.id, req.ip);
       successRedirect(req, res, 'Priority updated successfully', `/admin/tickets/${req.params.id}`);
     } catch (error) {
       logger.error('Priority update error', { ticketId: req.params.id, error: error.message });
@@ -174,7 +174,7 @@ router.post(
         ticket.status !== 'closed' &&
         ticket.reporter_id !== null
       ) {
-        await ticketService.updateTicket(ticketId, { status: 'waiting_on_department' });
+        await ticketService.updateTicket(ticketId, { status: 'waiting_on_department' }, req.session.user.id, req.ip);
         logger.info('Admin comment triggered status update', {
           ticketId,
           oldStatus: ticket.status,
