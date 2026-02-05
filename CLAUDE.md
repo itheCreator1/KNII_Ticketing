@@ -111,25 +111,33 @@ tests/
 ```
 
 ### Running Tests
+
+**IMPORTANT**: All tests MUST be run inside the Docker container. Integration and E2E tests share a PostgreSQL database and require `--runInBand` (sequential execution) to prevent cross-suite contamination. Running tests in parallel causes ~130 phantom failures from concurrent database cleanup. All `npm test` scripts already include `--runInBand`.
+
 ```bash
-# Run all tests (unit, integration, E2E)
-npm test
+# Run all tests inside Docker container (unit, integration, E2E)
+docker-compose exec web npm test
 
 # Run unit tests only
-npm run test:unit
+docker-compose exec web npm run test:unit
 
 # Run integration tests (database, routes, middleware)
-npm run test:integration
+docker-compose exec web npm run test:integration
 
 # Run with coverage
-npm run test:coverage
+docker-compose exec web npm run test:coverage
 
 # View coverage in HTML browser
-npm run test:coverage:html
+docker-compose exec web npm run test:coverage:html
 
 # Watch mode for development
-npm run test:watch
+docker-compose exec web npm run test:watch
+
+# Run a specific test file
+docker-compose exec web npx jest tests/unit/models/User.test.js --no-coverage
 ```
+
+**Why Docker-only**: Tests depend on the PostgreSQL database running in the `db` container. The `web` container has the correct `DATABASE_URL`, Node.js version, and environment variables configured. Running tests outside the container will fail due to missing database connectivity.
 
 ### Test Patterns Used
 - **AAA Pattern**: Arrange-Act-Assert in all tests
@@ -1066,9 +1074,14 @@ docker-compose exec db psql -U ticketing_user -d ticketing_db
 
 # Check if tables exist
 docker-compose exec db psql -U ticketing_user -d ticketing_db -c "\dt"
+
+# Run test suite (MUST be inside container)
+docker-compose exec web npm test
 ```
 
 **Default admin credentials**: admin / admin123
+
+**IMPORTANT**: Always run tests inside the Docker container (`docker-compose exec web npm test`). Never run `npm test` or `npx jest` directly on the host machine - tests require the PostgreSQL database running in the `db` container.
 
 ---
 
