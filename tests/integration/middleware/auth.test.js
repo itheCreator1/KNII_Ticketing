@@ -42,7 +42,7 @@ describe('Auth Middleware Integration Tests', () => {
 
       // Assert
       expect(response.status).toBe(200);
-      expect(response.text).toContain('Admin Dashboard');
+      expect(response.text).toContain('Ticket Dashboard');
     });
 
     it('should redirect to login when no session exists', async () => {

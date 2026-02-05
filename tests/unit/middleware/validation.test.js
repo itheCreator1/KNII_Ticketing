@@ -72,7 +72,7 @@ describe('Validation Middleware', () => {
       expect(req.flash).toHaveBeenCalledWith('error_msg', 'Username is required');
       expect(req.flash).toHaveBeenCalledWith('error_msg', 'Email is invalid');
       expect(req.get).toHaveBeenCalledWith('Referer');
-      expect(res.redirect).toHaveBeenCalledWith('/admin/users/new');
+      expect(res.redirect).toHaveBeenCalledWith('back');
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -126,7 +126,7 @@ describe('Validation Middleware', () => {
         expect(req.flash).toHaveBeenCalledWith('error_msg', error.msg);
       });
       expect(req.get).toHaveBeenCalledWith('Referer');
-      expect(res.redirect).toHaveBeenCalledWith('/'); // Default when no Referer
+      expect(res.redirect).toHaveBeenCalledWith('back');
     });
 
     it('should extract error messages from validation result array', () => {

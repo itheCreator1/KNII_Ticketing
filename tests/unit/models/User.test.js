@@ -207,6 +207,7 @@ describe('User Model', () => {
         hashedPassword,
         'admin',
         null,
+        'active',
       ]);
       expect(result).toEqual(mockCreatedUser);
     });
@@ -279,6 +280,7 @@ describe('User Model', () => {
         hashedPassword,
         'department',
         'IT Support',
+        'active',
       ]);
       expect(result.department).toBe('IT Support');
     });

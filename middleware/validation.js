@@ -9,7 +9,7 @@ function validateRequest(req, res, next) {
       path: req.path,
       method: req.method,
       errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
-      body: Object.keys(req.body),
+      body: req.body ? Object.keys(req.body) : [],
     });
 
     if (req.accepts('html')) {

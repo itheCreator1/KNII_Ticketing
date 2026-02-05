@@ -63,7 +63,7 @@ describe('Admin Routes Integration Tests', () => {
 
       // Assert
       expect(response.status).toBe(200);
-      expect(response.text).toContain('Admin Dashboard');
+      expect(response.text).toContain('Ticket Dashboard');
       expect(response.text).toContain('Test Ticket 1');
       expect(response.text).toContain('Test Ticket 2');
     });
@@ -145,7 +145,7 @@ describe('Admin Routes Integration Tests', () => {
 
       // Assert
       expect(response.status).toBe(200);
-      expect(response.text).toContain('Admin Dashboard');
+      expect(response.text).toContain('Ticket Dashboard');
     });
   });
 
@@ -174,7 +174,7 @@ describe('Admin Routes Integration Tests', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(response.text).toContain('Test Ticket Detail');
-      expect(response.text).toContain(`Ticket #${ticket.id}`);
+      expect(response.text).toContain(`ID #${ticket.id}`);
     });
 
     it('should display comments for the ticket', async () => {
@@ -259,21 +259,28 @@ describe('Admin Routes Integration Tests', () => {
     });
 
     it('should require admin role', async () => {
-      // Arrange - Create regular user (not admin)
-      const regularUserData = createUserData({ role: 'user', status: 'active' });
-      await User.create(regularUserData);
+      // Arrange - Create department user (not admin)
+      const deptUserData = createUserData({ role: 'department', status: 'active', department: 'IT Support' });
+      const deptUser = await User.create(deptUserData);
+
+      // Login as department user to get their cookies
+      const deptLoginResponse = await request(app).post('/auth/login').send({
+        username: deptUserData.username,
+        password: deptUserData.password,
+      });
+      const deptCookies = deptLoginResponse.headers['set-cookie'];
 
       const ticket = await Ticket.create(createTicketData());
 
-      // Act - Use admin cookies (which has admin role, so this should succeed)
+      // Act - Try to access admin route with department user cookies (should be denied)
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
-        .set('Cookie', adminCookies)
+        .set('Cookie', deptCookies)
         .send({ status: 'in_progress' });
 
-      // Assert
+      // Assert - Department user should be denied access
       expect(response.status).toBe(302);
-      expect(response.headers.location).toBe(`/admin/tickets/${ticket.id}`);
+      expect(response.headers.location).toBe('/auth/login');
     });
 
     it('should update ticket status', async () => {

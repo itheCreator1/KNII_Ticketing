@@ -66,7 +66,7 @@ router.post('/', validateFloorCreate, validateRequest, async (req, res, next) =>
     successRedirect(req, res, 'Floor created successfully', '/admin/floors');
   } catch (error) {
     logger.error('Error creating floor', { error: error.message, stack: error.stack });
-    next(error);
+    return errorRedirect(req, res, error.message, '/admin/floors');
   }
 });
 
@@ -93,7 +93,7 @@ router.get('/:id/edit', validateFloorId, validateRequest, async (req, res, next)
     });
   } catch (error) {
     logger.error('Error loading floor', { error: error.message, stack: error.stack });
-    next(error);
+    return errorRedirect(req, res, error.message, '/admin/floors');
   }
 });
 
@@ -119,7 +119,7 @@ router.post('/:id', validateFloorUpdate, validateRequest, async (req, res, next)
     successRedirect(req, res, 'Floor updated successfully', '/admin/floors');
   } catch (error) {
     logger.error('Error updating floor', { error: error.message, stack: error.stack });
-    next(error);
+    return errorRedirect(req, res, error.message, 'back');
   }
 });
 
@@ -158,7 +158,7 @@ router.post('/:id/deactivate', validateFloorId, validateRequest, async (req, res
     successRedirect(req, res, 'Floor deactivated successfully', '/admin/floors');
   } catch (error) {
     logger.error('Error deactivating floor', { error: error.message, stack: error.stack });
-    next(error);
+    return errorRedirect(req, res, error.message, '/admin/floors');
   }
 });
 
@@ -179,7 +179,7 @@ router.post('/:id/reactivate', validateFloorId, validateRequest, async (req, res
     successRedirect(req, res, 'Floor reactivated successfully', '/admin/floors');
   } catch (error) {
     logger.error('Error reactivating floor', { error: error.message, stack: error.stack });
-    next(error);
+    return errorRedirect(req, res, error.message, '/admin/floors');
   }
 });
 

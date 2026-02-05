@@ -91,7 +91,7 @@ describe('User Management Routes Integration Tests', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(response.text).toContain('admin');
-      expect(response.text).toContain('active');
+      expect(response.text).toContain('Active');
     });
 
     it('should require authentication', async () => {

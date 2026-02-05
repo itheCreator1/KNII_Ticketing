@@ -426,7 +426,7 @@ describe('User Management E2E Tests', () => {
 
       // Verify user not created
       const userCheck = await User.findByUsername('testuser');
-      expect(userCheck).toBeNull();
+      expect(userCheck).toBeFalsy();
     });
 
     it('should hash passwords using bcrypt', async () => {

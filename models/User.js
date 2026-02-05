@@ -8,7 +8,7 @@ class User {
     try {
       logger.debug('User.findById: Starting query', { userId: id });
       const result = await pool.query(
-        'SELECT id, username, email, role, status, department, created_at FROM users WHERE id = $1',
+        'SELECT id, username, email, role, status, department, login_attempts, last_login_at, deleted_at, created_at, updated_at FROM users WHERE id = $1',
         [id],
       );
       const duration = Date.now() - startTime;
@@ -39,7 +39,7 @@ class User {
     try {
       logger.debug('User.findByUsername: Starting query', { username });
       const result = await pool.query(
-        'SELECT id, username, email, role, status, department, login_attempts, created_at, updated_at FROM users WHERE username = $1',
+        'SELECT id, username, email, role, status, department, login_attempts, last_login_at, deleted_at, created_at, updated_at FROM users WHERE username = $1',
         [username],
       );
       const duration = Date.now() - startTime;
@@ -100,7 +100,7 @@ class User {
     try {
       logger.debug('User.findByEmail: Starting query', { email });
       const result = await pool.query(
-        'SELECT id, username, email, role, department FROM users WHERE email = $1',
+        'SELECT id, username, email, role, status, department, login_attempts, last_login_at, deleted_at, created_at, updated_at FROM users WHERE email = $1',
         [email],
       );
       const duration = Date.now() - startTime;
@@ -127,17 +127,23 @@ class User {
   }
 
   static async create(
-    { username, email, password, role = 'admin', department = null },
+    { username, email, password, role = 'admin', department = null, status = 'active' },
     client = null,
   ) {
     const db = client || pool;
     const startTime = Date.now();
     try {
-      logger.debug('User.create: Starting user creation', { username, email, role, department });
+      logger.debug('User.create: Starting user creation', {
+        username,
+        email,
+        role,
+        department,
+        status,
+      });
       const password_hash = await bcrypt.hash(password, 10);
       const result = await db.query(
-        'INSERT INTO users (username, email, password_hash, role, department) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role, department',
-        [username, email, password_hash, role, department],
+        'INSERT INTO users (username, email, password_hash, role, department, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, email, role, department, status',
+        [username, email, password_hash, role, department, status],
       );
       const duration = Date.now() - startTime;
 
@@ -171,7 +177,7 @@ class User {
     try {
       logger.debug('User.findAll: Starting query');
       const result = await pool.query(
-        'SELECT id, username, email, role, status, department, created_at FROM users ORDER BY created_at DESC',
+        'SELECT id, username, email, role, status, department, login_attempts, last_login_at, deleted_at, created_at, updated_at FROM users ORDER BY created_at DESC',
       );
       const duration = Date.now() - startTime;
 
@@ -195,14 +201,14 @@ class User {
   }
 
   // Update user fields (excluding password)
-  static async update(id, { username, email, role, status, department }, client = null) {
+  static async update(id, { username, email, role, status, department, login_attempts }, client = null) {
     const db = client || pool;
     const startTime = Date.now();
     const fields = [];
     const values = [];
     let paramCount = 1;
 
-    const updates = { username, email, role, status, department };
+    const updates = { username, email, role, status, department, login_attempts };
     const changedFields = Object.keys(updates).filter((key) => updates[key] !== undefined);
 
     try {
@@ -231,6 +237,10 @@ class User {
         fields.push(`department = $${paramCount++}`);
         values.push(department);
       }
+      if (login_attempts !== undefined) {
+        fields.push(`login_attempts = $${paramCount++}`);
+        values.push(login_attempts);
+      }
 
       fields.push('updated_at = CURRENT_TIMESTAMP');
       values.push(id);
@@ -239,7 +249,7 @@ class User {
         UPDATE users
         SET ${fields.join(', ')}
         WHERE id = $${paramCount}
-        RETURNING id, username, email, role, status, department, created_at, updated_at
+        RETURNING id, username, email, role, status, department, login_attempts, last_login_at, deleted_at, created_at, updated_at
       `;
 
       const result = await db.query(query, values);
@@ -496,7 +506,7 @@ class User {
       `UPDATE users
        SET department = $1, updated_at = NOW()
        WHERE id = $2 AND role = 'department'
-       RETURNING id, username, email, role, status, department`,
+       RETURNING id, username, email, role, status, department, login_attempts, last_login_at, deleted_at, created_at, updated_at`,
       [department, userId],
     );
     return result.rows[0];
