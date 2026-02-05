@@ -46,7 +46,7 @@ describe('User Model', () => {
       // Assert
       expect(result).toEqual(mockUser);
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT id, username, email, role, status, department, created_at'),
+        expect.stringContaining('SELECT id, username, email, role, status, department, login_attempts, last_login_at, deleted_at, created_at, updated_at'),
         [1],
       );
       expect(pool.query).toHaveBeenCalledWith(
