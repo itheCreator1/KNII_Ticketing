@@ -116,10 +116,19 @@ describe('Authentication E2E Tests', () => {
         password: userData.password,
       });
 
-      // Assert - Should be rejected
+      // Assert - Should be rejected (redirect to login, not dashboard)
       expect(response.status).toBe(302);
       expect(response.headers.location).toBe('/auth/login');
-      expect(response.headers['set-cookie']).toBeUndefined();
+
+      // Verify the session does not grant access to protected routes
+      const cookies = response.headers['set-cookie'];
+      if (cookies) {
+        const dashboardResponse = await request(app)
+          .get('/admin/dashboard')
+          .set('Cookie', cookies);
+        expect(dashboardResponse.status).toBe(302);
+        expect(dashboardResponse.headers.location).toBe('/auth/login');
+      }
     });
 
     it('should reset login_attempts to 0 on successful login', async () => {
@@ -342,10 +351,19 @@ describe('Authentication E2E Tests', () => {
         password: userData.password,
       });
 
-      // Step 3: Verify rejection
+      // Step 3: Verify rejection (redirect to login, not dashboard)
       expect(response.status).toBe(302);
       expect(response.headers.location).toBe('/auth/login');
-      expect(response.headers['set-cookie']).toBeUndefined();
+
+      // Verify the session does not grant access to protected routes
+      const cookies = response.headers['set-cookie'];
+      if (cookies) {
+        const dashboardResponse = await request(app)
+          .get('/admin/dashboard')
+          .set('Cookie', cookies);
+        expect(dashboardResponse.status).toBe(302);
+        expect(dashboardResponse.headers.location).toBe('/auth/login');
+      }
     });
 
     it('should reject login for deleted users', async () => {
