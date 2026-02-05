@@ -633,7 +633,7 @@ describe('UserService', () => {
 
     it('should prevent deleting last super_admin', async () => {
       // Arrange
-      const mockSuperAdmin = { id: 1, username: 'lastadmin', role: 'super_admin' };
+      const mockSuperAdmin = { id: 1, username: 'lastadmin', role: 'super_admin', status: 'active' };
 
       User.findById.mockResolvedValue(mockSuperAdmin);
       User.countActiveSuperAdmins.mockResolvedValue(1);
@@ -652,6 +652,7 @@ describe('UserService', () => {
         username: 'admin1',
         email: 'admin1@test.com',
         role: 'super_admin',
+        status: 'active',
       };
 
       User.findById.mockResolvedValue(mockSuperAdmin);

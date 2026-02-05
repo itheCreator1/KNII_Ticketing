@@ -281,8 +281,8 @@ class UserService {
         throw new Error('Cannot delete yourself');
       }
 
-      // Prevent deleting last super_admin
-      if (target.role === 'super_admin') {
+      // Prevent deleting last active super_admin
+      if (target.role === 'super_admin' && target.status === 'active') {
         const superAdminCount = await User.countActiveSuperAdmins();
         if (superAdminCount <= 1) {
           logger.warn('userService.deleteUser: Cannot delete last super admin', {
