@@ -13,6 +13,10 @@ const request = require('supertest');
 const app = require('../../../app');
 const { setupIntegrationTest, teardownIntegrationTest } = require('../../helpers/database');
 const { createUserData } = require('../../helpers/factories');
+const {
+  fetchCsrfToken,
+  authenticateUser,
+} = require('../../helpers/csrf');
 const User = require('../../../models/User');
 const AuditLog = require('../../../models/AuditLog');
 
@@ -42,13 +46,10 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies } = await authenticateUser(app, {
         username: userData.username,
         password: userData.password,
-        _csrf: 'test-token', // CSRF will be validated in production
       });
-
-      const cookies = loginResponse.headers['set-cookie'];
 
       // Act - Try to access login page while authenticated
       const response = await request(app).get('/auth/login').set('Cookie', cookies);
@@ -65,11 +66,17 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act
-      const response = await request(app).post('/auth/login').send({
-        username: userData.username,
-        password: userData.password,
-      });
+      const response = await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: userData.username,
+          password: userData.password,
+          _csrf: csrfToken,
+        });
 
       // Assert
       expect(response.status).toBe(302);
@@ -82,16 +89,22 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act
-      const response = await request(app).post('/auth/login').send({
-        username: userData.username,
-        password: userData.password,
-      });
+      const response = await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: userData.username,
+          password: userData.password,
+          _csrf: csrfToken,
+        });
 
       // Assert
-      const cookies = response.headers['set-cookie'];
-      expect(cookies).toBeDefined();
-      expect(cookies.some((cookie) => cookie.includes('connect.sid'))).toBe(true);
+      const responseCookies = response.headers['set-cookie'];
+      expect(responseCookies).toBeDefined();
+      expect(responseCookies.some((cookie) => cookie.includes('connect.sid'))).toBe(true);
     });
 
     it('should reset login_attempts to 0 on successful login', async () => {
@@ -107,11 +120,17 @@ describe('Auth Routes Integration Tests', () => {
       const userBefore = await User.findByUsernameWithPassword(userData.username);
       expect(userBefore.login_attempts).toBe(2);
 
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act - Successful login
-      await request(app).post('/auth/login').send({
-        username: userData.username,
-        password: userData.password,
-      });
+      await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: userData.username,
+          password: userData.password,
+          _csrf: csrfToken,
+        });
 
       // Assert - login_attempts should be reset
       const userAfter = await User.findByUsernameWithPassword(userData.username);
@@ -124,11 +143,17 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act - Failed login with wrong password
-      await request(app).post('/auth/login').send({
-        username: userData.username,
-        password: 'WrongPassword123!',
-      });
+      await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: userData.username,
+          password: 'WrongPassword123!',
+          _csrf: csrfToken,
+        });
 
       // Assert
       const userAfter = await User.findByUsernameWithPassword(userData.username);
@@ -140,12 +165,18 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      // Act - Attempt 5 failed logins
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
+      // Act - Attempt 5 failed logins (reuse same CSRF token within session)
       for (let i = 0; i < 5; i++) {
-        await request(app).post('/auth/login').send({
-          username: userData.username,
-          password: 'WrongPassword123!',
-        });
+        await request(app)
+          .post('/auth/login')
+          .set('Cookie', cookies)
+          .send({
+            username: userData.username,
+            password: 'WrongPassword123!',
+            _csrf: csrfToken,
+          });
       }
 
       // Assert
@@ -163,11 +194,17 @@ describe('Auth Routes Integration Tests', () => {
         await User.incrementLoginAttempts(userData.username);
       }
 
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act - Try to login with correct password
-      const response = await request(app).post('/auth/login').send({
-        username: userData.username,
-        password: userData.password,
-      });
+      const response = await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: userData.username,
+          password: userData.password,
+          _csrf: csrfToken,
+        });
 
       // Assert
       expect(response.status).toBe(302);
@@ -180,11 +217,17 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'inactive' });
       const user = await User.create(userData);
 
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act
-      const response = await request(app).post('/auth/login').send({
-        username: userData.username,
-        password: userData.password,
-      });
+      const response = await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: userData.username,
+          password: userData.password,
+          _csrf: csrfToken,
+        });
 
       // Assert
       expect(response.status).toBe(302);
@@ -196,11 +239,17 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'deleted' });
       const user = await User.create(userData);
 
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act
-      const response = await request(app).post('/auth/login').send({
-        username: userData.username,
-        password: userData.password,
-      });
+      const response = await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: userData.username,
+          password: userData.password,
+          _csrf: csrfToken,
+        });
 
       // Assert
       expect(response.status).toBe(302);
@@ -212,11 +261,17 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act
-      await request(app).post('/auth/login').send({
-        username: userData.username,
-        password: userData.password,
-      });
+      await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: userData.username,
+          password: userData.password,
+          _csrf: csrfToken,
+        });
 
       // Assert
       const auditLogs = await AuditLog.findByActor(user.id);
@@ -231,11 +286,17 @@ describe('Auth Routes Integration Tests', () => {
     });
 
     it('should handle non-existent username gracefully', async () => {
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act
-      const response = await request(app).post('/auth/login').send({
-        username: 'nonexistentuser',
-        password: 'SomePassword123!',
-      });
+      const response = await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: 'nonexistentuser',
+          password: 'SomePassword123!',
+          _csrf: csrfToken,
+        });
 
       // Assert
       expect(response.status).toBe(302);
@@ -243,11 +304,17 @@ describe('Auth Routes Integration Tests', () => {
     });
 
     it('should validate required fields', async () => {
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act
-      const response = await request(app).post('/auth/login').send({
-        username: '',
-        password: '',
-      });
+      const response = await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: '',
+          password: '',
+          _csrf: csrfToken,
+        });
 
       // Assert
       expect(response.status).toBe(302);
@@ -259,20 +326,30 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       await User.create(userData);
 
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act - Measure time for existing user
       const start1 = Date.now();
-      await request(app).post('/auth/login').send({
-        username: userData.username,
-        password: 'WrongPassword123!',
-      });
+      await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: userData.username,
+          password: 'WrongPassword123!',
+          _csrf: csrfToken,
+        });
       const duration1 = Date.now() - start1;
 
-      // Act - Measure time for non-existent user
+      // Act - Measure time for non-existent user (reuse same session/token)
       const start2 = Date.now();
-      await request(app).post('/auth/login').send({
-        username: 'nonexistentuser12345',
-        password: 'WrongPassword123!',
-      });
+      await request(app)
+        .post('/auth/login')
+        .set('Cookie', cookies)
+        .send({
+          username: 'nonexistentuser12345',
+          password: 'WrongPassword123!',
+          _csrf: csrfToken,
+        });
       const duration2 = Date.now() - start2;
 
       // Assert - Times should be similar (within 200ms threshold)
@@ -288,15 +365,16 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies, csrfToken } = await authenticateUser(app, {
         username: userData.username,
         password: userData.password,
       });
 
-      const cookies = loginResponse.headers['set-cookie'];
-
       // Act - Logout
-      const response = await request(app).post('/auth/logout').set('Cookie', cookies);
+      const response = await request(app)
+        .post('/auth/logout')
+        .set('Cookie', cookies)
+        .send({ _csrf: csrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -308,15 +386,16 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies, csrfToken } = await authenticateUser(app, {
         username: userData.username,
         password: userData.password,
       });
 
-      const cookies = loginResponse.headers['set-cookie'];
-
       // Act
-      const response = await request(app).post('/auth/logout').set('Cookie', cookies);
+      const response = await request(app)
+        .post('/auth/logout')
+        .set('Cookie', cookies)
+        .send({ _csrf: csrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -328,15 +407,16 @@ describe('Auth Routes Integration Tests', () => {
       const userData = createUserData({ role: 'admin', status: 'active' });
       const user = await User.create(userData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies, csrfToken } = await authenticateUser(app, {
         username: userData.username,
         password: userData.password,
       });
 
-      const cookies = loginResponse.headers['set-cookie'];
-
       // Act
-      const response = await request(app).post('/auth/logout').set('Cookie', cookies);
+      const response = await request(app)
+        .post('/auth/logout')
+        .set('Cookie', cookies)
+        .send({ _csrf: csrfToken });
 
       // Assert - Session cookie should be cleared
       const setCookieHeader = response.headers['set-cookie'];
@@ -349,8 +429,13 @@ describe('Auth Routes Integration Tests', () => {
     });
 
     it('should handle logout when not logged in gracefully', async () => {
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act
-      const response = await request(app).post('/auth/logout');
+      const response = await request(app)
+        .post('/auth/logout')
+        .set('Cookie', cookies)
+        .send({ _csrf: csrfToken });
 
       // Assert - Should still redirect (session.destroy handles null session)
       expect(response.status).toBe(302);

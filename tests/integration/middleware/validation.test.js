@@ -14,6 +14,7 @@ const request = require('supertest');
 const app = require('../../../app');
 const { setupIntegrationTest, teardownIntegrationTest } = require('../../helpers/database');
 const { createUserData, createTicketData } = require('../../helpers/factories');
+const { fetchCsrfToken, authenticateUser } = require('../../helpers/csrf');
 const User = require('../../../models/User');
 const Ticket = require('../../../models/Ticket');
 
@@ -51,44 +52,32 @@ describe('Validation Middleware Integration Tests', () => {
       expect([200, 204, 404]).toContain(response.status);
     });
 
-    it.skip('should generate CSRF token in GET response', async () => {
-      // CSRF is intentionally disabled in test environment (NODE_ENV=test)
-      // See app.js lines 33-58 and CLAUDE.md documentation
+    it('should generate CSRF token in GET response', async () => {
       // Act
-      const response = await request(app).get('/');
+      const response = await request(app).get('/auth/login');
 
-      // Assert - Check for CSRF token in page or cookies
+      // Assert - Check for CSRF token in page
       expect(response.status).toBe(200);
-      // CSRF token should be available in res.locals.csrfToken
+      // CSRF token should be available in res.locals.csrfToken and rendered in forms
       expect(response.text).toContain('_csrf');
     });
 
-    it.skip('should set CSRF cookie on first request', async () => {
-      // CSRF is intentionally disabled in test environment (NODE_ENV=test)
-      // See app.js lines 33-58 and CLAUDE.md documentation
+    it('should set CSRF cookie on first request', async () => {
       // Act
-      const response = await request(app).get('/');
+      const response = await request(app).get('/auth/login');
 
       // Assert
       const cookies = response.headers['set-cookie'];
       expect(cookies).toBeDefined();
 
-      // Look for CSRF cookie (name depends on NODE_ENV)
-      const hasCsrfCookie = cookies.some(
-        (cookie) => cookie.includes('csrf-token') || cookie.includes('psifi'),
-      );
+      // Look for CSRF cookie (psifi.x-csrf-token in non-production)
+      const hasCsrfCookie = cookies.some((cookie) => cookie.includes('psifi.x-csrf-token'));
       expect(hasCsrfCookie).toBe(true);
     });
 
     it('should accept POST with valid CSRF token from form', async () => {
       // Arrange - Get CSRF token from login page
-      const getResponse = await request(app).get('/auth/login');
-
-      const cookies = getResponse.headers['set-cookie'];
-
-      // Extract CSRF token from HTML (simplified - real extraction would parse HTML)
-      const csrfMatch = getResponse.text.match(/name="_csrf" value="([^"]+)"/);
-      const csrfToken = csrfMatch ? csrfMatch[1] : null;
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
 
       // Create user for login
       const userData = createUserData({ role: 'admin', status: 'active' });
@@ -116,26 +105,24 @@ describe('Validation Middleware Integration Tests', () => {
         password: userData.password,
       });
 
-      // Assert - Should be rejected with 403 or redirect
-      expect([403, 302]).toContain(response.status);
+      // Assert - Should be rejected with 403 (CSRF validation failure)
+      expect(response.status).toBe(403);
     });
 
     it('should reject PUT without CSRF token', async () => {
-      // Arrange - Create admin user and login
+      // Arrange - Create admin user and login with CSRF
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData);
+      await User.create(userData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies } = await authenticateUser(app, {
         username: userData.username,
         password: userData.password,
       });
 
-      const cookies = loginResponse.headers['set-cookie'];
-
       // Create a ticket
       const ticket = await Ticket.create(createTicketData());
 
-      // Act - PUT without CSRF token (if app supports PUT)
+      // Act - PUT without CSRF token (cookies have session but no _csrf in body)
       const response = await request(app)
         .put(`/admin/tickets/${ticket.id}`)
         .set('Cookie', cookies)
@@ -146,21 +133,19 @@ describe('Validation Middleware Integration Tests', () => {
     });
 
     it('should reject DELETE without CSRF token', async () => {
-      // Arrange - Create admin user and login
+      // Arrange - Create super_admin user and login with CSRF
       const userData = createUserData({ role: 'super_admin', status: 'active' });
-      const user = await User.create(userData);
+      await User.create(userData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies } = await authenticateUser(app, {
         username: userData.username,
         password: userData.password,
       });
 
-      const cookies = loginResponse.headers['set-cookie'];
-
       // Create another user to delete
       const targetUser = await User.create(createUserData());
 
-      // Act - DELETE without CSRF token (if app supports DELETE)
+      // Act - DELETE without CSRF token
       const response = await request(app)
         .delete(`/admin/users/${targetUser.id}`)
         .set('Cookie', cookies);
@@ -171,9 +156,7 @@ describe('Validation Middleware Integration Tests', () => {
 
     it('should validate CSRF token matches cookie', async () => {
       // Arrange - Get legitimate token and cookies
-      const getResponse = await request(app).get('/auth/login');
-
-      const cookies = getResponse.headers['set-cookie'];
+      const { cookies } = await fetchCsrfToken(app);
 
       // Create user for login attempt
       const userData = createUserData({ role: 'admin', status: 'active' });
@@ -187,32 +170,23 @@ describe('Validation Middleware Integration Tests', () => {
       });
 
       // Assert - Should be rejected
-      expect([403, 302]).toContain(response.status);
+      expect(response.status).toBe(403);
     });
 
     it('should accept POST with token from authenticated session', async () => {
-      // Arrange - Create user and login
+      // Arrange - Create user and login with CSRF
       const userData = createUserData({ role: 'admin', status: 'active' });
-      const user = await User.create(userData);
+      await User.create(userData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies, csrfToken } = await authenticateUser(app, {
         username: userData.username,
         password: userData.password,
       });
 
-      const cookies = loginResponse.headers['set-cookie'];
-
-      // Get a page to get CSRF token
-      const dashboardResponse = await request(app).get('/admin/dashboard').set('Cookie', cookies);
-
-      // Extract CSRF token
-      const csrfMatch = dashboardResponse.text.match(/name="_csrf" value="([^"]+)"/);
-      const csrfToken = csrfMatch ? csrfMatch[1] : null;
-
       // Create ticket for update
       const ticket = await Ticket.create(createTicketData());
 
-      // Act - POST with valid CSRF token
+      // Act - POST with valid CSRF token from authenticated session
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', cookies)
@@ -250,9 +224,7 @@ describe('Validation Middleware Integration Tests', () => {
       // Assert
       const cookies = response.headers['set-cookie'];
       if (cookies) {
-        const csrfCookie = cookies.find(
-          (cookie) => cookie.includes('csrf') || cookie.includes('psifi'),
-        );
+        const csrfCookie = cookies.find((cookie) => cookie.includes('psifi.x-csrf-token'));
 
         if (csrfCookie) {
           // Check for security attributes
@@ -263,21 +235,18 @@ describe('Validation Middleware Integration Tests', () => {
       }
     });
 
-    it.skip('should use __Host- prefix for CSRF cookie in production', async () => {
-      // CSRF is intentionally disabled in test environment (NODE_ENV=test)
-      // See app.js lines 33-58 and CLAUDE.md documentation
-      // This is configured based on NODE_ENV
-      // In development: psifi.x-csrf-token
-      // In production: __Host-psifi.x-csrf-token
+    it('should use psifi.x-csrf-token cookie name in non-production', async () => {
+      // In non-production: psifi.x-csrf-token
+      // In production: __Host-psifi.x-csrf-token (requires HTTPS)
 
       // Act
-      const response = await request(app).get('/');
+      const response = await request(app).get('/auth/login');
 
       // Assert
       const cookies = response.headers['set-cookie'];
       expect(cookies).toBeDefined();
 
-      // Check cookie name based on environment
+      // Check cookie name for non-production environment
       const hasCsrfCookie = cookies.some((cookie) => cookie.includes('psifi.x-csrf-token'));
       expect(hasCsrfCookie).toBe(true);
     });
@@ -297,8 +266,8 @@ describe('Validation Middleware Integration Tests', () => {
         _csrf: 'some-token',
       });
 
-      // Assert - Should be rejected
-      expect([403, 302]).toContain(response.status);
+      // Assert - Should be rejected (no CSRF cookie to match)
+      expect(response.status).toBe(403);
     });
 
     it('should protect all state-changing routes', async () => {
@@ -309,23 +278,17 @@ describe('Validation Middleware Integration Tests', () => {
       ];
 
       for (const route of testRoutes) {
-        // Act
+        // Act - POST without CSRF
         const response = await request(app).post(route.path).send(route.data);
 
-        // Assert - Should handle CSRF (either validate or reject)
-        // 200/302 means validation passed (may have other errors)
-        // 403 means CSRF rejected
-        expect([200, 302, 403]).toContain(response.status);
+        // Assert - Should be rejected by CSRF protection
+        expect(response.status).toBe(403);
       }
     });
 
     it('should allow login with valid token', async () => {
       // Arrange - Get login page with form
-      const getResponse = await request(app).get('/auth/login');
-
-      const cookies = getResponse.headers['set-cookie'];
-      const csrfMatch = getResponse.text.match(/name="_csrf" value="([^"]+)"/);
-      const csrfToken = csrfMatch ? csrfMatch[1] : null;
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
 
       const userData = createUserData({ role: 'admin', status: 'active' });
       await User.create(userData);
@@ -343,9 +306,7 @@ describe('Validation Middleware Integration Tests', () => {
 
     it('should handle missing _csrf field gracefully', async () => {
       // Arrange
-      const getResponse = await request(app).get('/auth/login');
-
-      const cookies = getResponse.headers['set-cookie'];
+      const { cookies } = await fetchCsrfToken(app);
       const userData = createUserData({ role: 'admin', status: 'active' });
       await User.create(userData);
 
@@ -355,22 +316,21 @@ describe('Validation Middleware Integration Tests', () => {
         password: userData.password,
       });
 
-      // Assert - Should be rejected
-      expect([403, 302]).toContain(response.status);
+      // Assert - Should be rejected by CSRF (no _csrf in body)
+      expect(response.status).toBe(403);
     });
   });
 
   describe('validateRequest integration', () => {
     it('should redirect back with flash messages on validation errors', async () => {
-      // Arrange - Get page to establish session
-      const getResponse = await request(app).get('/auth/login');
+      // Arrange - Get CSRF token to pass CSRF validation
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
 
-      const cookies = getResponse.headers['set-cookie'];
-
-      // Act - Submit invalid data (missing required fields)
+      // Act - Submit invalid data (missing required fields) with valid CSRF
       const response = await request(app).post('/auth/login').set('Cookie', cookies).send({
         username: '', // Invalid - required
         password: '', // Invalid - required
+        _csrf: csrfToken,
       });
 
       // Assert
@@ -379,16 +339,21 @@ describe('Validation Middleware Integration Tests', () => {
     });
 
     it('should return JSON errors when client accepts JSON', async () => {
+      // Arrange - Get CSRF token
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act - POST with JSON accept header and invalid data
       const response = await request(app)
         .post('/auth/login')
+        .set('Cookie', cookies)
         .set('Accept', 'application/json')
         .send({
           username: '',
           password: '',
+          _csrf: csrfToken,
         });
 
-      // Assert - Should return JSON error (may also include CSRF error)
+      // Assert - Should return JSON error from validation (not CSRF)
       expect([400, 403]).toContain(response.status);
     });
   });

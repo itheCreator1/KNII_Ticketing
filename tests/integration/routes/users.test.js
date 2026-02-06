@@ -19,6 +19,7 @@ const request = require('supertest');
 const app = require('../../../app');
 const { setupIntegrationTest, teardownIntegrationTest } = require('../../helpers/database');
 const { createUserData } = require('../../helpers/factories');
+const { fetchCsrfToken, authenticateUser } = require('../../helpers/csrf');
 const User = require('../../../models/User');
 const AuditLog = require('../../../models/AuditLog');
 const bcrypt = require('bcryptjs');
@@ -26,8 +27,10 @@ const bcrypt = require('bcryptjs');
 describe('User Management Routes Integration Tests', () => {
   let superAdminUser;
   let superAdminCookies;
+  let superAdminCsrfToken;
   let adminUser;
   let adminCookies;
+  let adminCsrfToken;
 
   beforeEach(async () => {
     await setupIntegrationTest();
@@ -36,23 +39,23 @@ describe('User Management Routes Integration Tests', () => {
     const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
     superAdminUser = await User.create(superAdminData);
 
-    const superAdminLogin = await request(app).post('/auth/login').send({
+    const { cookies: saCookies, csrfToken: saCsrfToken } = await authenticateUser(app, {
       username: superAdminData.username,
       password: superAdminData.password,
     });
-
-    superAdminCookies = superAdminLogin.headers['set-cookie'];
+    superAdminCookies = saCookies;
+    superAdminCsrfToken = saCsrfToken;
 
     // Create regular admin user for permission tests
     const adminData = createUserData({ role: 'admin', status: 'active' });
     adminUser = await User.create(adminData);
 
-    const adminLogin = await request(app).post('/auth/login').send({
+    const { cookies: aCookies, csrfToken: aCsrfToken } = await authenticateUser(app, {
       username: adminData.username,
       password: adminData.password,
     });
-
-    adminCookies = adminLogin.headers['set-cookie'];
+    adminCookies = aCookies;
+    adminCsrfToken = aCsrfToken;
   });
 
   afterEach(async () => {
@@ -132,7 +135,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post('/admin/users')
         .set('Cookie', adminCookies)
-        .send(createUserData());
+        .send({ ...createUserData(), _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -147,7 +150,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post('/admin/users')
         .set('Cookie', superAdminCookies)
-        .send(userData);
+        .send({ ...userData, _csrf: superAdminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -164,7 +167,10 @@ describe('User Management Routes Integration Tests', () => {
       const userData = createUserData({ username: 'hasheduser' });
 
       // Act
-      await request(app).post('/admin/users').set('Cookie', superAdminCookies).send(userData);
+      await request(app)
+        .post('/admin/users')
+        .set('Cookie', superAdminCookies)
+        .send({ ...userData, _csrf: superAdminCsrfToken });
 
       // Assert
       const user = await User.findByUsernameWithPassword('hasheduser');
@@ -188,7 +194,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post('/admin/users')
         .set('Cookie', superAdminCookies)
-        .send({ ...userData, email: 'different@example.com' });
+        .send({ ...userData, email: 'different@example.com', _csrf: superAdminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -204,7 +210,10 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post('/admin/users')
         .set('Cookie', superAdminCookies)
-        .send(createUserData({ username: 'different', email: 'unique@example.com' }));
+        .send({
+          ...createUserData({ username: 'different', email: 'unique@example.com' }),
+          _csrf: superAdminCsrfToken,
+        });
 
       // Assert
       expect(response.status).toBe(302);
@@ -219,7 +228,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post('/admin/users')
         .set('Cookie', superAdminCookies)
-        .send(userData);
+        .send({ ...userData, _csrf: superAdminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -232,7 +241,10 @@ describe('User Management Routes Integration Tests', () => {
       delete userData.status;
 
       // Act
-      await request(app).post('/admin/users').set('Cookie', superAdminCookies).send(userData);
+      await request(app)
+        .post('/admin/users')
+        .set('Cookie', superAdminCookies)
+        .send({ ...userData, _csrf: superAdminCsrfToken });
 
       // Assert
       const user = await User.findByUsername('defaultactive');
@@ -244,7 +256,10 @@ describe('User Management Routes Integration Tests', () => {
       const userData = createUserData({ username: 'audituser' });
 
       // Act
-      await request(app).post('/admin/users').set('Cookie', superAdminCookies).send(userData);
+      await request(app)
+        .post('/admin/users')
+        .set('Cookie', superAdminCookies)
+        .send({ ...userData, _csrf: superAdminCsrfToken });
 
       // Assert
       const user = await User.findByUsername('audituser');
@@ -306,7 +321,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/users/${user.id}`)
         .set('Cookie', adminCookies)
-        .send({ username: 'updated' });
+        .send({ username: 'updated', _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -326,6 +341,7 @@ describe('User Management Routes Integration Tests', () => {
           username: 'updated',
           email: 'updated@example.com',
           role: 'super_admin',
+          _csrf: superAdminCsrfToken,
         });
 
       // Assert
@@ -346,7 +362,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/users/${user2.id}`)
         .set('Cookie', superAdminCookies)
-        .send({ username: 'user1' });
+        .send({ username: 'user1', _csrf: superAdminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -362,7 +378,7 @@ describe('User Management Routes Integration Tests', () => {
       await request(app)
         .post(`/admin/users/${user.id}`)
         .set('Cookie', superAdminCookies)
-        .send({ status: 'inactive' });
+        .send({ status: 'inactive', _csrf: superAdminCsrfToken });
 
       // Assert
       const updatedUser = await User.findById(user.id);
@@ -378,7 +394,7 @@ describe('User Management Routes Integration Tests', () => {
       await request(app)
         .post(`/admin/users/${user.id}`)
         .set('Cookie', superAdminCookies)
-        .send({ username: 'modified' });
+        .send({ username: 'modified', _csrf: superAdminCsrfToken });
 
       // Assert
       const auditLogs = await AuditLog.findByTarget('user', user.id);
@@ -398,7 +414,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/users/${user.id}/password`)
         .set('Cookie', adminCookies)
-        .send({ password: 'NewPass123!' });
+        .send({ password: 'NewPass123!', _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -413,7 +429,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/users/${user.id}/password`)
         .set('Cookie', superAdminCookies)
-        .send({ password: newPassword });
+        .send({ password: newPassword, _csrf: superAdminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -432,7 +448,7 @@ describe('User Management Routes Integration Tests', () => {
       await request(app)
         .post(`/admin/users/${user.id}/password`)
         .set('Cookie', superAdminCookies)
-        .send({ password: newPassword });
+        .send({ password: newPassword, _csrf: superAdminCsrfToken });
 
       // Assert
       const updatedUser = await User.findByUsernameWithPassword(user.username);
@@ -450,7 +466,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/users/${user.id}/password`)
         .set('Cookie', superAdminCookies)
-        .send({ password: 'weak' });
+        .send({ password: 'weak', _csrf: superAdminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -465,7 +481,7 @@ describe('User Management Routes Integration Tests', () => {
       await request(app)
         .post(`/admin/users/${user.id}/password`)
         .set('Cookie', superAdminCookies)
-        .send({ password: 'NewSecurePass123!' });
+        .send({ password: 'NewSecurePass123!', _csrf: superAdminCsrfToken });
 
       // Assert
       const updatedUser = await User.findById(user.id);
@@ -480,7 +496,7 @@ describe('User Management Routes Integration Tests', () => {
       await request(app)
         .post(`/admin/users/${user.id}/password`)
         .set('Cookie', superAdminCookies)
-        .send({ password: 'NewSecurePass123!' });
+        .send({ password: 'NewSecurePass123!', _csrf: superAdminCsrfToken });
 
       // Assert
       const auditLogs = await AuditLog.findByTarget('user', user.id);
@@ -499,7 +515,8 @@ describe('User Management Routes Integration Tests', () => {
       // Act
       const response = await request(app)
         .post(`/admin/users/${user.id}/delete`)
-        .set('Cookie', adminCookies);
+        .set('Cookie', adminCookies)
+        .send({ _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -512,7 +529,8 @@ describe('User Management Routes Integration Tests', () => {
       // Act
       const response = await request(app)
         .post(`/admin/users/${user.id}/delete`)
-        .set('Cookie', superAdminCookies);
+        .set('Cookie', superAdminCookies)
+        .send({ _csrf: superAdminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -527,7 +545,10 @@ describe('User Management Routes Integration Tests', () => {
       const user = await User.create(createUserData());
 
       // Act
-      await request(app).post(`/admin/users/${user.id}/delete`).set('Cookie', superAdminCookies);
+      await request(app)
+        .post(`/admin/users/${user.id}/delete`)
+        .set('Cookie', superAdminCookies)
+        .send({ _csrf: superAdminCsrfToken });
 
       // Assert - User.clearUserSessions should have been called
       const deletedUser = await User.findById(user.id);
@@ -538,7 +559,8 @@ describe('User Management Routes Integration Tests', () => {
       // Act - Try to delete self
       const response = await request(app)
         .post(`/admin/users/${superAdminUser.id}/delete`)
-        .set('Cookie', superAdminCookies);
+        .set('Cookie', superAdminCookies)
+        .send({ _csrf: superAdminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -550,7 +572,10 @@ describe('User Management Routes Integration Tests', () => {
       const user = await User.create(createUserData());
 
       // Act
-      await request(app).post(`/admin/users/${user.id}/delete`).set('Cookie', superAdminCookies);
+      await request(app)
+        .post(`/admin/users/${user.id}/delete`)
+        .set('Cookie', superAdminCookies)
+        .send({ _csrf: superAdminCsrfToken });
 
       // Assert
       const auditLogs = await AuditLog.findByTarget('user', user.id);
@@ -566,7 +591,10 @@ describe('User Management Routes Integration Tests', () => {
       const user = await User.create(userData);
 
       // Act
-      await request(app).post(`/admin/users/${user.id}/delete`).set('Cookie', superAdminCookies);
+      await request(app)
+        .post(`/admin/users/${user.id}/delete`)
+        .set('Cookie', superAdminCookies)
+        .send({ _csrf: superAdminCsrfToken });
 
       // Verify deletion
       const response = await request(app).get('/admin/users').set('Cookie', superAdminCookies);
@@ -586,7 +614,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/users/${user.id}/toggle-status`)
         .set('Cookie', adminCookies)
-        .send({ status: 'inactive' });
+        .send({ status: 'inactive', _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -600,7 +628,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/users/${user.id}/toggle-status`)
         .set('Cookie', superAdminCookies)
-        .send({ status: 'inactive' });
+        .send({ status: 'inactive', _csrf: superAdminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -617,7 +645,7 @@ describe('User Management Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/users/${user.id}/toggle-status`)
         .set('Cookie', superAdminCookies)
-        .send({ status: 'active' });
+        .send({ status: 'active', _csrf: superAdminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);

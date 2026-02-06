@@ -15,6 +15,7 @@ const request = require('supertest');
 const app = require('../../../app');
 const { setupIntegrationTest, teardownIntegrationTest } = require('../../helpers/database');
 const { createUserData, createTicketData, createCommentData } = require('../../helpers/factories');
+const { fetchCsrfToken, authenticateUser } = require('../../helpers/csrf');
 const User = require('../../../models/User');
 const Ticket = require('../../../models/Ticket');
 const Comment = require('../../../models/Comment');
@@ -23,6 +24,7 @@ const AuditLog = require('../../../models/AuditLog');
 describe('Admin Routes Integration Tests', () => {
   let adminUser;
   let adminCookies;
+  let adminCsrfToken;
 
   beforeEach(async () => {
     await setupIntegrationTest();
@@ -31,12 +33,12 @@ describe('Admin Routes Integration Tests', () => {
     const adminData = createUserData({ role: 'admin', status: 'active' });
     adminUser = await User.create(adminData);
 
-    const loginResponse = await request(app).post('/auth/login').send({
+    const { cookies, csrfToken } = await authenticateUser(app, {
       username: adminData.username,
       password: adminData.password,
     });
-
-    adminCookies = loginResponse.headers['set-cookie'];
+    adminCookies = cookies;
+    adminCsrfToken = csrfToken;
   });
 
   afterEach(async () => {
@@ -248,10 +250,14 @@ describe('Admin Routes Integration Tests', () => {
       // Arrange
       const ticket = await Ticket.create(createTicketData());
 
+      // Add CSRF token so request reaches auth middleware (not blocked by CSRF)
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
-        .send({ status: 'in_progress' });
+        .set('Cookie', cookies)
+        .send({ status: 'in_progress', _csrf: csrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -264,11 +270,10 @@ describe('Admin Routes Integration Tests', () => {
       const deptUser = await User.create(deptUserData);
 
       // Login as department user to get their cookies
-      const deptLoginResponse = await request(app).post('/auth/login').send({
+      const { cookies: deptCookies, csrfToken: deptCsrfToken } = await authenticateUser(app, {
         username: deptUserData.username,
         password: deptUserData.password,
       });
-      const deptCookies = deptLoginResponse.headers['set-cookie'];
 
       const ticket = await Ticket.create(createTicketData());
 
@@ -276,7 +281,7 @@ describe('Admin Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', deptCookies)
-        .send({ status: 'in_progress' });
+        .send({ status: 'in_progress', _csrf: deptCsrfToken });
 
       // Assert - Department user should be denied access (requireAdmin redirects to dashboard)
       expect(response.status).toBe(302);
@@ -291,7 +296,7 @@ describe('Admin Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ status: 'in_progress' });
+        .send({ status: 'in_progress', _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -308,7 +313,7 @@ describe('Admin Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ priority: 'critical' });
+        .send({ priority: 'critical', _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -325,7 +330,7 @@ describe('Admin Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ assigned_to: adminUser.id });
+        .send({ assigned_to: adminUser.id, _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -342,7 +347,7 @@ describe('Admin Routes Integration Tests', () => {
       await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ status: 'closed' });
+        .send({ status: 'closed', _csrf: adminCsrfToken });
 
       // Assert
       const auditLogs = await AuditLog.findByTarget('ticket', ticket.id);
@@ -357,7 +362,7 @@ describe('Admin Routes Integration Tests', () => {
       const response = await request(app)
         .post('/admin/tickets/invalid/update')
         .set('Cookie', adminCookies)
-        .send({ status: 'closed' });
+        .send({ status: 'closed', _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -371,7 +376,7 @@ describe('Admin Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ status: 'invalid_status' });
+        .send({ status: 'invalid_status', _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -383,10 +388,14 @@ describe('Admin Routes Integration Tests', () => {
       // Arrange
       const ticket = await Ticket.create(createTicketData());
 
+      // Add CSRF token so request reaches auth middleware (not blocked by CSRF)
+      const { csrfToken, cookies } = await fetchCsrfToken(app);
+
       // Act
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/comments`)
-        .send({ content: 'Test comment' });
+        .set('Cookie', cookies)
+        .send({ content: 'Test comment', _csrf: csrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -403,6 +412,7 @@ describe('Admin Routes Integration Tests', () => {
         .set('Cookie', adminCookies)
         .send({
           content: 'This is a comment',
+          _csrf: adminCsrfToken,
         });
 
       // Assert
@@ -422,7 +432,7 @@ describe('Admin Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/comments`)
         .set('Cookie', adminCookies)
-        .send({ content: '' });
+        .send({ content: '', _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -436,7 +446,7 @@ describe('Admin Routes Integration Tests', () => {
       const response = await request(app)
         .post('/admin/tickets/invalid/comments')
         .set('Cookie', adminCookies)
-        .send({ content: 'Test comment' });
+        .send({ content: 'Test comment', _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -450,7 +460,7 @@ describe('Admin Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/comments`)
         .set('Cookie', adminCookies)
-        .send({ content: 'Test comment' });
+        .send({ content: 'Test comment', _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
@@ -466,7 +476,7 @@ describe('Admin Routes Integration Tests', () => {
       const response = await request(app)
         .post(`/admin/tickets/${ticket.id}/comments`)
         .set('Cookie', adminCookies)
-        .send({ content: longContent });
+        .send({ content: longContent, _csrf: adminCsrfToken });
 
       // Assert
       expect(response.status).toBe(302);
