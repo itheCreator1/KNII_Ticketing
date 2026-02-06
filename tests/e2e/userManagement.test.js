@@ -14,6 +14,7 @@ const request = require('supertest');
 const app = require('../../app');
 const { setupIntegrationTest, teardownIntegrationTest } = require('../helpers/database');
 const { createUserData } = require('../helpers/factories');
+const { fetchCsrfToken, authenticateUser } = require('../helpers/csrf');
 const User = require('../../models/User');
 const AuditLog = require('../../models/AuditLog');
 const bcrypt = require('bcryptjs');
@@ -33,13 +34,11 @@ describe('User Management E2E Tests', () => {
       const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
       const superAdmin = await User.create(superAdminData);
 
-      const superAdminLogin = await request(app).post('/auth/login').send({
-        username: superAdminData.username,
-        password: superAdminData.password,
-      });
-
-      const superAdminCookies = superAdminLogin.headers['set-cookie'];
-      expect(superAdminLogin.status).toBe(302);
+      const { cookies: superAdminCookies, csrfToken: superAdminCsrfToken } =
+        await authenticateUser(app, {
+          username: superAdminData.username,
+          password: superAdminData.password,
+        });
 
       // Step 2: Super admin creates new admin user
       const newUserData = {
@@ -47,6 +46,7 @@ describe('User Management E2E Tests', () => {
         email: 'newadmin@example.com',
         password: 'SecurePass123!',
         role: 'admin',
+        _csrf: superAdminCsrfToken,
       };
 
       const createResponse = await request(app)
@@ -72,18 +72,20 @@ describe('User Management E2E Tests', () => {
       expect(passwordValid).toBe(true);
 
       // Step 4: Logout super admin
-      await request(app).post('/auth/logout').set('Cookie', superAdminCookies);
+      await request(app)
+        .post('/auth/logout')
+        .set('Cookie', superAdminCookies)
+        .send({ _csrf: superAdminCsrfToken });
 
       // Step 5: New admin user logs in successfully
-      const newUserLogin = await request(app).post('/auth/login').send({
-        username: 'newadmin',
-        password: 'SecurePass123!',
-      });
+      const { cookies: newUserCookies, csrfToken: newUserCsrfToken, loginResponse: newUserLogin } =
+        await authenticateUser(app, {
+          username: 'newadmin',
+          password: 'SecurePass123!',
+        });
 
       expect(newUserLogin.status).toBe(302);
       expect(newUserLogin.headers.location).toBe('/admin/dashboard');
-
-      const newUserCookies = newUserLogin.headers['set-cookie'];
 
       // Step 6: Verify new user can access admin dashboard
       const dashboardResponse = await request(app)
@@ -93,15 +95,17 @@ describe('User Management E2E Tests', () => {
       expect(dashboardResponse.status).toBe(200);
 
       // Step 7: Logout new admin
-      await request(app).post('/auth/logout').set('Cookie', newUserCookies);
+      await request(app)
+        .post('/auth/logout')
+        .set('Cookie', newUserCookies)
+        .send({ _csrf: newUserCsrfToken });
 
       // Step 8: Super admin logs in again
-      const superAdminLogin2 = await request(app).post('/auth/login').send({
-        username: superAdminData.username,
-        password: superAdminData.password,
-      });
-
-      const superAdminCookies2 = superAdminLogin2.headers['set-cookie'];
+      const { cookies: superAdminCookies2, csrfToken: superAdminCsrfToken2 } =
+        await authenticateUser(app, {
+          username: superAdminData.username,
+          password: superAdminData.password,
+        });
 
       // Step 9: Super admin updates new user's role to super_admin
       const updateRoleResponse = await request(app)
@@ -111,6 +115,7 @@ describe('User Management E2E Tests', () => {
           username: 'newadmin',
           email: 'newadmin@example.com',
           role: 'super_admin',
+          _csrf: superAdminCsrfToken2,
         });
 
       expect(updateRoleResponse.status).toBe(302);
@@ -123,7 +128,7 @@ describe('User Management E2E Tests', () => {
       const resetPasswordResponse = await request(app)
         .post(`/admin/users/${newUser.id}/password`)
         .set('Cookie', superAdminCookies2)
-        .send({ password: newPassword });
+        .send({ password: newPassword, _csrf: superAdminCsrfToken2 });
 
       expect(resetPasswordResponse.status).toBe(302);
 
@@ -143,14 +148,10 @@ describe('User Management E2E Tests', () => {
       expect(oldPasswordValid).toBe(false);
 
       // Step 13: New user can login with new password
-      const newPasswordLogin = await request(app).post('/auth/login').send({
+      const { cookies: newPasswordCookies } = await authenticateUser(app, {
         username: 'newadmin',
         password: newPassword,
       });
-
-      expect(newPasswordLogin.status).toBe(302);
-
-      const newPasswordCookies = newPasswordLogin.headers['set-cookie'];
 
       // Step 14: Super admin deactivates user (status = 'inactive')
       const deactivateResponse = await request(app)
@@ -161,6 +162,7 @@ describe('User Management E2E Tests', () => {
           email: 'newadmin@example.com',
           role: 'super_admin',
           status: 'inactive',
+          _csrf: superAdminCsrfToken2,
         });
 
       expect(deactivateResponse.status).toBe(302);
@@ -170,14 +172,30 @@ describe('User Management E2E Tests', () => {
       expect(deactivatedUser.status).toBe('inactive');
 
       // Step 16: Attempt login as deactivated user (should fail)
-      const deactivatedLoginResponse = await request(app).post('/auth/login').send({
-        username: 'newadmin',
-        password: newPassword,
-      });
+      const { csrfToken: deactivatedCsrfToken, cookies: deactivatedCsrfCookies } =
+        await fetchCsrfToken(app);
+      const deactivatedLoginResponse = await request(app)
+        .post('/auth/login')
+        .set('Cookie', deactivatedCsrfCookies)
+        .send({
+          username: 'newadmin',
+          password: newPassword,
+          _csrf: deactivatedCsrfToken,
+        });
 
       expect(deactivatedLoginResponse.status).toBe(302);
       expect(deactivatedLoginResponse.headers.location).toBe('/auth/login');
-      expect(deactivatedLoginResponse.headers['set-cookie']).toBeUndefined();
+
+      // Verify the session does not grant access to protected routes
+      // (Express session always sets a cookie, but it should not contain auth data)
+      const deactivatedCookies = deactivatedLoginResponse.headers['set-cookie'];
+      if (deactivatedCookies) {
+        const accessCheck = await request(app)
+          .get('/admin/dashboard')
+          .set('Cookie', deactivatedCookies);
+        expect(accessCheck.status).toBe(302);
+        expect(accessCheck.headers.location).toBe('/auth/login');
+      }
 
       // Step 17: Verify existing session is invalidated
       const sessionCheckResponse = await request(app)
@@ -190,7 +208,8 @@ describe('User Management E2E Tests', () => {
       // Step 18: Super admin deletes user (soft delete)
       const deleteResponse = await request(app)
         .post(`/admin/users/${newUser.id}/delete`)
-        .set('Cookie', superAdminCookies2);
+        .set('Cookie', superAdminCookies2)
+        .send({ _csrf: superAdminCsrfToken2 });
 
       expect(deleteResponse.status).toBe(302);
 
@@ -237,12 +256,10 @@ describe('User Management E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       await User.create(adminData);
 
-      const adminLogin = await request(app).post('/auth/login').send({
+      const { cookies: adminCookies, csrfToken: adminCsrfToken } = await authenticateUser(app, {
         username: adminData.username,
         password: adminData.password,
       });
-
-      const adminCookies = adminLogin.headers['set-cookie'];
 
       // Step 2: Try to access user management (should fail)
       const listResponse = await request(app).get('/admin/users').set('Cookie', adminCookies);
@@ -254,7 +271,7 @@ describe('User Management E2E Tests', () => {
       const createResponse = await request(app)
         .post('/admin/users')
         .set('Cookie', adminCookies)
-        .send(createUserData());
+        .send({ ...createUserData(), _csrf: adminCsrfToken });
 
       expect(createResponse.status).toBe(302);
       expect(createResponse.headers.location).toBe('/admin/dashboard');
@@ -263,12 +280,10 @@ describe('User Management E2E Tests', () => {
       const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
       await User.create(superAdminData);
 
-      const superAdminLogin = await request(app).post('/auth/login').send({
+      const { cookies: superAdminCookies } = await authenticateUser(app, {
         username: superAdminData.username,
         password: superAdminData.password,
       });
-
-      const superAdminCookies = superAdminLogin.headers['set-cookie'];
 
       // Step 5: Super admin can access user management
       const superAdminListResponse = await request(app)
@@ -286,17 +301,17 @@ describe('User Management E2E Tests', () => {
       const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
       const superAdmin = await User.create(superAdminData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
-        username: superAdminData.username,
-        password: superAdminData.password,
-      });
-
-      const superAdminCookies = loginResponse.headers['set-cookie'];
+      const { cookies: superAdminCookies, csrfToken: superAdminCsrfToken } =
+        await authenticateUser(app, {
+          username: superAdminData.username,
+          password: superAdminData.password,
+        });
 
       // Act - Try to delete self
       const deleteResponse = await request(app)
         .post(`/admin/users/${superAdmin.id}/delete`)
-        .set('Cookie', superAdminCookies);
+        .set('Cookie', superAdminCookies)
+        .send({ _csrf: superAdminCsrfToken });
 
       // Assert - Should be rejected
       expect(deleteResponse.status).toBe(302);
@@ -314,23 +329,20 @@ describe('User Management E2E Tests', () => {
       const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
       const superAdmin = await User.create(superAdminData);
 
-      const superAdminLogin = await request(app).post('/auth/login').send({
-        username: superAdminData.username,
-        password: superAdminData.password,
-      });
-
-      const superAdminCookies = superAdminLogin.headers['set-cookie'];
+      const { cookies: superAdminCookies, csrfToken: superAdminCsrfToken } =
+        await authenticateUser(app, {
+          username: superAdminData.username,
+          password: superAdminData.password,
+        });
 
       // Step 2: Create target user and login
       const targetUserData = createUserData({ role: 'admin', status: 'active' });
       const targetUser = await User.create(targetUserData);
 
-      const targetUserLogin = await request(app).post('/auth/login').send({
+      const { cookies: targetUserCookies } = await authenticateUser(app, {
         username: targetUserData.username,
         password: targetUserData.password,
       });
-
-      const targetUserCookies = targetUserLogin.headers['set-cookie'];
 
       // Step 3: Verify target user can access dashboard
       const beforeDeactivate = await request(app)
@@ -348,6 +360,7 @@ describe('User Management E2E Tests', () => {
           email: targetUserData.email,
           role: 'admin',
           status: 'inactive',
+          _csrf: superAdminCsrfToken,
         });
 
       // Step 5: Verify target user's session is invalidated
@@ -364,27 +377,25 @@ describe('User Management E2E Tests', () => {
       const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
       const superAdmin = await User.create(superAdminData);
 
-      const superAdminLogin = await request(app).post('/auth/login').send({
-        username: superAdminData.username,
-        password: superAdminData.password,
-      });
-
-      const superAdminCookies = superAdminLogin.headers['set-cookie'];
+      const { cookies: superAdminCookies, csrfToken: superAdminCsrfToken } =
+        await authenticateUser(app, {
+          username: superAdminData.username,
+          password: superAdminData.password,
+        });
 
       const targetUserData = createUserData({ role: 'admin', status: 'active' });
       const targetUser = await User.create(targetUserData);
 
-      const targetUserLogin = await request(app).post('/auth/login').send({
+      const { cookies: targetUserCookies } = await authenticateUser(app, {
         username: targetUserData.username,
         password: targetUserData.password,
       });
 
-      const targetUserCookies = targetUserLogin.headers['set-cookie'];
-
       // Act - Delete user
       await request(app)
         .post(`/admin/users/${targetUser.id}/delete`)
-        .set('Cookie', superAdminCookies);
+        .set('Cookie', superAdminCookies)
+        .send({ _csrf: superAdminCsrfToken });
 
       // Assert - Session should be invalidated
       const afterDelete = await request(app)
@@ -402,12 +413,11 @@ describe('User Management E2E Tests', () => {
       const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
       await User.create(superAdminData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
-        username: superAdminData.username,
-        password: superAdminData.password,
-      });
-
-      const superAdminCookies = loginResponse.headers['set-cookie'];
+      const { cookies: superAdminCookies, csrfToken: superAdminCsrfToken } =
+        await authenticateUser(app, {
+          username: superAdminData.username,
+          password: superAdminData.password,
+        });
 
       // Act - Try to create user with weak password
       const weakPasswordResponse = await request(app)
@@ -418,6 +428,7 @@ describe('User Management E2E Tests', () => {
           email: 'test@example.com',
           password: 'weak',
           role: 'admin',
+          _csrf: superAdminCsrfToken,
         });
 
       // Assert - Should be rejected
@@ -434,22 +445,25 @@ describe('User Management E2E Tests', () => {
       const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
       await User.create(superAdminData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
-        username: superAdminData.username,
-        password: superAdminData.password,
-      });
-
-      const superAdminCookies = loginResponse.headers['set-cookie'];
+      const { cookies: superAdminCookies, csrfToken: superAdminCsrfToken } =
+        await authenticateUser(app, {
+          username: superAdminData.username,
+          password: superAdminData.password,
+        });
 
       const password = 'TestPass123!';
 
       // Act - Create user
-      await request(app).post('/admin/users').set('Cookie', superAdminCookies).send({
-        username: 'hashtest',
-        email: 'hashtest@example.com',
-        password: password,
-        role: 'admin',
-      });
+      await request(app)
+        .post('/admin/users')
+        .set('Cookie', superAdminCookies)
+        .send({
+          username: 'hashtest',
+          email: 'hashtest@example.com',
+          password: password,
+          role: 'admin',
+          _csrf: superAdminCsrfToken,
+        });
 
       // Assert
       const user = await User.findByUsernameWithPassword('hashtest');
@@ -469,20 +483,23 @@ describe('User Management E2E Tests', () => {
       const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
       await User.create(superAdminData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
-        username: superAdminData.username,
-        password: superAdminData.password,
-      });
-
-      const superAdminCookies = loginResponse.headers['set-cookie'];
+      const { cookies: superAdminCookies, csrfToken: superAdminCsrfToken } =
+        await authenticateUser(app, {
+          username: superAdminData.username,
+          password: superAdminData.password,
+        });
 
       // Create first user
-      await request(app).post('/admin/users').set('Cookie', superAdminCookies).send({
-        username: 'uniquetest',
-        email: 'unique1@example.com',
-        password: 'ValidPass123!',
-        role: 'admin',
-      });
+      await request(app)
+        .post('/admin/users')
+        .set('Cookie', superAdminCookies)
+        .send({
+          username: 'uniquetest',
+          email: 'unique1@example.com',
+          password: 'ValidPass123!',
+          role: 'admin',
+          _csrf: superAdminCsrfToken,
+        });
 
       // Act - Try to create another user with same username
       const duplicateResponse = await request(app)
@@ -493,6 +510,7 @@ describe('User Management E2E Tests', () => {
           email: 'unique2@example.com',
           password: 'ValidPass123!',
           role: 'admin',
+          _csrf: superAdminCsrfToken,
         });
 
       // Assert - Should be rejected
@@ -505,20 +523,23 @@ describe('User Management E2E Tests', () => {
       const superAdminData = createUserData({ role: 'super_admin', status: 'active' });
       await User.create(superAdminData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
-        username: superAdminData.username,
-        password: superAdminData.password,
-      });
-
-      const superAdminCookies = loginResponse.headers['set-cookie'];
+      const { cookies: superAdminCookies, csrfToken: superAdminCsrfToken } =
+        await authenticateUser(app, {
+          username: superAdminData.username,
+          password: superAdminData.password,
+        });
 
       // Create first user
-      await request(app).post('/admin/users').set('Cookie', superAdminCookies).send({
-        username: 'user1',
-        email: 'duplicate@example.com',
-        password: 'ValidPass123!',
-        role: 'admin',
-      });
+      await request(app)
+        .post('/admin/users')
+        .set('Cookie', superAdminCookies)
+        .send({
+          username: 'user1',
+          email: 'duplicate@example.com',
+          password: 'ValidPass123!',
+          role: 'admin',
+          _csrf: superAdminCsrfToken,
+        });
 
       // Act - Try to create another user with same email
       const duplicateResponse = await request(app)
@@ -529,6 +550,7 @@ describe('User Management E2E Tests', () => {
           email: 'duplicate@example.com',
           password: 'ValidPass123!',
           role: 'admin',
+          _csrf: superAdminCsrfToken,
         });
 
       // Assert - Should be rejected

@@ -14,6 +14,7 @@ const request = require('supertest');
 const app = require('../../app');
 const { setupIntegrationTest, teardownIntegrationTest } = require('../helpers/database');
 const { createUserData, createTicketData } = require('../helpers/factories');
+const { authenticateUser } = require('../helpers/csrf');
 const User = require('../../models/User');
 const Ticket = require('../../models/Ticket');
 const Comment = require('../../models/Comment');
@@ -39,12 +40,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
       });
       const departmentUser = await User.create(departmentData);
 
-      const deptLoginResponse = await request(app).post('/auth/login').send({
+      const { cookies: deptCookies } = await authenticateUser(app, {
         username: departmentData.username,
         password: departmentData.password,
       });
-
-      const deptCookies = deptLoginResponse.headers['set-cookie'];
 
       // Department user creates ticket (now requires authentication)
       // Tickets are created directly in DB for this E2E test or via service
@@ -67,12 +66,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       const admin = await User.create(adminData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies: adminCookies, csrfToken: adminCsrfToken } = await authenticateUser(app, {
         username: adminData.username,
         password: adminData.password,
       });
-
-      const adminCookies = loginResponse.headers['set-cookie'];
 
       // Step 3: Admin views ticket in dashboard
       const dashboardResponse = await request(app)
@@ -95,7 +92,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const updateResponse1 = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ status: 'in_progress' });
+        .send({ status: 'in_progress', _csrf: adminCsrfToken });
 
       expect(updateResponse1.status).toBe(302);
 
@@ -116,6 +113,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
         .set('Cookie', adminCookies)
         .send({
           content: 'Checking database connection logs. Appears to be a network issue.',
+          _csrf: adminCsrfToken,
         });
 
       expect(firstCommentResponse.status).toBe(302);
@@ -132,6 +130,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
         .set('Cookie', adminCookies)
         .send({
           content: 'We are investigating the database connection issue. Our team is working on it.',
+          _csrf: adminCsrfToken,
         });
 
       expect(secondCommentResponse.status).toBe(302);
@@ -145,7 +144,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const assignResponse = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ assigned_to: admin.id });
+        .send({ assigned_to: admin.id, _csrf: adminCsrfToken });
 
       expect(assignResponse.status).toBe(302);
 
@@ -157,7 +156,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const priorityResponse = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ priority: 'critical' });
+        .send({ priority: 'critical', _csrf: adminCsrfToken });
 
       expect(priorityResponse.status).toBe(302);
 
@@ -172,6 +171,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
         .send({
           content:
             'Issue resolved. Firewall rules have been updated to allow database connections.',
+          _csrf: adminCsrfToken,
         });
 
       expect(resolutionCommentResponse.status).toBe(302);
@@ -180,7 +180,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const closeResponse = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ status: 'closed' });
+        .send({ status: 'closed', _csrf: adminCsrfToken });
 
       expect(closeResponse.status).toBe(302);
 
@@ -210,12 +210,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       const admin = await User.create(adminData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies: adminCookies, csrfToken: adminCsrfToken } = await authenticateUser(app, {
         username: adminData.username,
         password: adminData.password,
       });
-
-      const adminCookies = loginResponse.headers['set-cookie'];
 
       const ticket = await Ticket.create(createTicketData({ status: 'open' }));
 
@@ -226,7 +224,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
         await request(app)
           .post(`/admin/tickets/${ticket.id}/update`)
           .set('Cookie', adminCookies)
-          .send({ status });
+          .send({ status, _csrf: adminCsrfToken });
       }
 
       // Assert - Verify all transitions logged
@@ -249,12 +247,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       const admin = await User.create(adminData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies: adminCookies, csrfToken: adminCsrfToken } = await authenticateUser(app, {
         username: adminData.username,
         password: adminData.password,
       });
-
-      const adminCookies = loginResponse.headers['set-cookie'];
 
       // Step 3: Verify ticket is unassigned
       expect(ticket.assigned_to).toBeNull();
@@ -263,7 +259,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const assignResponse = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ assigned_to: admin.id });
+        .send({ assigned_to: admin.id, _csrf: adminCsrfToken });
 
       expect(assignResponse.status).toBe(302);
 
@@ -282,7 +278,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const unassignResponse = await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ assigned_to: '' });
+        .send({ assigned_to: '', _csrf: adminCsrfToken });
 
       // Verify unassignment (if supported)
       // Some implementations may not allow null assignment
@@ -298,18 +294,16 @@ describe('Ticket Lifecycle E2E Tests', () => {
 
       const ticket = await Ticket.create(createTicketData({ assigned_to: admin1.id }));
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies: adminCookies, csrfToken: adminCsrfToken } = await authenticateUser(app, {
         username: admin1Data.username,
         password: admin1Data.password,
       });
-
-      const adminCookies = loginResponse.headers['set-cookie'];
 
       // Act - Reassign to admin2
       await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ assigned_to: admin2.id });
+        .send({ assigned_to: admin2.id, _csrf: adminCsrfToken });
 
       // Assert
       const updatedTicket = await Ticket.findById(ticket.id);
@@ -326,18 +320,16 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       await User.create(adminData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies: adminCookies, csrfToken: adminCsrfToken } = await authenticateUser(app, {
         username: adminData.username,
         password: adminData.password,
       });
-
-      const adminCookies = loginResponse.headers['set-cookie'];
 
       // Step 3: Escalate to medium
       await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ priority: 'medium' });
+        .send({ priority: 'medium', _csrf: adminCsrfToken });
 
       let updatedTicket = await Ticket.findById(ticket.id);
       expect(updatedTicket.priority).toBe('medium');
@@ -346,7 +338,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
       await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ priority: 'high' });
+        .send({ priority: 'high', _csrf: adminCsrfToken });
 
       updatedTicket = await Ticket.findById(ticket.id);
       expect(updatedTicket.priority).toBe('high');
@@ -355,7 +347,7 @@ describe('Ticket Lifecycle E2E Tests', () => {
       await request(app)
         .post(`/admin/tickets/${ticket.id}/update`)
         .set('Cookie', adminCookies)
-        .send({ priority: 'critical' });
+        .send({ priority: 'critical', _csrf: adminCsrfToken });
 
       updatedTicket = await Ticket.findById(ticket.id);
       expect(updatedTicket.priority).toBe('critical');
@@ -381,34 +373,42 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const admin1 = await User.create(admin1Data);
       const admin2 = await User.create(admin2Data);
 
-      const login1 = await request(app).post('/auth/login').send({
+      const { cookies: cookies1, csrfToken: csrfToken1 } = await authenticateUser(app, {
         username: admin1Data.username,
         password: admin1Data.password,
       });
 
-      const cookies1 = login1.headers['set-cookie'];
-
-      const login2 = await request(app).post('/auth/login').send({
+      const { cookies: cookies2, csrfToken: csrfToken2 } = await authenticateUser(app, {
         username: admin2Data.username,
         password: admin2Data.password,
       });
 
-      const cookies2 = login2.headers['set-cookie'];
-
       // Act - Admin 1 adds comment
-      await request(app).post(`/admin/tickets/${ticket.id}/comments`).set('Cookie', cookies1).send({
-        content: 'I will investigate this issue.',
-      });
+      await request(app)
+        .post(`/admin/tickets/${ticket.id}/comments`)
+        .set('Cookie', cookies1)
+        .send({
+          content: 'I will investigate this issue.',
+          _csrf: csrfToken1,
+        });
 
       // Admin 2 adds comment
-      await request(app).post(`/admin/tickets/${ticket.id}/comments`).set('Cookie', cookies2).send({
-        content: 'I can help with the database side.',
-      });
+      await request(app)
+        .post(`/admin/tickets/${ticket.id}/comments`)
+        .set('Cookie', cookies2)
+        .send({
+          content: 'I can help with the database side.',
+          _csrf: csrfToken2,
+        });
 
       // Admin 1 adds another comment
-      await request(app).post(`/admin/tickets/${ticket.id}/comments`).set('Cookie', cookies1).send({
-        content: 'Issue has been resolved.',
-      });
+      await request(app)
+        .post(`/admin/tickets/${ticket.id}/comments`)
+        .set('Cookie', cookies1)
+        .send({
+          content: 'Issue has been resolved.',
+          _csrf: csrfToken1,
+        });
 
       // Assert
       const comments = await Comment.findByTicketId(ticket.id);
@@ -434,12 +434,10 @@ describe('Ticket Lifecycle E2E Tests', () => {
       const adminData = createUserData({ role: 'admin', status: 'active' });
       await User.create(adminData);
 
-      const loginResponse = await request(app).post('/auth/login').send({
+      const { cookies: adminCookies } = await authenticateUser(app, {
         username: adminData.username,
         password: adminData.password,
       });
-
-      const adminCookies = loginResponse.headers['set-cookie'];
 
       // Act - Filter by status=open
       const openResponse = await request(app)
