@@ -27,35 +27,24 @@ const testComponentsRoutes = require('./routes/test-components');
 
 const app = express();
 
-// CSRF Protection Configuration (disabled in test environment for easier testing)
-let generateCsrfToken, doubleCsrfProtection;
-
-if (process.env.NODE_ENV !== 'test') {
-  // Production and development: Enable real CSRF protection
-  const csrfConfig = doubleCsrf({
-    getSecret: () => process.env.SESSION_SECRET,
-    // Use __Host- prefix only in production (requires HTTPS)
-    cookieName:
-      process.env.NODE_ENV === 'production' ? '__Host-psifi.x-csrf-token' : 'psifi.x-csrf-token',
-    cookieOptions: {
-      sameSite: 'strict',
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-    },
-    size: 64,
-    ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
-    getCsrfTokenFromRequest: (req) => req.body?._csrf,
-    getSessionIdentifier: (req) => req.sessionID || '',
-  });
-  generateCsrfToken = csrfConfig.generateCsrfToken;
-  doubleCsrfProtection = csrfConfig.doubleCsrfProtection;
-} else {
-  // Test environment: Disable CSRF protection for simpler testing
-  // Tests focus on business logic, not CSRF library validation
-  generateCsrfToken = (_req, _res, _options) => 'test-csrf-token';
-  doubleCsrfProtection = (_req, _res, next) => next();
-}
+// CSRF Protection Configuration (enabled in all environments)
+const csrfConfig = doubleCsrf({
+  getSecret: () => process.env.SESSION_SECRET,
+  // Use __Host- prefix only in production (requires HTTPS)
+  cookieName:
+    process.env.NODE_ENV === 'production' ? '__Host-psifi.x-csrf-token' : 'psifi.x-csrf-token',
+  cookieOptions: {
+    sameSite: 'strict',
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+  },
+  size: 64,
+  ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
+  getCsrfTokenFromRequest: (req) => req.body?._csrf,
+  getSessionIdentifier: (req) => req.sessionID || '',
+});
+const { generateCsrfToken, doubleCsrfProtection } = csrfConfig;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
